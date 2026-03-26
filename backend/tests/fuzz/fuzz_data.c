@@ -34,14 +34,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#if 0
-#define Z_FUZZ_DEBUG                 /* Set `symbol->debug` flag */
-#endif
 #include "fuzz.h"
 
-#if Z_FUZZ_MAIN
+#ifdef Z_FUZZ_MAIN
 /* For testing that a corpus file reproduces a bug:
-   cc -g -O0 -DZ_FUZZ_MAIN fuzz_data.c -o fuzz_data -lzint -fsanitize=address
+   cc -g -O0 -DZ_FUZZ_MAIN -DZ_FUZZ_DEBUG fuzz_data.c -o fuzz_data -lzint -fsanitize=address
    ./fuzz_data <corpus-file>
 */
 #include <errno.h>

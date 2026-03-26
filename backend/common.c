@@ -882,7 +882,11 @@ INTERNAL void z_hrt_printf_nochk(struct zint_symbol *symbol, const char *fmt, ..
 
     va_start(ap, fmt);
 
+#ifdef ZINT_IS_C89
     size = vsprintf((char *) symbol->text, fmt, ap);
+#else
+    size = vsnprintf((char *) symbol->text, sizeof(symbol->text), fmt, ap);
+#endif
 
     assert(size >= 0);
     assert(size < ARRAY_SIZE(symbol->text));
@@ -1086,7 +1090,11 @@ INTERNAL int z_ct_printf_256(struct zint_symbol *symbol, const char *fmt, ...) {
 
     va_start(ap, fmt);
 
+#ifdef ZINT_IS_C89
     size = vsprintf((char *) symbol->content_segs[0].source, fmt, ap);
+#else
+    size = vsnprintf((char *) symbol->content_segs[0].source, 256, fmt, ap);
+#endif
 
     assert(size >= 0);
     assert(size < 256);

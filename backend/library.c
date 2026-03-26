@@ -1140,7 +1140,7 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
     }
 
     if (symbol->rows >= 200) { /* Check for stacking too many symbols */
-        return error_tag(ZINT_ERROR_TOO_LONG, symbol, 770, "Too many stacked symbols");
+        return error_tag(ZINT_ERROR_TOO_LONG, symbol, 770, "Too many stacked symbols (maximum 200)");
     }
     if (symbol->rows < 0) { /* Silently defend against out-of-bounds access */
         symbol->rows = 0;
@@ -1275,8 +1275,9 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
     }
 
     if (error_number < ZINT_ERROR) {
-        if (symbol->height < 0.5f) { /* Absolute minimum */
-            (void) z_set_height(symbol, 0.0f, 50.0f, 0.0f, 1 /*no_errtxt*/);
+        const int rows = symbol->rows ? symbol->rows : 1;
+        if (symbol->height < 0.5f * rows) { /* Absolute minimum */
+            (void) z_set_height(symbol, 0.0f, 50.0f * rows, 0.0f, 1 /*no_errtxt*/);
         }
         assert(!(symbol->output_options & BARCODE_CONTENT_SEGS)
                 || (symbol->content_segs && symbol->content_seg_count && symbol->content_segs[0].source

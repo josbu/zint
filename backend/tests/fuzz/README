@@ -1,4 +1,5 @@
-% backend/tests/fuzz/README 2026-03-22
+% backend/tests/fuzz/README 2026-03-26
+% Tested on Ubuntu 24.04 LTS
 % vim: set ts=4 sw=4 et :
 
 To run fuzzers "fuzz_data" and "fuzz_gs1" using OSS-Fuzz
@@ -23,7 +24,7 @@ Link zint's "backend/tests/fuzz" to a sub-dir of OSS-Fuzz`s project dir as "zint
     cd $OSS_FUZZ_DIR/projects
     ln -s $ZINT_DIR/backend/tests/fuzz $PROJECT_NAME
 
-Create corpus dirs, e.g. could create in the "build" dir in "<oss_fuzz_dir>":
+Create corpus dirs, e.g. could create in the "build" dir in "<oss-fuzz-clone-dir>":
 
     mkdir -p $OSS_FUZZ_DIR/build/corpus_data
     mkdir -p $OSS_FUZZ_DIR/build/corpus_gs1
@@ -33,7 +34,7 @@ Then can use OSS-Fuzz's python helpers to build the docker image and fuzzers:
     cd $OSS_FUZZ_DIR/projects/$PROJECT_NAME
     python3 $OSS_FUZZ_DIR/infra/helper.py build_image $PROJECT_NAME
 
-(on any subsequent runs can add "--no-pull" option to avoid question)
+(on any subsequent runs can add "--no-pull" option to avoid the "Pull latest base images" question)
 
     python3 $OSS_FUZZ_DIR/infra/helper.py build_fuzzers $PROJECT_NAME
 

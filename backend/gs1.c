@@ -55,10 +55,13 @@ static int gs1_err_msg_cpy_nochk(char err_msg[50], const char *msg) {
 ZINT_FORMAT_PRINTF(2, 3) static int gs1_err_msg_printf_nochk(char err_msg[50], const char *fmt, ...) {
     va_list ap;
     int size;
-
     va_start(ap, fmt);
 
+#ifdef ZINT_IS_C89
     size = vsprintf(err_msg, fmt, ap);
+#else
+    size = vsnprintf(err_msg, 50, fmt, ap);
+#endif
 
     (void)size;
     assert(size >= 0);

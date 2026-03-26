@@ -810,6 +810,8 @@ static int ult_generate_codewords_segs(struct zint_symbol *symbol, struct zint_s
        Note not updating `eci` for GS1 mode as not converted */
     const int content_segs = !gs1 && (symbol->output_options & BARCODE_CONTENT_SEGS);
 
+    assert(length > 0); /* Suppress clang-tidy-23 clang-analyzer-core.uninitialized.Assign */
+
     for (i = 0; i < seg_count; i++) {
         if (segs[i].eci) {
             have_eci = 1;
@@ -908,8 +910,10 @@ static int ult_generate_codewords_segs(struct zint_symbol *symbol, struct zint_s
     }
 
     current_mode = symbol_mode;
-    codeword_count = ult_generate_codewords(symbol, source, length, 0 /*eci*/, gs1, symbol_mode, &current_mode,
-                                            codewords, codeword_count);
+    if (length > 0) {
+        codeword_count = ult_generate_codewords(symbol, source, length, 0 /*eci*/, gs1, symbol_mode, &current_mode,
+                                                codewords, codeword_count);
+    }
     if (content_segs && segs[0].eci) {
         z_ct_set_seg_eci(symbol, 0, segs[0].eci);
     }

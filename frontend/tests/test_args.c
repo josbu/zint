@@ -1065,15 +1065,15 @@ static void test_other_opts(const testCtx *const p_ctx) {
         /* 54*/ { -1, NULL, -1, " -h", NULL, "Encode input data in a barcode ", 1 },
         /* 55*/ { -1, NULL, -1, " -e", NULL, "3: ISO/IEC 8859-1 ", 1 },
         /* 56*/ { -1, NULL, -1, " -t", NULL, "1 CODE11 ", 1 },
-        /* 57*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12345678", "Error 184: scalexdimdp X-dim invalid floating point: integer part must be 7 digits maximum", 0 },
-        /* 58*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "1234567890123", "Error 184: scalexdimdp X-dim too long", 0 },
-        /* 59*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "123456.12", "Error 184: scalexdimdp X-dim invalid floating point: 7 significant digits maximum", 0 },
-        /* 60*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", ",12.34", "Error 184: scalexdimdp X-dim too short", 0 },
-        /* 61*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12.34,", "Error 184: scalexdimdp resolution too short", 0 },
-        /* 62*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12mm1", "Error 184: scalexdimdp X-dim unknown units: mm1", 0 },
-        /* 63*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "1inc", "Error 184: scalexdimdp X-dim unknown units: inc", 0 },
-        /* 64*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12.34in,123x", "Error 184: scalexdimdp resolution unknown units: x", 0 },
-        /* 65*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12,123.45678", "Error 184: scalexdimdp resolution invalid floating point: 7 significant digits maximum", 0 },
+        /* 57*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12345678", "Error 189: scalexdimdp X-dim invalid floating point: integer part must be 7 digits maximum", 0 },
+        /* 58*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "1234567890123", "Error 189: scalexdimdp X-dim too long", 0 },
+        /* 59*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "123456.12", "Error 189: scalexdimdp X-dim invalid floating point: 7 significant digits maximum", 0 },
+        /* 60*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", ",12.34", "Error 189: scalexdimdp X-dim too short", 0 },
+        /* 61*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12.34,", "Error 189: scalexdimdp resolution too short", 0 },
+        /* 62*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12mm1", "Error 189: scalexdimdp X-dim unknown units: mm1", 0 },
+        /* 63*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "1inc", "Error 189: scalexdimdp X-dim unknown units: inc", 0 },
+        /* 64*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12.34in,123x", "Error 189: scalexdimdp resolution unknown units: x", 0 },
+        /* 65*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "12,123.45678", "Error 189: scalexdimdp resolution invalid floating point: 7 significant digits maximum", 0 },
         /* 66*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "10.1,1000", "Warning 185: scalexdimdp X-dim '10.1' out of range (greater than 10), **IGNORED**", 0 },
         /* 67*/ { BARCODE_EANX, "501234567890", -1, " --scalexdimdp=", "10,1000.1", "Warning 186: scalexdimdp resolution '1000.1' out of range (greater than 1000), **IGNORED**", 0 },
     };
@@ -1286,6 +1286,73 @@ static void test_bad_args(const testCtx *const p_ctx) {
     testFinish();
 }
 
+static void test_too_many_args(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int b;
+        const char *args0;
+        const char *args1;
+        const char *args2;
+        const char *args3;
+
+        const char *expected;
+    };
+    /* s/\v(\/\*)[ 0-9]*(\*\/)/\=printf("%s%3d%s", submatch(1), (@z+setreg('z',@z+1)), submatch(2))/ | let @z=0: */
+    struct item data[] = {
+        /*  0*/ { BARCODE_CODE128,
+                    " -d 000 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 010 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 020 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 030 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 040 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 050 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 060 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 070 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 080 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 090 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    " -d 100 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 110 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 120 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 130 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 140 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 150 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 160 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 170 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 180 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 190 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    "",
+                    "",
+                    ""
+                },
+        /*  1*/ { BARCODE_CODE128,
+                    " -d 000 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 010 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 020 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 030 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 040 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 050 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 060 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 070 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 080 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 090 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    " -d 100 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 110 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 120 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 130 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 140 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 150 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 160 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 170 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 180 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 190 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    " -d 200",
+                    "",
+                    "Error 770: Too many stacked symbols (maximum 200)"
+                },
+        /*  1*/ { BARCODE_CODE128,
+                    " -d 000 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 010 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 020 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 030 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 040 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 050 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 060 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 070 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 080 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 090 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    " -d 100 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 110 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 120 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 130 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 140 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 150 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 160 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 170 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 180 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 190 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    " -d 200 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 210 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 220 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 230 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 240 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 250 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 260 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 270 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 280 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9 -d 290 -d 1 -d 2 -d 3 -d 4 -d 5 -d 6 -d 7 -d 8 -d 9",
+                    " -d 300",
+                    "Error 129: Too many data args (maximum 300)"
+                },
+    };
+    int data_size = ARRAY_SIZE(data);
+    int i;
+    int exit_status;
+
+    char cmd[4096];
+    char buf[8192];
+
+    testStart("test_too_many_args");
+
+    for (i = 0; i < data_size; i++) {
+
+        if (testContinue(p_ctx, i)) continue;
+
+        strcpy(cmd, "zint");
+        *buf = '\0';
+
+        arg_int(cmd, "-b ", data[i].b);
+        strcat(cmd, data[i].args0);
+        strcat(cmd, data[i].args1);
+        strcat(cmd, data[i].args2);
+        strcat(cmd, data[i].args3);
+
+        strcat(cmd, " 2>&1");
+
+        assert_nonnull(exec(cmd, buf, sizeof(buf) - 1, debug, i, &exit_status), "i:%d exec(%s) == NULL\n", i, cmd);
+        assert_zero(strcmp(buf, data[i].expected), "i:%d buf (%s) != expected (%s) (%s)\n", i, buf, data[i].expected, cmd);
+    }
+
+    testFinish();
+}
+
 int main(int argc, char *argv[]) {
 
     testFunction funcs[] = { /* name, func */
@@ -1301,6 +1368,7 @@ int main(int argc, char *argv[]) {
         { "test_combos", test_combos },
         { "test_exit_status", test_exit_status },
         { "test_bad_args", test_bad_args },
+        { "test_too_many_args", test_too_many_args },
     };
 
     testRun(argc, argv, funcs, ARRAY_SIZE(funcs));

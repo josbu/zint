@@ -1860,7 +1860,7 @@ static void test_stacking(const testCtx *const p_ctx) {
     int ret;
     struct zint_symbol *symbol = NULL;
     const char *data = "1";
-    const char *expected_error = "Error 770: Too many stacked symbols";
+    const char *expected_error = "Error 770: Too many stacked symbols (maximum 200)";
     const char *expected_error_content = "Error 857: Cannot use BARCODE_CONTENT_SEGS output option if stacking symbols";
     int i;
 

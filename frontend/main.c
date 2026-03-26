@@ -1489,7 +1489,9 @@ static int do_exit(const int error_number) {
     return error_number; /* Not reached */
 }
 
-typedef struct { const char *arg; int opt; } arg_opt;
+struct arg_opt { const char *arg; int opt; };
+
+#define OPT_ARGS_MAX    300 /* Make greater than 200 (max no. of stacked rows) as that's a better error message */
 
 int main(int argc, char **argv) {
     struct zint_symbol *my_symbol;
@@ -1519,7 +1521,7 @@ int main(int argc, char **argv) {
     float x_dim_mm = 0.0f, dpmm = 0.0f;
     float float_opt;
     char errbuf[ERRBUF_SIZE]; /* For `validate_float/()`, `validate_scalexdimdp()` etc. */
-    arg_opt *const arg_opts = (arg_opt *) z_alloca(sizeof(arg_opt) * argc);
+    struct arg_opt *const arg_opts = (struct arg_opt *) z_alloca(sizeof(struct arg_opt) * OPT_ARGS_MAX);
 
     const int no_png = ZBarcode_NoPng();
     const int have_gs1syntaxengine = ZBarcode_HaveGS1SyntaxEngine();
@@ -1970,7 +1972,7 @@ int main(int argc, char **argv) {
                 break;
             case OPT_SCALEXDIM:
                 if (!validate_scalexdimdp(optarg, &x_dim_mm, &dpmm, errbuf)) {
-                    fprintf(stderr, "Error 184: %s\n", errbuf);
+                    fprintf(stderr, "Error 189: %s\n", errbuf);
                     return do_exit(ZINT_ERROR_INVALID_OPTION);
                 }
                 if (x_dim_mm > 10.0f || dpmm > 1000.0f) {
@@ -2173,6 +2175,11 @@ int main(int argc, char **argv) {
 
             case 'd': /* we have some data! */
                 if (batch_mode == 0) {
+                    if (data_arg_num == OPT_ARGS_MAX) {
+                        fprintf(stderr, "Error 129: Too many data args (maximum %d)\n", OPT_ARGS_MAX);
+                        return do_exit(ZINT_ERROR_INVALID_OPTION);
+
+                    }
                     arg_opts[data_arg_num].arg = optarg;
                     arg_opts[data_arg_num].opt = opt;
                     data_arg_num++;
@@ -2186,6 +2193,11 @@ int main(int argc, char **argv) {
 
             case 'i': /* Take data from file */
                 if (batch_mode == 0 || input_cnt == 0) {
+                    if (data_arg_num == OPT_ARGS_MAX) {
+                        fprintf(stderr, "Error 130: Too many data args (maximum %d)\n", OPT_ARGS_MAX);
+                        return do_exit(ZINT_ERROR_INVALID_OPTION);
+
+                    }
                     arg_opts[data_arg_num].arg = optarg;
                     arg_opts[data_arg_num].opt = opt;
                     data_arg_num++;
@@ -2211,6 +2223,7 @@ int main(int argc, char **argv) {
             case '?': {
                     /* Workaround musl `optind` bug - see https://www.openwall.com/lists/musl/2025/12/19/1 */
                     const int idx = optind <= argc ? optind - 1 : argc - 1;
+                    /* NOLINTNEXTLINE(clang-analyzer-security.ArrayBound) disable clang-tidy-23 warning */
                     const char *const arg = argv[idx] ? argv[idx] : "?";
                     if (optopt) {
                         for (i = 0; i < ARRAY_SIZE(long_options) && long_options[i].val != optopt; i++);
@@ -2327,7 +2340,7 @@ int main(int argc, char **argv) {
                 warn_number = ZINT_WARN_INVALID_OPTION;
             }
             error_number = batch_process(my_symbol, arg_opts[0].arg, mirror_mode, filetype, output_given,
-                            rotate_angle);
+                                        rotate_angle);
         } else {
             if (seg_count) {
                 if (data_arg_num > 1) {
@@ -2397,6 +2410,9 @@ int main(int argc, char **argv) {
                     fflush(stderr);
                     if (error_number < ZINT_ERROR) {
                         error_number = ret;
+                    }
+                    if (error_number >= ZINT_ERROR) {
+                        break;
                     }
                 }
             }

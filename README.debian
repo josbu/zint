@@ -1,8 +1,10 @@
-% README.deb 2026-03-18
+% README.debian 2026-03-26
 % Tested on Ubuntu 24.04 LTS
 % vim: set ts=4 sw=4 et :
 
-The "debian" directory is included to enable creating a local Debian dpkg ".deb" file.
+(Note for normal building of zint on Debian systems, see "README.linux".)
+
+This is the README for the "debian" directory that is included to enable creating a local Debian dpkg ".deb" file.
 
 (The official Debian package is at https://salsa.debian.org/debian/zint)
 

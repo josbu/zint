@@ -890,7 +890,8 @@ static const struct item gs1_data[] = {
     /*  3*/ { 7, BARCODE_UPCA_CC, GS1_MODE | GS1PARENS_MODE | GS1NOCHECK_MODE, 0, -1, -1, -1, -1, 0, 0, "()904OOOOO)CK0336680OOOOOOOOOOOOOO29[0kkkk%%%%(", -1 }, /* #300 (#11), Andre Maute (`gs1_verify()` not checking length on resolve AI data loop) */
     /*  4*/ { 8, BARCODE_GS1_128_CC, GS1_MODE | GS1NOCHECK_MODE, 0, -1, 3, -1, -1, 0, 0, "[]RRR___________________KKKRRR0000", -1 }, /* #300 (#13), Andre Maute (`calc_padding_ccc()` dividing by zero when linear width == 68) */
     /*  5*/ { 9, BARCODE_DBAR_EXP, GS1_MODE | GS1RAW_MODE, 0, -1, -1, -1, -1, 0, 0, "1012345678901234567890211", -1 }, /* #352, Simon Resch (`gs1_lint_parse_raw_caret()` check that data of AIs with non-predefined lengths are terminated with separators (unless last)) */
-    /*  5*/ { 10, BARCODE_DBAR_EXP, GS1_MODE | GS1NOCHECK_MODE | HEIGHTPERROW_MODE | FAST_MODE, 0, -1, -1, -1, -1, 0, 0, "1012345678901234567890211", -1 }, /* #352, Simon Resch (`gs1_lint_parse_raw_caret()` check that data of AIs with non-predefined lengths are terminated with separators (unless last)) */
+    /*  6*/ { 10, BARCODE_DBAR_EXP, GS1_MODE | GS1NOCHECK_MODE | HEIGHTPERROW_MODE | FAST_MODE, 0, -1, -1, -1, -1, 0, 0, "1012345678901234567890211", -1 }, /* #352, Simon Resch (`gs1_lint_parse_raw_caret()` check that data of AIs with non-predefined lengths are terminated with separators (unless last)) */
+    /*  7*/ { 11, BARCODE_DBAR_EXP, GS1_MODE | GS1NOCHECK_MODE | GS1RAW_MODE, 0, -1, -1, -1, -1, 0, 0, "01914190S5(60)1239322", -1 }, /* fuzz_gs1 (1st) check length on encoding method 6 before `z_to_int()` */
 };
 
 /* Write a setting as 1 char to filename, allowing for -1 meaning none (255 or zero) */

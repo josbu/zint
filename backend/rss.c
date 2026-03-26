@@ -870,7 +870,8 @@ static int dbar_exp_binary_string(struct zint_symbol *symbol, const unsigned cha
             if (source[18] == '2') {
                 /* (01) and (392x) */
                 encoding_method = 5;
-            } else if (source[18] == '3' && z_to_int(source + 20, 3) >= 0) { /* Check 3-digit currency string */
+            /* Check 3-digit currency string */
+            } else if (length >= 23 && source[18] == '3' && z_to_int(source + 20, 3) >= 0) {
                 /* (01) and (393x) */
                 encoding_method = 6;
             }

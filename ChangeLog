@@ -1,4 +1,4 @@
-Version 2.16.0.9 (dev) not released yet (2026-03-22)
+Version 2.16.0.9 (dev) not released yet (2026-03-26)
 ====================================================
 
 **Incompatible changes**
@@ -35,14 +35,23 @@ Bugs
 - CLI: fix "--scalexdimdp" X-dim inch units being divided instead of multiplied
   on conversion to mm
 - DOTCODE: fix not emitting FNC1 (signalling not GS1) if input is just 2 digits
-- CMake: set `rpath` of CLI/GUI on install (ticket #346, props Hagen Röwer and
-  Bryce Harrison)
+- CMake: set `rpath` of CLI/GUI on macOS install (ticket #346, props Hagen Röwer
+  and Bryce Harrison)
 - AZTEC: fix ECC to be at least advertised percentages (ticket #347, props
   Francois Grieu)
 - CODE32/PZN: fix not restoring `option_2` (props axxel)
 - DBAR_EXP_CC/DBAR_EXPSTK_CC: fix separator over finder patterns when linear
   part is greater than 4 codeblocks
+- raster/vector: allow for separator height being > twice row height (buffer
+  overflow for raster, zero/negative height rects for vector) (ticket #353,
+  props Simon Resch)
 - raster/vector: fix BARCODE_BIND_TOP trumping BARCODE_BOX
+- raster/vector: EAN/UPC: fix calculation of image/vector height to allow for
+  heights smaller than `textoffset` when have add-on (buffer overflow for
+  raster, outside vector height for vector)
+- ZBarcode_Encode_Segs: allow for multiple (stacked) rows when setting absolute
+  minimum height
+- CLI: stop looping over data args when have error
 
 
 Version 2.16.0 (2025-12-19)

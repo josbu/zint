@@ -1778,7 +1778,8 @@ INTERNAL int zint_micropdf417(struct zint_symbol *symbol, struct zint_seg segs[]
                 }
                 bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + chainemc[k + 2]]) << 1, 17, pattern, bp);
                 if (symbol->option_2 == 4) {
-                    bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + chainemc[k + 3]]) << 1, 17, pattern, bp);
+                    bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + chainemc[k + 3]]) << 1, 17, pattern,
+                                            bp);
                 }
             }
         }

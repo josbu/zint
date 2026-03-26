@@ -34,9 +34,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#if 0
-#define Z_FUZZ_DEBUG                 /* Set `symbol->debug` flag */
-#endif
 #include "fuzz.h"
 
 static const int symbologies[] = {
@@ -46,9 +43,9 @@ static const int symbologies[] = {
     BARCODE_UPCA_CC, BARCODE_UPCE_CC, BARCODE_DBAR_STK_CC, BARCODE_DBAR_OMNSTK_CC, BARCODE_DBAR_EXPSTK_CC,
 };
 
-#if Z_FUZZ_MAIN
+#ifdef Z_FUZZ_MAIN
 /* For testing that a corpus file reproduces a bug:
-   cc -g -O0 -DZ_FUZZ_MAIN fuzz_gs1.c -o fuzz_data -lzint -fsanitize=address
+   cc -g -O0 -DZ_FUZZ_MAIN -DZ_FUZZ_DEBUG fuzz_gs1.c -o fuzz_gs1 -lzint -fsanitize=address
    ./fuzz_gs1 <corpus-file>
 */
 #include <errno.h>
