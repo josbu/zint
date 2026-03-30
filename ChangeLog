@@ -1,4 +1,4 @@
-Version 2.16.0.9 (dev) not released yet (2026-03-26)
+Version 2.16.0.9 (dev) not released yet (2026-03-30)
 ====================================================
 
 **Incompatible changes**
@@ -9,6 +9,8 @@ Version 2.16.0.9 (dev) not released yet (2026-03-26)
 - New Qt Backend method `save_as_memfile()` to save file to memory
 - New Qt Backend methods `gs1Raw()` and `setGS1Raw()` for new `GS1RAW_MODE`
   option for processing GS1 input
+- CLI now warns if both "--dmre" and "--square" are given (previously silently
+  ignored "--dmre")
 
 Changes
 -------
@@ -22,11 +24,14 @@ Changes
 - AZTEC: add improved encoding algorithm adapted from ZXing, props Frank Yellin
   and Rustam Abdullaev; previous algorithm available via "--fast" (input_mode
   |= FAST_MODE)
-- AZTEC: add new option "--azfull" (option_3 = ZINT_AZTEC_FULL) to only
+- AZTEC: add new option "--azfull" (`option_3 = ZINT_AZTEC_FULL`) to only
   consider Full symbols (not Compact ones) on automatic sizing
 - GS1: new `GS1RAW_MODE` (CLI "--gs1raw") and GS1 Syntax Engine "Unbracketed AI
   element strings" (caret) options for specifying GS1 input (ticket #350, props
   Mario Verbruggen)
+- DATAMATRIX: new options "--dmb256=" (`option_3 = DM_B256_START`) & "--dmc40="
+  (`option_3 = DM_C40_START`) to allow forcing of initial encodation for given
+  no. (`option_1`) of initial characters, with 0 meaning all
 
 Bugs
 ----
@@ -45,7 +50,7 @@ Bugs
 - raster/vector: allow for separator height being > twice row height (buffer
   overflow for raster, zero/negative height rects for vector) (ticket #353,
   props Simon Resch)
-- raster/vector: fix BARCODE_BIND_TOP trumping BARCODE_BOX
+- raster/vector: fix `BARCODE_BIND_TOP` trumping `BARCODE_BOX`
 - raster/vector: EAN/UPC: fix calculation of image/vector height to allow for
   heights smaller than `textoffset` when have add-on (buffer overflow for
   raster, outside vector height for vector)

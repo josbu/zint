@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2025 Robin Stuart <rstuart114@gmail.com>
+# Copyright (C) 2019-2026 Robin Stuart <rstuart114@gmail.com>
 # Adapted from qrencode/tests/CMakeLists.txt
 # Copyright (C) 2006-2017 Kentaro Fukuchi <kentaro@fukuchi.org>
 # vim: set ts=4 sw=4 et :

@@ -1569,7 +1569,14 @@ int ZBarcode_Encode_File(struct zint_symbol *symbol, const char *filename) {
         file = fopen(filename, "rb");
 #endif
         if (!file) {
-            ZEXT z_errtxtf(0, symbol, 229, "Unable to read input file (%1$d: %2$s)", errno, strerror(errno));
+            const int len = (int) strlen(filename);
+            if (len > 40) {
+                ZEXT z_errtxtf(0, symbol, 233, "Unable to read input file \"%1$.10s...%2$.30s\" (%3$d: %4$s)",
+                                filename, filename + (len - 30), errno, strerror(errno));
+            } else {
+                ZEXT z_errtxtf(0, symbol, 229, "Unable to read input file \"%1$s\" (%2$d: %3$s)",
+                                filename, errno, strerror(errno));
+            }
             return error_tag(ZINT_ERROR_INVALID_DATA, symbol, -1, NULL);
         }
         file_opened = 1;

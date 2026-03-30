@@ -103,6 +103,7 @@ static int tif_lzw_putCode(struct filemem *fmp, const int code, const int bitsPe
    "manuscript in public domain" according to "Encyclopedia of Graphics File Formats" (2nd edition, 1996)
    by James D. Murray and William vanRyper, Chapter 9 "Data Compression", p.178
 */
+/* Copyright (C) 1988 Bob Montgomery */
 static int tif_lzw_compress(struct filemem *fmp, const unsigned char *bp, const unsigned int blen) {
     short suffixes[TIF_LZW_TABLE_SIZE] = {0}; /* "shade[]" in Montgomery diagram */
     /* A child is made up of a parent (or prefix) code plus a suffix byte

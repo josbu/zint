@@ -624,20 +624,27 @@ const char *testUtilOption3Name(int symbology, int option_3) {
         } else {
             name = (option_3 & 0xFF) ? "-1" : "0";
         }
-    } else if (symbology == BARCODE_DATAMATRIX || symbology == BARCODE_HIBC_DM) {
+    } else if (symbology == BARCODE_DATAMATRIX || symbology == BARCODE_HIBC_DM || symbology == BARCODE_MAILMARK_2D) {
         if (option_3 > 0) {
-            if ((option_3 & 0x7F) == DM_SQUARE) {
+            /* Note only catering for commonly used combinations here */
+            if ((option_3 & DM_SQUARE_DMRE_MASK) == DM_SQUARE) {
                 if ((option_3 & DM_ISO_144) == DM_ISO_144) {
                     name = "DM_SQUARE | DM_ISO_144";
                 } else {
                     name = "DM_SQUARE";
                 }
-            } else if ((option_3 & 0x7F) == DM_DMRE) {
+            } else if ((option_3 & DM_SQUARE_DMRE_MASK) == DM_DMRE) {
                 if ((option_3 & DM_ISO_144) == DM_ISO_144) {
                     name = "DM_DMRE | DM_ISO_144";
                 } else {
                     name = "DM_DMRE";
                 }
+            } else if ((option_3 & DM_B256_C40_START_MASK) == DM_B256_C40_START_MASK) {
+                name = "DM_B256_START | DM_C40_START";
+            } else if ((option_3 & DM_B256_C40_START_MASK) == DM_B256_START) {
+                name = "DM_B256_START";
+            } else if ((option_3 & DM_B256_C40_START_MASK) == DM_C40_START) {
+                name = "DM_C40_START";
             } else if ((option_3 & DM_ISO_144) == DM_ISO_144) {
                 name = "DM_ISO_144";
             } else {
@@ -2380,7 +2387,7 @@ static const char *testUtilBwippName(int index, const struct zint_symbol *symbol
         { "", BARCODE_AUSREDIRECT, 68, 0, 0, 0, 0, 0, },
         { "isbn", BARCODE_ISBNX, 69, 0, 1, 0, 0, 1 /*gs1_cvt*/, },
         { "royalmail", BARCODE_RM4SCC, 70, 0, 0, 0, 0, 0, },
-        { "datamatrix", BARCODE_DATAMATRIX, 71, 0, 1, 1, 1, 0, },
+        { "datamatrix", BARCODE_DATAMATRIX, 71, 1, 1, 1, 1, 0, },
         { "ean14", BARCODE_EAN14, 72, 0, 0, 1 /*GS1CARET*/, 0, 1 /*gs1_cvt*/, },
         { "code39", BARCODE_VIN, 73, 0, 0, 0, 0, 0, },
         { "codablockf", BARCODE_CODABLOCKF, 74, 1, 1, 0, 10 /*linear_row_height*/, 0, },
@@ -2411,7 +2418,7 @@ static const char *testUtilBwippName(int index, const struct zint_symbol *symbol
         { "hibccode39", BARCODE_HIBC_39, 99, 0, 0, 0, 0, 0, },
         { "", -1, 100, 0, 0, 0, 0, 0, },
         { "", -1, 101, 0, 0, 0, 0, 0, },
-        { "hibcdatamatrix", BARCODE_HIBC_DM, 102, 0, 1, 1, 0, 0, },
+        { "hibcdatamatrix", BARCODE_HIBC_DM, 102, 1, 1, 1, 0, 0, },
         { "", -1, 103, 0, 0, 0, 0, 0, },
         { "hibcqrcode", BARCODE_HIBC_QR, 104, 1, 1, 1, 0, 0, },
         { "", -1, 105, 0, 0, 0, 0, 0, },
@@ -2428,7 +2435,7 @@ static const char *testUtilBwippName(int index, const struct zint_symbol *symbol
         { "hanxin", BARCODE_HANXIN, 116, 0, 0, 0, 0, 0, },
         { "", -1, 117, 0, 0, 0, 0, 0, },
         { "", -1, 118, 0, 0, 0, 0, 0, },
-        { "mailmark", BARCODE_MAILMARK_2D, 119, 0, 1, 0, 0, 0, },
+        { "mailmark", BARCODE_MAILMARK_2D, 119, 1, 1, 1, 0, 0, },
         { "code128", BARCODE_UPU_S10, 120, 0, 0, 0, 0, 0, },
         { "", BARCODE_MAILMARK_4S, 121, 0, 0, 0, 0, 0, }, /* Note BWIPP mailmark is BARCODE_MAILMARK_2D above */
         { "", -1, 122, 0, 0, 0, 0, 0, },
@@ -3446,14 +3453,21 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
                     added_dmre = 1;
                 }
             }
-            if ((option_3 & 0x7F) != DM_SQUARE && symbol->width != symbol->height) {
-                if ((option_3 & 0x7F) == DM_DMRE && !added_dmre) {
+            if ((option_3 == -1 || (option_3 & DM_SQUARE_DMRE_MASK) != DM_SQUARE)
+                    && symbol->width != symbol->height) {
+                if (option_3 != -1 && (option_3 & DM_SQUARE_DMRE_MASK) == DM_DMRE && !added_dmre) {
                     sprintf(bwipp_opts_buf + strlen(bwipp_opts_buf), "%sdmre", strlen(bwipp_opts_buf) ? " " : "");
                     /*added_dmre = 1; */
                 }
                 sprintf(bwipp_opts_buf + strlen(bwipp_opts_buf), "%sformat=rectangle",
                         strlen(bwipp_opts_buf) ? " " : "");
                 bwipp_opts = bwipp_opts_buf;
+            }
+            if (option_3 != -1 && option_1 >= 0 &&
+                    ((option_3 & DM_B256_C40_START_MASK) == DM_C40_START
+                        || (option_3 & DM_B256_C40_START_MASK) == DM_B256_C40_START_MASK)) { /* DM_C40_START trumps */
+                sprintf(bwipp_opts_buf + strlen(bwipp_opts_buf), "%sc40headerlength=%d",
+                        strlen(bwipp_opts_buf) ? " " : "", option_1 ? option_1 : 9999);
             }
             if (option_3 != -1) {
                 bwipp_opts = bwipp_opts_buf;

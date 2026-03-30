@@ -24,10 +24,11 @@
 #include <QGraphicsScene>
 #include <QSettings>
 
-class QLabel;
-class QShortcut;
 class QDoubleSpinBox;
 class QPushButton;
+class QRadioButton;
+class QShortcut;
+class QSpinBox;
 class QToolButton;
 
 #include "ui_mainWindow.h"
@@ -77,6 +78,7 @@ public slots:
     void eanaddon_no_quiet_zones_ui_set();
     void aztec_size_index_changed();
     void aztec_ecc_index_changed();
+    void dm_startmode_ui_set();
     void structapp_ui_set();
     void clear_text_gap();
     void on_encoded();
@@ -176,6 +178,16 @@ protected:
     QPoint get_context_menu_pos(const QPoint &pos, QWidget *widget);
 
     QWidget *get_widget(const QString &name);
+
+    QPushButton *get_btn(const QString &name);
+    QCheckBox *get_chk(const QString &name);
+    QComboBox *get_cmb(const QString &name);
+    QGroupBox *get_groupBox(const QString &name);
+    QLabel *get_lbl(const QString &name);
+    QRadioButton *get_rad(const QString &name);
+    QDoubleSpinBox *get_dspn(const QString &name);
+    QSpinBox *get_spn(const QString &name);
+    QLineEdit *get_txt(const QString &name);
 
     static QString get_setting_name(int symbology);
 

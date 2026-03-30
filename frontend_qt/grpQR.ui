@@ -300,7 +300,7 @@ error correction codewords</string>
      <item row="2" column="0">
       <widget class="QLabel" name="labelQRMask">
        <property name="text">
-        <string>&amp;Mask:</string>
+        <string>Mas&amp;k:</string>
        </property>
        <property name="toolTip">
         <string>Manually specify which mask to use</string>
@@ -403,7 +403,7 @@ formatted with Application Identifiers (AIs)</string>
       <item row="0" column="2">
        <widget class="QRadioButton" name="radQRHIBC">
         <property name="text">
-         <string>H&amp;IBC</string>
+         <string>&amp;HIBC</string>
         </property>
         <property name="toolTip">
          <string>Process data as a Health Industry Barcode (HIBC)
@@ -724,7 +724,7 @@ Value ranges from 0 to 255
 (ignored if disabled)</string>
         </property>
         <property name="text">
-         <string>I&amp;D:</string>
+         <string>&amp;ID:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>

@@ -4345,6 +4345,12 @@ placement, use option `--dmiso144` (API `option_3 |= DM_ISO_144`).
 For a faster but less optimal encodation, the `--fast` option (API `input_mode
 |= FAST_MODE`) may be used.
 
+The encodation mode of initial input characters may be forced using the
+`--dmb256` (API `option_3 |= DM_B256_START`) and `--dmc40` (API `option_3 |=
+DM_C40_START`) options. Both take an integer (API `option_1`) which specifies
+how many initial characters to encode in the respective mode, with `0` meaning
+all.
+
 Data Matrix supports Structured Append of up to 16 symbols and a numeric ID
 (file identifications), which can be set by using the `--structapp` option (see
 [4.17 Structured Append]) (API `structapp`). The ID consists of 2 numbers `ID1`

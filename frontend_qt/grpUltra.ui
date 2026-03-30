@@ -52,7 +52,7 @@ based on data</string>
      <item row="1" column="0">
       <widget class="QRadioButton" name="radUltraEcc">
        <property name="text">
-        <string>E&amp;rror Correction Level:</string>
+        <string>Error &amp;Correction Level:</string>
        </property>
        <property name="toolTip">
         <string>Set percentage of capacity to use for
@@ -110,7 +110,7 @@ error correction codewords</string>
      <item row="2" column="0">
       <widget class="QLabel" name="labelUltraRevision">
        <property name="text">
-        <string>Rev&amp;ision:</string>
+        <string>&amp;Revision:</string>
        </property>
        <property name="toolTip">
         <string>Set revision to use on output</string>
@@ -378,7 +378,7 @@ Value ranges from 1 to 80088
 (ignored if disabled)</string>
         </property>
         <property name="text">
-         <string>I&amp;D:</string>
+         <string>&amp;ID:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>

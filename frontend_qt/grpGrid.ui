@@ -485,7 +485,7 @@ Value ranges from 0 to 255
 (ignored if disabled)</string>
         </property>
         <property name="text">
-         <string>I&amp;D:</string>
+         <string>&amp;ID:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>

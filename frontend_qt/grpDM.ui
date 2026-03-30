@@ -23,7 +23,7 @@
    <item>
     <layout class="QGridLayout" name="gridLayoutDM">
      <item row="0" column="0">
-      <widget class="QLabel" name="lblDM200Size">
+      <widget class="QLabel" name="lblDMSize">
        <property name="text">
         <string>Si&amp;ze:</string>
        </property>
@@ -31,12 +31,12 @@
         <string>Set height and width (H x W) of symbol</string>
        </property>
        <property name="buddy">
-        <cstring>cmbDM200Size</cstring>
+        <cstring>cmbDMSize</cstring>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="cmbDM200Size">
+      <widget class="QComboBox" name="cmbDMSize">
        <property name="toolTip">
         <string>Set height and width (H x W) of symbol</string>
        </property>
@@ -341,19 +341,19 @@ versions on automatic symbol size selection
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBoxDM200EncodingMode">
+    <widget class="QGroupBox" name="groupBoxDMEncodingMode">
      <property name="title">
       <string>Encoding Mode</string>
      </property>
      <property name="toolTip">
       <string>How to process data</string>
      </property>
-     <layout class="QGridLayout" name="gridLayoutDM200EncodingMode">
+     <layout class="QGridLayout" name="gridLayoutDMEncodingMode">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
       <item row="0" column="0">
-       <widget class="QRadioButton" name="radDM200Stand">
+       <widget class="QRadioButton" name="radDMStand">
         <property name="text">
          <string>S&amp;tandard</string>
         </property>
@@ -366,7 +366,7 @@ versions on automatic symbol size selection
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QRadioButton" name="radDM200GS1">
+       <widget class="QRadioButton" name="radDMGS1">
         <property name="text">
          <string>GS&amp;1 Data</string>
         </property>
@@ -377,9 +377,9 @@ formatted with Application Identifiers (AIs)</string>
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="QRadioButton" name="radDM200HIBC">
+       <widget class="QRadioButton" name="radDMHIBC">
         <property name="text">
-         <string>H&amp;IBC</string>
+         <string>&amp;HIBC</string>
         </property>
         <property name="toolTip">
          <string>Process data as a Health Industry Barcode (HIBC)
@@ -393,19 +393,104 @@ the data with a slash &quot;/&quot;</string>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkDMGSSep">
-     <property name="text">
-      <string>Use separator GS &amp;for GS1</string>
-     </property>
-     <property name="toolTip">
-      <string>Use Group Separator (ASCII 0x1D) to separate GS1 AIs
+    <layout class="QGridLayout" name="gridLayoutModeOpts">
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="chkDMGSSep">
+       <property name="text">
+        <string>Use separator &amp;GS for GS1</string>
+       </property>
+       <property name="toolTip">
+        <string>Use Group Separator (ASCII 0x1D) to separate GS1 AIs
 instead of the preferred FNC1
 (ignored if disabled)</string>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
-     </property>
-    </widget>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <layout class="QHBoxLayout" name="horzLayoutDMStartMode">
+       <item>
+        <widget class="QLabel" name="lblDMStartMode">
+         <property name="text">
+          <string>Start &amp;Mode:</string>
+         </property>
+         <property name="toolTip">
+          <string>Mode to start encodation in</string>
+         </property>
+         <property name="buddy">
+          <cstring>cmbDMStartMode</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="cmbDMStartMode">
+         <property name="toolTip">
+          <string>Select mode to start encodation in</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>Disabled</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Base 256</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>C40</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblDMStartModeLength">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Le&amp;ngth:</string>
+         </property>
+         <property name="toolTip">
+          <string>Number of initial characters
+to encode in Start Mode
+(ignored if disabled)</string>
+         </property>
+         <property name="buddy">
+          <cstring>spnDMStartModeLength</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spnDMStartModeLength">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>Number of initial characters
+to encode in Start Mode
+(ignored if disabled)</string>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>3116</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="specialValueText">
+          <string>All</string>
+         </property>
+        </widget>
+       </item>
+	  </layout>
+     </item>
+	</layout>
    </item>
    <item>
     <widget class="QCheckBox" name="chkDMISO144">
@@ -715,7 +800,7 @@ Value of each ID ranges from 1 to 254
 (ignored if disabled)</string>
         </property>
         <property name="text">
-         <string>I&amp;D:</string>
+         <string>&amp;ID:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeft|Qt::AlignLeading|Qt::AlignVCenter</set>

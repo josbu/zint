@@ -463,7 +463,9 @@ static void test_2d_encode(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
     struct item {
+        int option_1;
         int option_2;
+        int option_3;
         const char *data;
         int ret;
 
@@ -478,7 +480,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
     /* Mailmark Barcode Definition Document 15th Feb 2021 (MBDD)
        https://www.royalmailtechnical.com/rmt_docs/User_Guides_2021/Mailmark_Barcode_definition_document_20210215.pdf */
     static const struct item data[] = {
-        /*  0*/ { 8, "JGB 01Z999999900000001EC1A1AA1A0SN35TQ       ", 0, 24, 24, 1, "MMRLLL Section 2.4 Code Type Format 7 figure **NOT SAME**, figure switches from C40 to ASC to C40 to ASC contrary to spec",
+        /*  0*/ { -1, 8, -1, "JGB 01Z999999900000001EC1A1AA1A0SN35TQ       ", 0, 24, 24, 1, "MMRLLL Section 2.4 Code Type Format 7 figure **NOT SAME**, figure switches from C40 to ASC to C40 to ASC contrary to spec",
                     "101010101010101010101010"
                     "110000010100011001100001"
                     "101001011100001011111010"
@@ -504,7 +506,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     "100111100000101110001010"
                     "111111111111111111111111"
                 },
-        /*  1*/ { 10, "JGB 01Z999999900000001EC1A1AA1A0SN35TQ       ", 0, 32, 32, 1, "MMRLLL Section 2.4 Code Type Format 9 figure **NOT SAME**, figure switches as above",
+        /*  1*/ { -1, 10, -1, "JGB 01Z999999900000001EC1A1AA1A0SN35TQ       ", 0, 32, 32, 1, "MMRLLL Section 2.4 Code Type Format 9 figure **NOT SAME**, figure switches as above",
                     "10101010101010101010101010101010"
                     "11000001010001111001100100101111"
                     "10100101110000101011110000000000"
@@ -538,7 +540,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     "11001101100011101011101000001000"
                     "11111111111111111111111111111111"
                 },
-        /*  2*/ { 30, "JGB 01Z999999900000001EC1A1AA1A0SN35TQ       ", 0, 16, 48, 1, "MMRLLL Section 2.4 Code Type Format 29 figure **NOT SAME**, figure switches as above",
+        /*  2*/ { -1, 30, -1, "JGB 01Z999999900000001EC1A1AA1A0SN35TQ       ", 0, 16, 48, 1, "MMRLLL Section 2.4 Code Type Format 29 figure **NOT SAME**, figure switches as above",
                     "101010101010101010101010101010101010101010101010"
                     "110000010100011001101111111101100101100100011101"
                     "101001011100001011100010100100011001100010101100"
@@ -556,7 +558,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     "101101100011101110101010100001111111001010100010"
                     "111111111111111111111111111111111111111111111111"
                 },
-        /*  3*/ { 30, "JGB 012100123412345678AB19XY1A 0             REFERENCE 12300AB", 0, 16, 48, 1, "MBDD Table 4 example",
+        /*  3*/ { -1, 30, -1, "JGB 012100123412345678AB19XY1A 0             REFERENCE 12300AB", 0, 16, 48, 1, "MBDD Table 4 example",
                     "101010101010101010101010101010101010101010101010"
                     "110000010100010110001111111011100000001001111111"
                     "101001011100011001110010100100010100110011111100"
@@ -574,7 +576,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     "101111100001111111101010100010111101100101001100"
                     "111111111111111111111111111111111111111111111111"
                 },
-        /*  4*/ { 10, "JGB 012100123412345678AB19XY1A 0             www.xyz.com", 0, 32, 32, 1, "MBDD Table 5 (& BWIPP) example",
+        /*  4*/ { -1, 10, -1, "JGB 012100123412345678AB19XY1A 0             www.xyz.com", 0, 32, 32, 1, "MBDD Table 5 (& BWIPP) example",
                     "10101010101010101010101010101010"
                     "11000001010001011111111110001111"
                     "10100101110001101001111111000000"
@@ -608,7 +610,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     "11000011100001101111110101011100"
                     "11111111111111111111111111111111"
                 },
-        /*  5*/ { 10, "JGB 010100000700009001B707RH1A 0SN35XX       ABCDEFGHIJ1234567890ABCDEFGHIJ1234567890A", 0, 32, 32, 1, "TEC-IT example, same",
+        /*  5*/ { -1, 10, -1, "JGB 010100000700009001B707RH1A 0SN35XX       ABCDEFGHIJ1234567890ABCDEFGHIJ1234567890A", 0, 32, 32, 1, "TEC-IT example, same",
                     "10101010101010101010101010101010"
                     "11000001010001111000100110110001"
                     "10100101110000101010110010100000"
@@ -642,7 +644,75 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     "10111101100000001010110001010110"
                     "11111111111111111111111111111111"
                 },
-        /*  6*/ { 10, "JGB 010100000700009001B707RH1A 0SN35XX       é", 0, 32, 32, 1, "",
+        /*  6*/ { -1, 10, -1, "JGB 010100000700009001B707RH1A 0SN35XX       é", 0, 32, 32, 1, "",
+                    "10101010101010101010101010101010"
+                    "11000001010001111001101100001111"
+                    "10100101110000101011111110000000"
+                    "10101000010110011001101011000101"
+                    "10001100111000101111000111011110"
+                    "10011100011000011100101000100101"
+                    "11001111001000101010010010011110"
+                    "10100101011000111100001100101111"
+                    "10101111010111101100111100110100"
+                    "11001001100100111001110000010111"
+                    "11001000001001001101001111011110"
+                    "11010000001111111011011101101101"
+                    "11001000010000101001101010011010"
+                    "11010111000101011111111101111111"
+                    "10111101100011101110001100110100"
+                    "11111111111111111111111111111111"
+                    "10101010101010101010101010101010"
+                    "11011101100000011000000001110001"
+                    "11110000111100101000011000101010"
+                    "11001011110010011000011101110001"
+                    "11011111000101001011100101011100"
+                    "10010101101100011100010000011101"
+                    "10011001101011101110100111101000"
+                    "11101010110010111001111100100101"
+                    "10011011111101001000101111110100"
+                    "10011101010101111111111000111101"
+                    "11100001010010101011001010000000"
+                    "10011010101011111000011010001001"
+                    "11101001100100001101010001011000"
+                    "10001001100100011011110101100101"
+                    "11001011100001001010111101010100"
+                    "11111111111111111111111111111111"
+                },
+        /*  7*/ { 0, 10, DM_C40_START, "JGB 010100000700009001B707RH1A 0SN35XX       é", 0, 32, 32, 0, "BWIPP fixes c40headerlength at 45",
+                    "10101010101010101010101010101010"
+                    "11000001010001111000000111101111"
+                    "10100101110000101010011111000000"
+                    "10101000010110011000111011000101"
+                    "10001100111000101111000111011110"
+                    "10011100011000011100101000100101"
+                    "11001111001000101010010010011110"
+                    "10100101011000111100001100101111"
+                    "10101111010111101100111100110100"
+                    "11001001100100111001110000010111"
+                    "11001000001001001101000111010010"
+                    "11010000001111111011011111100001"
+                    "11001000010000101001010110001010"
+                    "11010111000101011111111010110011"
+                    "10111101100011101111010010010000"
+                    "11111111111111111111111111111111"
+                    "10101010101010101010101010101010"
+                    "11011101100000011011100000000001"
+                    "11110000111100001001011110110010"
+                    "11001011110010011010101001010001"
+                    "11011111000110001011101010011000"
+                    "10010101101100011010001110010101"
+                    "10011001101111101011100011110000"
+                    "11101010110000011011000010101101"
+                    "10011011011100101100100000010110"
+                    "10011101010111111011000011110101"
+                    "11100001000100101110110101110000"
+                    "10011000100011011101111110110001"
+                    "11100100110001001010010111001100"
+                    "10001001110001011010101100000001"
+                    "11000001100010101010110110001100"
+                    "11111111111111111111111111111111"
+                },
+        /*  8*/ { 40, 10, DM_C40_START, "JGB 010100000700009001B707RH1A 0SN35XX       é", 0, 32, 32, 1, "",
                     "10101010101010101010101010101010"
                     "11000001010001111001101100001111"
                     "10100101110000101011111110000000"
@@ -699,7 +769,7 @@ static void test_2d_encode(const testCtx *const p_ctx) {
         assert_nonnull(symbol, "Symbol not created\n");
 
         length = testUtilSetSymbol(symbol, BARCODE_MAILMARK_2D, -1 /*input_mode*/, -1 /*eci*/,
-                                    -1 /*option_1*/, data[i].option_2, -1 /*option_3*/, -1 /*output_options*/,
+                                    data[i].option_1, data[i].option_2, data[i].option_3, -1 /*output_options*/,
                                     data[i].data, -1, debug);
 
         ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
@@ -707,8 +777,9 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                     i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
-            printf("        /*%3d*/ { %d, \"%s\", %s, %d, %d, %d, \"%s\",\n",
-                    i, data[i].option_2, testUtilEscape(data[i].data, length, escaped, sizeof(escaped)),
+            printf("        /*%3d*/ { %d, %d, %s, \"%s\", %s, %d, %d, %d, \"%s\",\n",
+                    i, data[i].option_1, data[i].option_2, testUtilOption3Name(symbol->symbology, data[i].option_3),
+                    testUtilEscape(data[i].data, length, escaped, sizeof(escaped)),
                     testUtilErrorName(data[i].ret), symbol->rows, symbol->width, data[i].bwipp_cmp, data[i].comment);
             testUtilModulesPrint(symbol, "                    ", "\n");
             printf("                },\n");
@@ -725,15 +796,16 @@ static void test_2d_encode(const testCtx *const p_ctx) {
                 assert_zero(ret, "i:%d testUtilModulesCmp ret %d != 0 width %d row %d (%s)\n",
                             i, ret, width, row, data[i].data);
 
-                if (do_bwipp && testUtilCanBwipp(i, symbol, -1, data[i].option_2, -1, debug)) {
+                if (do_bwipp && testUtilCanBwipp(i, symbol, data[i].option_1, data[i].option_2, data[i].option_3,
+                                                debug)) {
                     if (!data[i].bwipp_cmp) {
                         if (debug & ZINT_DEBUG_TEST_PRINT) {
                             printf("i:%d %s not BWIPP compatible (%s)\n",
                                     i, testUtilBarcodeName(symbol->symbology), data[i].comment);
                         }
                     } else {
-                        ret = testUtilBwipp(i, symbol, -1, data[i].option_2, -1, data[i].data, length, NULL, cmp_buf,
-                                    sizeof(cmp_buf), NULL);
+                        ret = testUtilBwipp(i, symbol, data[i].option_1, data[i].option_2, data[i].option_3,
+                                            data[i].data, length, NULL, cmp_buf, sizeof(cmp_buf), NULL);
                         assert_zero(ret, "i:%d %s testUtilBwipp ret %d != 0\n",
                                     i, testUtilBarcodeName(symbol->symbology), ret);
 

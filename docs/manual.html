@@ -6504,6 +6504,12 @@ ISO/IEC standard placement, use option <code>--dmiso144</code> (API
 <code>option_3 |= DM_ISO_144</code>).</p>
 <p>For a faster but less optimal encodation, the <code>--fast</code>
 option (API <code>input_mode |= FAST_MODE</code>) may be used.</p>
+<p>The encodation mode of initial input characters may be forced using
+the <code>--dmb256</code> (API <code>option_3 |= DM_B256_START</code>)
+and <code>--dmc40</code> (API <code>option_3 |= DM_C40_START</code>)
+options. Both take an integer (API <code>option_1</code>) which
+specifies how many initial characters to encode in the respective mode,
+with <code>0</code> meaning all.</p>
 <p>Data Matrix supports Structured Append of up to 16 symbols and a
 numeric ID (file identifications), which can be set by using the
 <code>--structapp</code> option (see <a href="#structured-append">4.17
@@ -9248,6 +9254,16 @@ anything.</p>
 <p>Send output to stdout, which in most cases should be re-directed to a
 pipe or a file. Use <code>--filetype</code> to specify output
 format.</p>
+</dd>
+<dt><code>--dmb256=INTEGER</code></dt>
+<dd>
+<p>For Data Matrix symbols, encode the first <em>INTEGER</em> input
+characters in Base 256 mode. 0 means all input.</p>
+</dd>
+<dt><code>--dmc40=INTEGER</code></dt>
+<dd>
+<p>For Data Matrix symbols, encode the first <em>INTEGER</em> input
+characters in C40 mode. 0 means all input.</p>
 </dd>
 <dt><code>--dmiso144</code></dt>
 <dd>

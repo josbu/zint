@@ -191,6 +191,8 @@
 - Fiddled with some help capitalization.
 2026-02-25 GL
 - Added -gs1raw switch.
+2026-03-30 GL
+- Added -dmb256 & -dmc40 switches.
 */
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
@@ -564,6 +566,8 @@ static const char help_message[] = "zint tcl(stub,obj) dll\n"
     "   -cols integer: Codablock F, DotCode, PDF417: number of columns\n"
     "   -compliantheight bool: warn if height not compliant, and use standard default\n"
     /* cli option --data is standard parameter */
+    "   -dmb256 integer: start Data Matrix in Base 256 mode for given length (0 means all)\n"
+    "   -dmc40 integer: start Data Matrix in C40 mode for given length (0 means all)\n"
     "   -dmiso144 bool: use ISO format for 144x144 Data Matrix symbols\n"
     "   -dmre bool: allow Data Matrix Rectangular Extended\n"
     "   -dotsize number: radius ratio of dots from 0.01 to 1.0\n"
@@ -911,7 +915,8 @@ static int Encode(Tcl_Interp *interp, int objc,
         static const char *optionList[] = {
             "-addongap", "-azfull",
             "-barcode", "-bg", "-bind", "-bindtop", "-bold", "-border", "-box",
-            "-cols", "-compliantheight", "-dmiso144", "-dmre", "-dotsize", "-dotty",
+            "-cols", "-compliantheight",
+            "-dmb256", "-dmc40", "-dmiso144", "-dmre", "-dotsize", "-dotty",
             "-eci", "-esc", "-extraesc", "-fast", "-fg", "-format", "-fullmultibyte",
             "-gs1nocheck", "-gs1parens", "-gs1raw", "-gs1strict",
             "-gssep", "-guarddescent",
@@ -925,7 +930,8 @@ static int Encode(Tcl_Interp *interp, int objc,
         enum iOption {
             iAddonGap, iAzFull,
             iBarcode, iBG, iBind, iBindTop, iBold, iBorder, iBox,
-            iCols, iCompliantHeight, iDMISO144, iDMRE, iDotSize, iDotty,
+            iCols, iCompliantHeight,
+            iDMB256, iDMC40, iDMISO144, iDMRE, iDotSize, iDotty,
             iECI, iEsc, iExtraEsc, iFast, iFG, iFormat, iFullMultiByte,
             iGS1NoCheck, iGS1Parens, iGS1Raw, iGS1Strict,
             iGSSep, iGuardDescent,
@@ -1012,6 +1018,8 @@ static int Encode(Tcl_Interp *interp, int objc,
         case iAddonGap:
         case iBorder:
         case iCols:
+        case iDMB256:
+        case iDMC40:
         case iMask:
         case iMode:
         case iRotate:
@@ -1293,12 +1301,12 @@ static int Encode(Tcl_Interp *interp, int objc,
         case iSquare:
             /* DM_SQUARE overwrites DM_DMRE */
             if (intValue)
-                my_symbol->option_3 = DM_SQUARE | (my_symbol->option_3 & ~0x7F);
+                my_symbol->option_3 = DM_SQUARE | (my_symbol->option_3 & ~DM_SQUARE_DMRE_MASK);
             break;
         case iDMRE:
             /* DM_DMRE overwrites DM_SQUARE */
             if (intValue)
-                my_symbol->option_3 = DM_DMRE | (my_symbol->option_3 & ~0x7F);
+                my_symbol->option_3 = DM_DMRE | (my_symbol->option_3 & ~DM_SQUARE_DMRE_MASK);
             break;
         case iDMISO144:
             if (intValue)
@@ -1365,6 +1373,26 @@ static int Encode(Tcl_Interp *interp, int objc,
                 fError = 1;
             } else {
                 my_symbol->border_width = intValue;
+            }
+            break;
+        case iDMB256:
+            if (intValue < 0) {
+                Tcl_SetObjResult(interp,
+                    Tcl_NewStringObj("Data Matrix Base 256 mode length out of range", -1));
+                fError = 1;
+            } else {
+                my_symbol->option_1 = intValue;
+                my_symbol->option_3 = DM_B256_START | (my_symbol->option_3 & ~DM_B256_C40_START_MASK);
+            }
+            break;
+        case iDMC40:
+            if (intValue < 0) {
+                Tcl_SetObjResult(interp,
+                    Tcl_NewStringObj("Data Matrix C40 mode length out of range", -1));
+                fError = 1;
+            } else {
+                my_symbol->option_1 = intValue;
+                my_symbol->option_3 = DM_C40_START | (my_symbol->option_3 & ~DM_B256_C40_START_MASK);
             }
             break;
         case iGuardDescent:

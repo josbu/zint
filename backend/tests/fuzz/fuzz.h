@@ -235,7 +235,7 @@ static const struct settings_item settings[] = {
     {  68, BARCODE_AUSREDIRECT,       GDSET_F,           0, -1,           0,  -1,           0,  -1,         1,    8 },
     {  69, BARCODE_ISBNX,  ISBNX_ADDON_SANE_F,           0, -1,           0,  -1,           0,  -1,         9,   19 },
     {  70, BARCODE_RM4SCC,            KRSET_F,           0, -1,           0,  -1,           0,  -1,         1,   50 },
-    {  71, BARCODE_DATAMATRIX,              0,           0, -1,           0,  48,         128, 128,         1, 3550 },
+    {  71, BARCODE_DATAMATRIX,              0,           0, 20,           0,  48,           0, 238,         1, 3550 },
     {  72, BARCODE_EAN14,              NEON_F,           0, -1,           0,  -1,           0,  -1,         1,   13 },
     {  73, BARCODE_VIN,             ARSENIC_F,           0, -1,           0,  -1,           0,  -1,        17,   17 },
     {  74, BARCODE_CODABLOCKF,              0,          -1, 44,          -1,  67,           4,   4,         1, 2725 },

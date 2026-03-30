@@ -1010,7 +1010,7 @@ private slots:
         QTest::newRow("BARCODE_DATAMATRIX (GS1Raw + GS1SyntaxEngine)") << true << 0.0f << ""
             << BARCODE_DATAMATRIX << (GS1_MODE | ESCAPE_MODE) // symbology-inputMode
             << "010952012345678810BATCH4\\G2107" << "" // text-primary
-            << 0.0f << -1 << 0 << DM_SQUARE << 1.0f // height-scale
+            << 0.0f << 2 << 0 << (DM_B256_START | DM_SQUARE) << 1.0f // height-scale
             << 0.0f << false << 0.7f << 1.0f // dpmm-textGap
             << 5.0f << 0 << 0 << "" // guardDescent-structAppID
             << "" << "" << QColor(Qt::black) << QColor(Qt::white) << false // fgStr-cmyk
@@ -1019,14 +1019,14 @@ private slots:
             << 0 << false << false << true << true // eci-gs1SyntaxEngine
             << false << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 71 -d '010952012345678810BATCH4\\G2107' --esc --gs1raw --gs1strict --gssep --square"
-            << "zint.exe -b 71 -d \"010952012345678810BATCH4\\G2107\" --esc --gs1raw --gs1strict --gssep --square"
+            << "zint -b 71 -d '010952012345678810BATCH4\\G2107' --dmb256=2 --esc --gs1raw --gs1strict --gssep --square"
+            << "zint.exe -b 71 -d \"010952012345678810BATCH4\\G2107\" --dmb256=2 --esc --gs1raw --gs1strict --gssep --square"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_DATAMATRIX") << false << 0.0f << ""
             << BARCODE_DATAMATRIX << (DATA_MODE | ESCAPE_MODE | FAST_MODE) // symbology-inputMode
             << "ABCDEFGH\\x01I" << "" // text-primary
-            << 0.0f << -1 << 0 << DM_ISO_144 << 1.0f // height-scale
+            << 0.0f << 0 << 0 << (DM_C40_START | DM_ISO_144) << 1.0f // height-scale
             << 0.0f << false << 0.7f << 1.0f // dpmm-textGap
             << 5.0f << 0 << 0 << "" // guardDescent-structAppID
             << "" << "" << QColor(Qt::black) << QColor(Qt::white) << false // fgStr-cmyk
@@ -1035,8 +1035,24 @@ private slots:
             << 0 << false << false << false << false // eci-gs1SyntaxEngine
             << false << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 71 --binary -d 'ABCDEFGH\\x01I' --dmiso144 --esc --fast"
-            << "zint.exe -b 71 --binary -d \"ABCDEFGH\\x01I\" --dmiso144 --esc --fast"
+            << "zint -b 71 --binary -d 'ABCDEFGH\\x01I' --dmc40=0 --dmiso144 --esc --fast"
+            << "zint.exe -b 71 --binary -d \"ABCDEFGH\\x01I\" --dmc40=0 --dmiso144 --esc --fast"
+            << "" << "" << "" << "";
+
+        QTest::newRow("BARCODE_MAILMARK_2D") << false << 0.0f << ""
+            << BARCODE_DATAMATRIX << UNICODE_MODE // symbology-inputMode
+            << "JGB 012100123412345678AB19XY1A 0             www.xyz.com" << "" // text-primary
+            << 0.0f << 0 << 0 << DM_C40_START << 1.0f // height-scale
+            << 0.0f << false << 0.7f << 1.0f // dpmm-textGap
+            << 5.0f << 0 << 0 << "" // guardDescent-structAppID
+            << "" << "" << QColor(Qt::black) << QColor(Qt::white) << false // fgStr-cmyk
+            << 0 << 0 << 0 << 0 << 0 // borderTypeIndex-fontSetting
+            << true << false << false << false << true << 90 // showText-rotateAngle
+            << 0 << false << false << false << false // eci-gs1SyntaxEngine
+            << false << false << false << WARN_DEFAULT << false // readerInit-debug
+            << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
+            << "zint -b 71 -d 'JGB 012100123412345678AB19XY1A 0             www.xyz.com' --dmc40=0 --rotate=90"
+            << "zint.exe -b 71 -d \"JGB 012100123412345678AB19XY1A 0             www.xyz.com\" --dmc40=0 --rotate=90"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_DBAR_EXPSTK_CC") << false << 40.8f << ""

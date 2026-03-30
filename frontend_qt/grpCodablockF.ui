@@ -348,7 +348,7 @@
      <item row="1" column="0">
       <widget class="QLabel" name="lblCbfHeight">
        <property name="text">
-        <string>Number of Ro&amp;ws:</string>
+        <string>Nu&amp;mber of Rows:</string>
        </property>
        <property name="toolTip">
         <string>Set number of rows</string>
@@ -605,7 +605,7 @@ the Appearance tab is not checked
 (ignored if disabled)</string>
        </property>
        <property name="text">
-        <string>Row &amp;Height:</string>
+        <string>Ro&amp;w Height:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -777,7 +777,7 @@ separating rows</string>
       <item>
        <widget class="QRadioButton" name="radCbfHIBC">
         <property name="text">
-         <string>H&amp;IBC</string>
+         <string>&amp;HIBC</string>
         </property>
         <property name="toolTip">
          <string>Process data as a Health Industry Barcode (HIBC)

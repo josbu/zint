@@ -113,6 +113,14 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 :   Send output to stdout, which in most cases should be re-directed to a pipe or a file. Use `--filetype` to specify
     output format.
 
+`--dmb256=INTEGER`
+
+:   For Data Matrix symbols, encode the first *INTEGER* input characters in Base 256 mode. 0 means all input.
+
+`--dmc40=INTEGER`
+
+:   For Data Matrix symbols, encode the first *INTEGER* input characters in C40 mode. 0 means all input.
+
 `--dmiso144`
 
 :   For Data Matrix symbols, use the standard ISO/IEC codeword placement for 144 x 144 (`--vers=24`) sized symbols,

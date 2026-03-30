@@ -1524,9 +1524,12 @@ static void test_encode_file_directory(const testCtx *const p_ctx) {
 static void test_encode_file(const testCtx *const p_ctx) {
     int ret;
     struct zint_symbol *symbol = NULL;
-    const char *data = "1";
-    const char *filename = "test_encode_file_in.txt";
-    const char *outfile = "test_encode_file_out.gif";
+    const char data[] = "1";
+    const char filename[] = "test_encode_file_in.txt";
+    const char outfile[] = "test_encode_file_out.gif";
+    const char long_filename[] = "test_encode_file_in_1234567890123456789012345678901234567890.txt";
+    const char long_filename_errtxt[]
+                        = "Error 233: Unable to read input file \"test_encod...56789012345678901234567890.txt\" (";
     FILE *fp;
 
     (void)p_ctx;
@@ -1576,6 +1579,19 @@ static void test_encode_file(const testCtx *const p_ctx) {
         ret = ZBarcode_Encode_File_and_Buffer_Vector(symbol, filename, 0);
         assert_zero(ret, "ret %d != 0 (%s)\n", ret, symbol->errtxt);
         assert_nonnull(symbol->vector, "symbol->vector NULL (%s)\n", symbol->errtxt);
+
+        ZBarcode_Delete(symbol);
+    }
+
+    {
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        strcpy(symbol->outfile, outfile);
+        ret = ZBarcode_Encode_File_and_Buffer_Vector(symbol, long_filename, 0);
+        assert_nonzero(ret, "ret %d == 0 (%s)\n", ret, symbol->errtxt);
+        assert_zero(strncmp(symbol->errtxt, long_filename_errtxt, sizeof(long_filename_errtxt) - 1),
+                    "strncmp(%s, %s) != 0\n", symbol->errtxt, long_filename_errtxt);
 
         ZBarcode_Delete(symbol);
     }
@@ -1632,7 +1648,7 @@ static void test_bad_args(const testCtx *const p_ctx) {
         "Error 200: Input segments NULL",
         "Error 239: Filename NULL",
         "Error 778: No input data",
-        "Error 229: Unable to read input file (", /* Excluding OS-dependent `errno` stuff */
+        "Error 229: Unable to read input file \"", /* Excluding filename and OS-dependent `errno` stuff */
         "Error 771: Too many input segments (maximum 256)",
         "Error 205: No input data",
         "Error 777: Input too long",

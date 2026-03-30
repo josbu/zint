@@ -111,7 +111,7 @@ error correction codewords</string>
      <item row="2" column="0">
       <widget class="QLabel" name="lblMQRMask">
        <property name="text">
-        <string>&amp;Mask:</string>
+        <string>Mas&amp;k:</string>
        </property>
        <property name="toolTip">
         <string>Manually specify which mask to use</string>
