@@ -1,16 +1,18 @@
-Version 2.16.0.9 (dev) not released yet (2026-03-30)
+Version 2.16.0.9 (dev) not released yet (2026-04-18)
 ====================================================
 
 **Incompatible changes**
 ------------------------
+- Code 128 now errors on unrecognized extra escape sequences
+  (previously just passed them through)
 - Aztec error codeword percentages adjusted to be at least advertised values
   (may cause symbol size change, and generation failure if specified)
 - Improved Aztec encodation algorithm (may cause symbol size change)
 - New Qt Backend method `save_as_memfile()` to save file to memory
 - New Qt Backend methods `gs1Raw()` and `setGS1Raw()` for new `GS1RAW_MODE`
   option for processing GS1 input
-- CLI now warns if both "--dmre" and "--square" are given (previously silently
-  ignored "--dmre")
+- CLI now warns if both "--dmre" and "--square" are given
+  (previously silently ignored "--dmre")
 
 Changes
 -------
@@ -32,11 +34,14 @@ Changes
 - DATAMATRIX: new options "--dmb256=" (`option_3 = DM_B256_START`) & "--dmc40="
   (`option_3 = DM_C40_START`) to allow forcing of initial encodation for given
   no. (`option_1`) of initial characters, with 0 meaning all
+- DATAMATRIX: add manual FNC1 support
 
 Bugs
 ----
 - CODE128: fix not handling FNC1 at end of data when in manual switching mode
-  or any FNC1 after manual C mode selected and no other non-C data
+  or any FNC1 after manual C mode selected and no other non-C data;
+  fix possible shifting before manual FNC1 in 2nd position after single alpha;
+  fix not removing manual FNC1 in 1st/2nd position from content segs
 - CLI: fix "--scalexdimdp" X-dim inch units being divided instead of multiplied
   on conversion to mm
 - DOTCODE: fix not emitting FNC1 (signalling not GS1) if input is just 2 digits

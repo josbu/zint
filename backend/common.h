@@ -140,6 +140,7 @@ typedef unsigned __int64 uint64_t;
 #define z_isdigit(ch) ((ch) <= '9' && (ch) >= '0')
 #define z_isupper(ch) ((ch) >= 'A' && (ch) <= 'Z')
 #define z_islower(ch) ((ch) >= 'a' && (ch) <= 'z')
+#define z_isalpha(ch) (z_isupper(ch) || z_islower(ch))
 #define z_isascii(ch) (!((ch) & ~0x7F))
 #define z_iscntrl(ch) (!((ch) & ~0x1F) || (ch) == 127)
 
@@ -307,6 +308,13 @@ INTERNAL int z_utf8_to_unicode(struct zint_symbol *symbol, const unsigned char s
                 int *length, const int disallow_4byte);
 
 
+/* Process `source` for manual FNC1 extra escape sequences, placing result in `dest` with result length in `p_len`,
+   and setting `fncs` with found FNC1s. `dest` & `fncs` must be at least `length` in size. `eci` is checked to be
+   ASCII-compatible (UTF-8 & single-byte ECIs, excl. Binary 899). On error sets `errtxt` & returns error no. */
+INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char source[], const int length,
+                const int eci, unsigned char dest[], char *fncs, int *p_len);
+
+
 /* Treats source as ISO/IEC 8859-1 and copies into `symbol->text`, converting to UTF-8. Control chars (incl. DEL) and
    non-ISO/IEC 8859-1 (0x80-9F) are replaced with spaces. Returns warning if truncated, else 0 */
 INTERNAL int z_hrt_cpy_iso8859_1(struct zint_symbol *symbol, const unsigned char source[], const int length);
@@ -345,6 +353,10 @@ INTERNAL void z_ct_free_segs(struct zint_symbol *symbol);
 /* Copy `segs` to content segs. Seg source copied as-is. If seg length <= 0, content reg length set to `strlen()`.
    If seg eci not set, content seg eci set to 3. On error sets `errxtxt`, returning BARCODE_ERROR_MEMORY */
 INTERNAL int z_ct_cpy_segs(struct zint_symbol *symbol, const struct zint_seg segs[], const int seg_count);
+
+/* Process content seg `seg_idx` buffer for manual FNC1 extra escape sequences (which must exist),
+   and update its ECI to `eci`, if set, to reflect (feedback) the actual ECI used */
+INTERNAL void z_ct_set_seg_extra_escapes_eci(struct zint_symbol *symbol, const int seg_idx, const int eci);
 
 /* Update the ECI of content seg `seg_idx` to `eci`, to reflect (feedback) the actual ECI used */
 INTERNAL void z_ct_set_seg_eci(struct zint_symbol *symbol, const int seg_idx, const int eci);

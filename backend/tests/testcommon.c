@@ -2665,29 +2665,77 @@ static char *testUtilBwippCvtGS1Data(char *bwipp_data, const int bwipp_data_size
     return bwipp_data;
 }
 
+/* Copied from "library.c" */
+/* Returns 1 if `symbol` can process EXTRA_ESCAPE_MODE */
+static int supports_extra_escape_mode(const struct zint_symbol *const symbol) {
+    return symbol->symbology == BARCODE_CODE128
+                || (symbol->symbology == BARCODE_DATAMATRIX && (symbol->input_mode & 0x07) != GS1_MODE);
+}
+
 #define z_isxdigit(c) (z_isdigit(c) || ((c) >= 'A' && (c) <= 'F') || ((c) >= 'a' && (c) <= 'f'))
 #define z_isodigit(c) ((c) <= '7' && (c) >= '0')
 
 /* Convert data to Ghostscript format for passing to bwipp_dump.ps */
-static char *testUtilBwippEscape(char *bwipp_data, const int bwipp_data_size, const char *data, const int length,
-                const int zint_escape_mode, const int eci, int *parse, int *parsefnc) {
+static char *testUtilBwippEscape(const struct zint_symbol *const symbol, char *bwipp_data, const int bwipp_data_size,
+                const char *data, const int length, const int eci, int *parse, int *parsefnc) {
+    const int is_extra_escaped = (symbol->input_mode & EXTRA_ESCAPE_MODE) && supports_extra_escape_mode(symbol);
+    const int is_escaped = (symbol->input_mode & ESCAPE_MODE) || is_extra_escaped;
+    const int is_c128 = symbol->symbology == BARCODE_CODE128;
     char *b = bwipp_data;
     char *be = b + bwipp_data_size;
     unsigned char *d = (unsigned char *) data;
     unsigned char *de = (unsigned char *) data + length;
     int have_done_single_caret = 0; /* Flag to help debug escaping of carets */
 
-    if (eci && !*parsefnc) {
+    if (eci) {
         sprintf(bwipp_data, "^ECI%06d", eci);
         *parsefnc = 1;
         b = bwipp_data + 10;
     }
 
     while (b < be && d < de) {
+        /* Deal with extra escape sequences first */
+        if (is_extra_escaped && *d == '\\' && d + 1 < de && d[1] == '^'
+                && (d + 2 == de || ((d[2] == '1' || d[2] == '^' || (is_c128 && d[2] >= '@' && d[2] <= 'C'))))) {
+            if (d + 2 == de || d[2] == '^') {
+                /* Literal "\^^" */
+                if (*parsefnc) {
+                    if (b + 6 >= be) {
+                        fprintf(stderr, "testUtilBwippEscape: extra escape double caret bwipp_data buffer full (%d)\n",
+                                bwipp_data_size);
+                        return NULL;
+                    }
+                    strcpy(b, "^092^^");
+                    b += 6;
+                    *parse = 1;
+                } else {
+                    if (b + 8 >= be) {
+                        fprintf(stderr, "testUtilBwippEscape: extra escape 094 caret bwipp_data buffer full (%d)\n",
+                                bwipp_data_size);
+                        return NULL;
+                    }
+                    strcpy(b, "^092^094");
+                    b += 8;
+                    *parse = 1;
+                }
+            } else if (d[2] == '1') {
+                if (b + 5 >= be) {
+                    fprintf(stderr, "testUtilBwippEscape: extra escape FNC1 bwipp_data buffer full (%d)\n",
+                            bwipp_data_size);
+                    return NULL;
+                }
+                strcpy(b, "^FNC1");
+                b += 5;
+                *parsefnc = 1;
+            } else {
+                assert(d + 2 < de && is_c128 && d[2] >= '@' && d[2] <= 'C');
+            }
+            d += 2 + (d + 2 != de);
+
         /* Have to escape double quote otherwise Ghostscript gives "Unterminated quote in @-file" for some reason */
         /* Escape single quote also to avoid having to do proper shell escaping TODO: proper shell escaping */
-        if (*d < 0x20 || *d >= 0x7F || (*d == '^' && !*parsefnc) || *d == '"' || *d == '\''
-                || *d == '(' || (*d == '\\' && !zint_escape_mode)) {
+        } else if (*d < 0x20 || *d >= 0x7F || (*d == '^' && !*parsefnc) || *d == '"' || *d == '\''
+                || *d == '(' || (*d == '\\' && !is_escaped)) {
             if (b + 4 >= be) {
                 fprintf(stderr, "testUtilBwippEscape: double quote bwipp_data buffer full (%d)\n", bwipp_data_size);
                 return NULL;
@@ -2710,7 +2758,7 @@ static char *testUtilBwippEscape(char *bwipp_data, const int bwipp_data_size, co
                 /* `parsefnc` changed while escaping (see FNC1 processing below) - may cause test to fail */
                 fprintf(stderr, "testUtilBwippEscape: WARNING: already escaped caret singularly\n");
             }
-        } else if (zint_escape_mode && *d == '\\' && d + 1 < de) {
+        } else if (is_escaped && *d == '\\' && d + 1 < de) {
             int val;
             switch (*++d) {
                 case '0': val = 0x00; /* Null */ break;
@@ -2883,6 +2931,7 @@ static char *testUtilBwippUtf8Convert(const int index, const int symbology, cons
 /* Create bwipp_dump.ps command and run */
 int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int option_2, int option_3,
             const char *data, int length, const char *primary, char *buffer, int buffer_size, int *p_parsefnc) {
+    static const char fn[] = "testUtilBwipp";
     static const char cmd_fmt[] = "gs -dNOPAUSE -dBATCH -dNODISPLAY -q -sb=%s -sd='%s'"
                                     " backend/tests/tools/bwipp_dump.ps";
     static const char cmd_opts_fmt[] = "gs -dNOPAUSE -dBATCH -dNODISPLAY -q -sb=%s -sd='%s' -so='%s'"
@@ -2924,10 +2973,11 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
 
     FILE *fp = NULL;
     int cnt;
+    int exit_status;
 
     char *b = buffer;
     char *be = buffer + buffer_size;
-    int r, h;
+    int r;
     int parse = 0, parsefnc = p_parsefnc ? *p_parsefnc : 0;
 
     const int upcean = (ZBarcode_Cap(symbology, ZINT_CAP_EANUPC) & ZINT_CAP_EANUPC) == ZINT_CAP_EANUPC;
@@ -2944,8 +2994,8 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
 
     bwipp_barcode = testUtilBwippName(index, symbol, option_1, option_2, option_3, 0, &linear_row_height, &gs1_cvt);
     if (!bwipp_barcode) {
-        fprintf(stderr, "i:%d testUtilBwipp: no mapping for %s, option_1 %d, option_2 %d, option_3 %d\n",
-                index, testUtilBarcodeName(symbology), option_1, option_2, option_3);
+        fprintf(stderr, "i:%d %s:%d no mapping for %s, option_1 %d, option_2 %d, option_3 %d\n",
+                index, fn, __LINE__, testUtilBarcodeName(symbology), option_1, option_2, option_3);
         return -1;
     }
 
@@ -2956,8 +3006,8 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
             bwipp_row_height[r] = symbol->row_height[r] ? symbol->row_height[r] : linear_row_height;
         }
         if ((symbol->debug & ZINT_DEBUG_TEST_PRINT) && !(symbol->debug & ZINT_DEBUG_TEST_LESS_NOISY)) {
-            fprintf(stderr, "bwipp_row_height[%d] %d, symbol->row_height[%d] %g\n",
-                        r, bwipp_row_height[r], r, symbol->row_height[r]);
+            fprintf(stderr, "i:%d %s:%d bwipp_row_height[%d] %d, symbol->row_height[%d] %g\n",
+                        index, fn, __LINE__, r, bwipp_row_height[r], r, symbol->row_height[r]);
         }
     }
 
@@ -2966,14 +3016,15 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
     if ((symbol->input_mode & 0x07) == UNICODE_MODE && zint_is_eci_convertible(eci)
             && (data = testUtilBwippUtf8Convert(index, symbology, 1 /*try_sjis*/, &eci, (const unsigned char *) data,
                                 &data_len, (unsigned char *) converted)) == NULL) {
-        fprintf(stderr, "i:%d testUtilBwipp: failed to convert UTF-8 data for %s\n",
-                index, testUtilBarcodeName(symbology));
+        fprintf(stderr, "i:%d %s:%d failed to convert UTF-8 data for %s\n",
+                index, fn, __LINE__, testUtilBarcodeName(symbology));
         return -1;
     }
 
     if (z_is_composite(symbology)) {
         if (!primary) {
-            fprintf(stderr, "i:%d testUtilBwipp: no primary data given %s\n", index, testUtilBarcodeName(symbology));
+            fprintf(stderr, "i:%d %s:%d no primary data given %s\n",
+                    index, fn, __LINE__, testUtilBarcodeName(symbology));
             return -1;
         }
         if (*primary != obracket && !upcean) {
@@ -3072,10 +3123,7 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
             }
             #endif
         } else {
-            const int is_extra_escaped = (symbol->input_mode & EXTRA_ESCAPE_MODE)
-                                            && symbol->symbology == BARCODE_CODE128;
-            const int is_escaped = (symbol->input_mode & ESCAPE_MODE) || is_extra_escaped;
-            if (testUtilBwippEscape(bwipp_data, bwipp_data_size, data, data_len, is_escaped, eci, &parse, &parsefnc)
+            if (testUtilBwippEscape(symbol, bwipp_data, bwipp_data_size, data, data_len, eci, &parse, &parsefnc)
                     == NULL) {
                 return -1;
             }
@@ -3560,9 +3608,8 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
     }
 
     if ((option_1 != -1 || option_2 != -1 || option_3 != -1) && !bwipp_opts) {
-        fprintf(stderr,
-                "i:%d testUtilBwipp: no BWIPP options set option_1 %d, option_2 %d, option_3 %d for symbology %s\n",
-                index, option_1, option_2, option_3, testUtilBarcodeName(symbology));
+        fprintf(stderr, "i:%d %s:%d no BWIPP options set option_1 %d, option_2 %d, option_3 %d for symbology %s\n",
+                index, fn, __LINE__, option_1, option_2, option_3, testUtilBarcodeName(symbology));
         return -1;
     }
 
@@ -3607,7 +3654,7 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
         memcpy(cmd + GS_INITIAL_LEN, adj, sizeof(adj) - 1);
     }
     if (symbology == BARCODE_CODE11 || symbology == BARCODE_CODE39 || symbology == BARCODE_EXCODE39
-            || symbology == BARCODE_CODABAR || symbology == BARCODE_PHARMA || symbology == BARCODE_PZN
+            || symbology == BARCODE_CODABAR || symbology == BARCODE_PZN
             || symbology == BARCODE_CODE32 || symbology == BARCODE_VIN) {
         /* Ratio 3 width bar/space -> 2 width */
         char adj[] = " -sr=0.6";
@@ -3664,12 +3711,12 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
     }
 
     if (symbol->debug & ZINT_DEBUG_TEST_PRINT) {
-        printf("i:%d testUtilBwipp: cmd %s\n", index, cmd);
+        printf("i:%d %s cmd %s\n", index, fn, cmd);
     }
 
     fp = testutil_popen(cmd, "r");
     if (!fp) {
-        fprintf(stderr, "i:%d testUtilBwipp: failed to run '%s'\n", index, cmd);
+        fprintf(stderr, "i:%d %s:%d failed to run '%s'\n", index, fn, __LINE__, cmd);
         return -1;
     }
 
@@ -3679,45 +3726,38 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
     } else {
         for (r = 0; r < symbol->rows; r++) {
             if (b + symbol->width > be) {
-                fprintf(stderr, "i:%d testUtilBwipp: row %d, width %d, row width iteration overrun (%s)\n",
-                        index, r, symbol->width, cmd);
-                testutil_pclose(fp);
+                fprintf(stderr, "i:%d %s:%d row %d, width %d, row width iteration overrun (%s)\n",
+                        index, fn, __LINE__, r, symbol->width, cmd);
+                (void) testutil_pclose(fp);
                 return -1;
             }
             cnt = (int) fread(b, 1, symbol->width, fp);
             if (cnt != symbol->width) {
-                fprintf(stderr,
-                        "i:%d testUtilBwipp: failed to read row %d of %d, symbol->width %d bytes, cnt %d (%s)\n",
-                        index, r + 1, symbol->rows, symbol->width, cnt, cmd);
-                testutil_pclose(fp);
+                fprintf(stderr, "i:%d %s:%d failed to read row %d of %d, symbol->width %d bytes, cnt %d (%s)\n",
+                        index, fn, __LINE__, r + 1, symbol->rows, symbol->width, cnt, cmd);
+                (void) testutil_pclose(fp);
                 return -1;
             }
             b += cnt;
-            for (h = bwipp_row_height[r]; h > 1; h--) { /* Ignore row copies if any */
-                cnt = (int) fread(b, 1, symbol->width, fp);
-                if (cnt != symbol->width) {
-                    fprintf(stderr,
-                            "i:%d testUtilBwipp: failed to read/ignore symbol->width %d bytes, cnt %d, h %d"
-                            ", bwipp_row_height[%d] %d, symbol->row_height[%d] %g (%s)\n",
-                            index, symbol->width, cnt, h, r, bwipp_row_height[r], r, symbol->row_height[r], cmd);
-                    testutil_pclose(fp);
-                    return -1;
-                }
-                if (h * 2 == bwipp_row_height[r]) { /* Hack to use middle row (avoids add-on text offsets) */
-                    memcpy(b - cnt, b, cnt);
-                }
-            }
         }
     }
     *b = '\0';
 
     if (fgetc(fp) != EOF) {
-        fprintf(stderr, "i:%d testUtilBwipp: failed to read full stream (%s)\n", index, cmd);
-        testutil_pclose(fp);
+        fprintf(stderr, "i:%d %s:%d failed to read full stream (%s)\n", index, fn, __LINE__, cmd);
+        (void) testutil_pclose(fp);
         return -1;
     }
 
-    testutil_pclose(fp);
+    if ((exit_status = testutil_pclose(fp))) {
+#ifndef _WIN32
+        if (WIFEXITED(exit_status)) {
+            exit_status = WEXITSTATUS(exit_status);
+        }
+#endif
+        fprintf(stderr, "i:%d %s:%d pclose returned exit status %d (%s)\n", index, fn, __LINE__, exit_status, cmd);
+        return -1;
+    }
 
     return 0;
 }
@@ -3797,7 +3837,7 @@ int testUtilBwippSegs(int index, struct zint_symbol *symbol, int option_1, int o
     total_len = (int) (d - data);
 
     if (unicode_mode) {
-        symbol->input_mode = DATA_MODE;
+        symbol->input_mode = DATA_MODE | (symbol->input_mode & ~0x07);
     }
     symbol->eci = 0;
 
@@ -4147,6 +4187,7 @@ int testUtilZXingCPP(int index, struct zint_symbol *symbol, const char *source, 
 
     FILE *fp = NULL;
     int cnt;
+    int exit_status;
 
     buffer[0] = '\0';
 
@@ -4192,17 +4233,25 @@ int testUtilZXingCPP(int index, struct zint_symbol *symbol, const char *source, 
     if (cnt == buffer_size) {
         fprintf(stderr, "i:%d testUtilZXingCPP: buffer too small, %d bytes, cnt %d (%s)\n",
                 index, buffer_size, cnt, cmd);
-        testutil_pclose(fp);
+        (void) testutil_pclose(fp);
         return -1;
     }
 
     if (fgetc(fp) != EOF) {
         fprintf(stderr, "i:%d testUtilZXingCPP: failed to read full stream (%s)\n", index, cmd);
-        testutil_pclose(fp);
+        (void) testutil_pclose(fp);
         return -1;
     }
 
-    testutil_pclose(fp);
+    if ((exit_status = testutil_pclose(fp))) {
+#ifndef _WIN32
+        if (WIFEXITED(exit_status)) {
+            exit_status = WEXITSTATUS(exit_status);
+        }
+#endif
+        fprintf(stderr, "i:%d testUtilZXingCPP: pclose returned exit status %d (%s)\n", index, exit_status, cmd);
+        return -1;
+    }
 
     if ((data_mode && zxingcpp_cmp > 1 && (zxingcpp_cmp == 899 || zint_is_eci_convertible(zxingcpp_cmp)))
             || symbol->eci >= 899) {
@@ -4311,7 +4360,7 @@ int testUtilZXingCPPCmp(struct zint_symbol *symbol, char *msg, char *cmp_buf, in
     const int is_dbar_nonexp = symbology == BARCODE_DBAR_OMN || symbology == BARCODE_DBAR_LTD
                                 || symbology == BARCODE_DBAR_OMNSTK || symbology == BARCODE_DBAR_STK;
     const int gs1 = (symbol->input_mode & 0x07) == GS1_MODE || is_gs1_128_dbar_exp;
-    const int is_extra_escaped = (symbol->input_mode & EXTRA_ESCAPE_MODE) && symbol->symbology == BARCODE_CODE128;
+    const int is_extra_escaped = (symbol->input_mode & EXTRA_ESCAPE_MODE) && supports_extra_escape_mode(symbol);
     const int is_escaped = (symbol->input_mode & ESCAPE_MODE) || is_extra_escaped;
     const int is_hibc = symbology >= BARCODE_HIBC_128 && symbology <= BARCODE_HIBC_AZTEC;
     const int have_ccheckdigit = symbol->option_2 == 1 || symbol->option_2 == 2; /* Good for C25, CODE39, CODABAR */
@@ -4360,6 +4409,7 @@ int testUtilZXingCPPCmp(struct zint_symbol *symbol, char *msg, char *cmp_buf, in
             /* Remove any Code 128 special escapes */
             int j = 0;
             int have_manual_ab = 0;
+            int have_position_fnc1 = 0;
             for (i = 0; i < expected_len; i++) {
                 if (escaped[i] == '\\' && i + 2 < expected_len && escaped[i + 1] == '^'
                         && ((escaped[i + 2] >= '@' && escaped[i + 2] <= 'C') || escaped[i + 2] == '1'
@@ -4372,11 +4422,13 @@ int testUtilZXingCPPCmp(struct zint_symbol *symbol, char *msg, char *cmp_buf, in
                             /* FNC1 in 1st position treated as GS1 and in 2nd position AIM, neither transmitted -
                                need to skip AIM (single alphabetic or Code Set C double digit)
                                TODO: guessing about whether in Code Set C for double digit */
-                            if (j > 2 || (j == 1 && !(z_isupper(escaped[0]) || z_islower(escaped[0])))
+                            if (symbol->eci || have_position_fnc1 || j > 2 || (j == 1 && !z_isalpha(escaped[0]))
                                     || (j == 2 && !(z_isdigit(escaped[0]) && z_isdigit(escaped[1])
                                                     && !have_manual_ab))) {
                                 /* Probably not AIM */
                                 escaped[j++] = 29; /* GS */
+                            } else {
+                                have_position_fnc1 = 1;
                             }
                         }
                     } else {

@@ -282,7 +282,7 @@ static int dm_text_sp_cnt(const unsigned char source[], const int position, cons
 
 /* 'look ahead test' from Annex J */
 static int dm_look_ahead_test(const unsigned char source[], const int length, const int position,
-            const int current_mode, const int mode_arg, const int gs1, const int debug_print) {
+            const int current_mode, const int mode_arg, const char *fncs, const int debug_print) {
     int ascii_count, c40_count, text_count, x12_count, edf_count, b256_count;
     int ascii_rnded, c40_rnded, text_rnded, x12_rnded, edf_rnded, b256_rnded;
     int cnt_1;
@@ -316,11 +316,11 @@ static int dm_look_ahead_test(const unsigned char source[], const int length, co
     }
 
     for (sp = position; sp < length; sp++) {
-        const unsigned char c = source[sp];
-        const int is_extended = c & 0x80;
+        const unsigned char ch = source[sp];
+        const int is_extended = ch & 0x80;
 
         /* ASCII ... step (l) */
-        if (z_isdigit(c)) {
+        if (z_isdigit(ch)) {
             ascii_count += DM_MULT_1_DIV_2; /* (l)(1) */
         } else {
             if (is_extended) {
@@ -331,7 +331,7 @@ static int dm_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* C40 ... step (m) */
-        if (dm_isc40(c)) {
+        if (dm_isc40(ch)) {
             c40_count += DM_MULT_2_DIV_3; /* (m)(1) */
         } else {
             if (is_extended) {
@@ -342,7 +342,7 @@ static int dm_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* TEXT ... step (n) */
-        if (dm_istext(c)) {
+        if (dm_istext(ch)) {
             text_count += DM_MULT_2_DIV_3; /* (n)(1) */
         } else {
             if (is_extended) {
@@ -353,7 +353,7 @@ static int dm_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* X12 ... step (o) */
-        if (dm_isX12(c)) {
+        if (dm_isX12(ch)) {
             x12_count += DM_MULT_2_DIV_3; /* (o)(1) */
         } else {
             if (is_extended) {
@@ -364,7 +364,7 @@ static int dm_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* EDIFACT ... step (p) */
-        if (dm_isedifact(c)) {
+        if (dm_isedifact(ch)) {
             edf_count += DM_MULT_3_DIV_4; /* (p)(1) */
         } else {
             if (is_extended) {
@@ -375,7 +375,7 @@ static int dm_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* Base 256 ... step (q) */
-        if (gs1 == 1 && c == '\x1D') {
+        if (fncs[sp] && ch == '\x1D') {
             /* FNC1 separator */
             b256_count += DM_MULT_4; /* (q)(1) */
         } else {
@@ -615,10 +615,10 @@ static int dm_codewords_remaining(struct zint_symbol *symbol, const int tp, cons
 }
 
 /* Number of C40/TEXT elements needed to encode `input` */
-static int dm_c40text_cnt(const int current_mode, const int gs1, unsigned char input) {
+static int dm_c40text_cnt(const int current_mode, const char fnc, unsigned char input) {
     int cnt;
 
-    if (gs1 && input == '\x1D') {
+    if (fnc && input == '\x1D') {
         return 2;
     }
     cnt = 1;
@@ -933,7 +933,7 @@ static void dm_addEdge(struct zint_symbol *symbol, const unsigned char *source, 
 
 /* Add edges for the various modes at a vertex */
 static void dm_addEdges(struct zint_symbol *symbol, const unsigned char source[], const int length,
-            const int last_seg, struct dm_edge *edges, const int from, struct dm_edge *previous, const int gs1) {
+            const int last_seg, struct dm_edge *edges, const int from, struct dm_edge *previous, const char *fncs) {
     int i, pos;
 
     assert(from < length); /* Suppress clang-tidy-21 clang-analyzer-security.ArrayBound */
@@ -965,7 +965,7 @@ static void dm_addEdges(struct zint_symbol *symbol, const unsigned char source[]
             dm_addEdge(symbol, source, length, last_seg, edges, DM_X12, from, 3, previous, 0);
         }
 
-        if (gs1 != 1 || source[from] != '\x1D') {
+        if (!fncs[from] || source[from] != '\x1D') {
             dm_addEdge(symbol, source, length, last_seg, edges, DM_BASE256, from, 1, previous, 0);
         }
     }
@@ -981,7 +981,7 @@ static void dm_addEdges(struct zint_symbol *symbol, const unsigned char source[]
 
 /* Calculate optimized encoding modes */
 static int dm_define_modes(struct zint_symbol *symbol, char modes[], const unsigned char source[], const int length,
-            const int last_seg, const int gs1, const int debug_print) {
+            const int last_seg, const char *fncs, const int debug_print) {
 
     int i, j, v_i;
     int minimalJ, minimalSize;
@@ -995,7 +995,7 @@ static int dm_define_modes(struct zint_symbol *symbol, char modes[], const unsig
     }
     assert((length + 1) * DM_NUM_MODES < USHRT_MAX); /* Guaranteed by input length limit */
 
-    dm_addEdges(symbol, source, length, last_seg, edges, 0, NULL, gs1);
+    dm_addEdges(symbol, source, length, last_seg, edges, 0, NULL, fncs);
 
     DM_TRACE_Edges("DEBUG Initial situation\n", source, length, edges, 0);
 
@@ -1003,7 +1003,7 @@ static int dm_define_modes(struct zint_symbol *symbol, char modes[], const unsig
         v_i = i * DM_NUM_MODES;
         for (j = 0; j < DM_NUM_MODES; j++) {
             if (edges[v_i + j].mode) {
-                dm_addEdges(symbol, source, length, last_seg, edges, i, edges + v_i + j, gs1);
+                dm_addEdges(symbol, source, length, last_seg, edges, i, edges + v_i + j, fncs);
             }
         }
         DM_TRACE_Edges("DEBUG situation after adding edges to vertices at position %d\n", source, length, edges, i);
@@ -1060,7 +1060,7 @@ static int dm_define_modes(struct zint_symbol *symbol, char modes[], const unsig
 /* Do default minimal encodation */
 static int dm_minimalenc(struct zint_symbol *symbol, const unsigned char source[], const int length,
             const int last_seg, int *p_sp, unsigned char target[], int *p_tp, int process_buffer[8], int *p_process_p,
-            int *p_b256_start, int *p_current_mode, const int gs1, const int debug_print) {
+            int *p_b256_start, int *p_current_mode, const char *fncs, const int debug_print) {
     int sp = *p_sp;
     int tp = *p_tp;
     int process_p = *p_process_p;
@@ -1070,7 +1070,7 @@ static int dm_minimalenc(struct zint_symbol *symbol, const unsigned char source[
 
     assert(length <= 10921); /* Can only handle (10921 + 1) * 6 = 65532 < 65536 (2*16) due to sizeof(previous) */
 
-    if (!dm_define_modes(symbol, modes, source, length, last_seg, gs1, debug_print)) {
+    if (!dm_define_modes(symbol, modes, source, length, last_seg, fncs, debug_print)) {
         return z_errtxt(ZINT_ERROR_MEMORY, symbol, 728, "Insufficient memory for mode buffers");
     }
 
@@ -1129,14 +1129,9 @@ static int dm_minimalenc(struct zint_symbol *symbol, const unsigned char source[
                     target[tp++] = (source[sp] - 128) + 1;
                     if (debug_print) printf("FN4 A%02X ", target[tp - 1] - 1);
                 } else {
-                    if (gs1 && source[sp] == '\x1D') {
-                        if (gs1 == 2) {
-                            target[tp++] = 29 + 1; /* GS */
-                            if (debug_print) fputs("GS ", stdout);
-                        } else {
-                            target[tp++] = 232; /* FNC1 */
-                            if (debug_print) fputs("FN1 ", stdout);
-                        }
+                    if (fncs[sp] && source[sp] == '\x1D') {
+                        target[tp++] = 232; /* FNC1 */
+                        if (debug_print) fputs("FN1 ", stdout);
                     } else {
                         target[tp++] = source[sp] + 1;
                         if (debug_print) printf("A%02X ", target[tp - 1] - 1);
@@ -1164,14 +1159,9 @@ static int dm_minimalenc(struct zint_symbol *symbol, const unsigned char source[
                 shift_set = ct_shift[source[sp] - 128];
                 value = ct_value[source[sp] - 128];
             } else {
-                if (gs1 && source[sp] == '\x1D') {
-                    if (gs1 == 2) {
-                        shift_set = ct_shift[29];
-                        value = ct_value[29]; /* GS */
-                    } else {
-                        shift_set = 2;
-                        value = 27; /* FNC1 */
-                    }
+                if (fncs[sp] && source[sp] == '\x1D') {
+                    shift_set = 2;
+                    value = 27; /* FNC1 */
                 } else {
                     shift_set = ct_shift[source[sp]];
                     value = ct_value[source[sp]];
@@ -1247,7 +1237,7 @@ static int dm_minimalenc(struct zint_symbol *symbol, const unsigned char source[
 /* Encode using algorithm based on ISO/IEC 21471:2020 Annex J (was ISO/IEC 21471:2006 Annex P) */
 static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], const int length, int *p_sp,
             unsigned char target[], int *p_tp, int process_buffer[8], int *p_process_p, int *p_b256_start,
-            int *p_current_mode, const int gs1, const int b256_end, const int c40_end, const int debug_print) {
+            int *p_current_mode, const char *fncs, const int b256_end, const int c40_end, const int debug_print) {
     int sp = *p_sp;
     int tp = *p_tp;
     int process_p = *p_process_p;
@@ -1284,7 +1274,7 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
                 if (debug_print) printf("N%02d ", target[tp - 1] - 130);
                 sp += 2;
             } else {
-                next_mode = dm_look_ahead_test(source, length, sp, current_mode, 0, gs1, debug_print);
+                next_mode = dm_look_ahead_test(source, length, sp, current_mode, 0, fncs, debug_print);
 
                 if (next_mode != DM_ASCII) {
                     tp = dm_switch_mode(next_mode, target, tp, p_b256_start, debug_print);
@@ -1295,14 +1285,9 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
                         target[tp++] = (source[sp] - 128) + 1;
                         if (debug_print) printf("FN4 A%02X ", target[tp - 1] - 1);
                     } else {
-                        if (gs1 && source[sp] == '\x1D') {
-                            if (gs1 == 2) {
-                                target[tp++] = 29 + 1; /* GS */
-                                if (debug_print) fputs("GS ", stdout);
-                            } else {
-                                target[tp++] = 232; /* FNC1 */
-                                if (debug_print) fputs("FN1 ", stdout);
-                            }
+                        if (fncs[sp] && source[sp] == '\x1D') {
+                            target[tp++] = 232; /* FNC1 */
+                            if (debug_print) fputs("FN1 ", stdout);
                         } else {
                             target[tp++] = source[sp] + 1;
                             if (debug_print) printf("A%02X ", target[tp - 1] - 1);
@@ -1317,7 +1302,7 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
 
             next_mode = current_mode;
             if (process_p == 0 && not_first && (sp >= c40_end)) { /* `c40_end` only set if `current_mode` DM_C40 */
-                next_mode = dm_look_ahead_test(source, length, sp, current_mode, process_p, gs1, debug_print);
+                next_mode = dm_look_ahead_test(source, length, sp, current_mode, process_p, fncs, debug_print);
             }
 
             if (next_mode != current_mode) {
@@ -1342,14 +1327,9 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
                     shift_set = ct_shift[source[sp] - 128];
                     value = ct_value[source[sp] - 128];
                 } else {
-                    if (gs1 && source[sp] == '\x1D') {
-                        if (gs1 == 2) {
-                            shift_set = ct_shift[29];
-                            value = ct_value[29]; /* GS */
-                        } else {
-                            shift_set = 2;
-                            value = 27; /* FNC1 */
-                        }
+                    if (fncs[sp] && source[sp] == '\x1D') {
+                        shift_set = 2;
+                        value = 27; /* FNC1 */
                     } else {
                         shift_set = ct_shift[source[sp]];
                         value = ct_value[source[sp]];
@@ -1376,7 +1356,7 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
             } else {
                 next_mode = DM_X12;
                 if (process_p == 0 && not_first) {
-                    next_mode = dm_look_ahead_test(source, length, sp, current_mode, process_p, gs1, debug_print);
+                    next_mode = dm_look_ahead_test(source, length, sp, current_mode, process_p, fncs, debug_print);
                 }
             }
 
@@ -1417,7 +1397,7 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
                 if (process_p == 3) {
                     /* Note different than spec Step (f)(2), which suggests checking when 0, but this seems to
                        work better in many cases as the switch to ASCII is "free" */
-                    next_mode = dm_look_ahead_test(source, length, sp, current_mode, process_p, gs1, debug_print);
+                    next_mode = dm_look_ahead_test(source, length, sp, current_mode, process_p, fncs, debug_print);
                 }
             }
 
@@ -1446,12 +1426,12 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
         /* step (g) Base 256 encodation */
         } else if (current_mode == DM_BASE256) {
 
-            if (gs1 == 1 && source[sp] == '\x1D') {
+            if (fncs[sp] && source[sp] == '\x1D') {
                 next_mode = DM_ASCII;
             } else {
                 next_mode = DM_BASE256;
                 if (not_first && sp >= b256_end) {
-                    next_mode = dm_look_ahead_test(source, length, sp, current_mode, tp - (*p_b256_start + 1), gs1,
+                    next_mode = dm_look_ahead_test(source, length, sp, current_mode, tp - (*p_b256_start + 1), fncs,
                                                     debug_print);
                 }
             }
@@ -1490,8 +1470,8 @@ static int dm_isoenc(struct zint_symbol *symbol, const unsigned char source[], c
 
 /* Encodes data using ASCII, C40, Text, X12, EDIFACT or Base 256 modes as appropriate
    Supports encoding FNC1 in supporting systems */
-static int dm_encode(struct zint_symbol *symbol, const unsigned char source[], const int length,
-            const int eci, const int last_seg, const int gs1, const int b256_end, const int c40_end,
+static int dm_encode(struct zint_symbol *symbol, const unsigned char source[], int length,
+            const int eci, const int last_seg, const char *fncs, const int b256_end, const int c40_end,
             unsigned char target[], int *p_tp) {
     int sp = 0;
     int tp = *p_tp;
@@ -1520,13 +1500,14 @@ static int dm_encode(struct zint_symbol *symbol, const unsigned char source[], c
         if (debug_print) printf("ECI %d ", eci + 1);
     }
 
+
     /* If FAST_MODE or MAILMARK_2D, do Annex J-based encodation */
     if ((symbol->input_mode & FAST_MODE) || b256_end || c40_end) {
         error_number = dm_isoenc(symbol, source, length, &sp, target, &tp, process_buffer, &process_p,
-                                    &b256_start, &current_mode, gs1, b256_end, c40_end, debug_print);
+                                    &b256_start, &current_mode, fncs, b256_end, c40_end, debug_print);
     } else { /* Do default minimal encodation */
         error_number = dm_minimalenc(symbol, source, length, last_seg, &sp, target, &tp, process_buffer, &process_p,
-                                        &b256_start, &current_mode, gs1, debug_print);
+                                        &b256_start, &current_mode, fncs, debug_print);
     }
     if (error_number) {
         assert(error_number >= ZINT_ERROR);
@@ -1571,7 +1552,7 @@ static int dm_encode(struct zint_symbol *symbol, const unsigned char source[], c
                 /* Backtrack to last complete triplet (same technique as BWIPP) */
                 while (sp > 0 && process_p % 3) {
                     sp--;
-                    cnt = dm_c40text_cnt(current_mode, gs1, source[sp]);
+                    cnt = dm_c40text_cnt(current_mode, fncs[sp], source[sp]);
                     total_cnt += cnt;
                     process_p -= cnt;
                 }
@@ -1588,14 +1569,9 @@ static int dm_encode(struct zint_symbol *symbol, const unsigned char source[], c
                         target[tp++] = 235; /* FNC4 */
                         target[tp++] = (source[sp] - 128) + 1;
                         if (debug_print) printf("FN4 A%02X ", target[tp - 1] - 1);
-                    } else if (gs1 && source[sp] == '\x1D') {
-                        if (gs1 == 2) {
-                            target[tp++] = 29 + 1; /* GS */
-                            if (debug_print) fputs("GS ", stdout);
-                        } else {
-                            target[tp++] = 232; /* FNC1 */
-                            if (debug_print) fputs("FN1 ", stdout);
-                        }
+                    } else if (fncs[sp] && source[sp] == '\x1D') {
+                        target[tp++] = 232; /* FNC1 */
+                        if (debug_print) fputs("FN1 ", stdout);
                     } else {
                         target[tp++] = source[sp] + 1;
                         if (debug_print) printf("A%02X ", target[tp - 1] - 1);
@@ -1670,10 +1646,10 @@ static int dm_encode(struct zint_symbol *symbol, const unsigned char source[], c
 }
 
 #ifdef ZINT_TEST /* Wrapper for direct testing */
-INTERNAL int zint_test_dm_encode(struct zint_symbol *symbol, const unsigned char source[], const int length,
-                const int eci, const int last_seg, const int gs1, const int b256_end, const int c40_end,
+INTERNAL int zint_test_dm_encode(struct zint_symbol *symbol, const unsigned char source[], int length,
+                const int eci, const int last_seg, const char *fncs, const int b256_end, const int c40_end,
                 unsigned char target[], int *p_tp) {
-    return dm_encode(symbol, source, length, eci, last_seg, gs1, b256_end, c40_end, target, p_tp);
+    return dm_encode(symbol, source, length, eci, last_seg, fncs, b256_end, c40_end, target, p_tp);
 }
 #endif
 
@@ -1685,10 +1661,12 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
     int i;
     int tp = 0;
     int in_macro = 0;
+    int have_extra_escapes = 0;
     int tot_length = 0, b256_have_fnc1 = 0;
     const struct zint_seg *last_seg = &segs[seg_count - 1];
     /* gs1 flag values: 0: no GS1, 1: GS1 with FNC1 serparator, 2: GS separator */
     const int gs1 = (symbol->input_mode & 0x07) == GS1_MODE ? 1 + !!(symbol->output_options & GS1_GS_SEPARATOR) : 0;
+    const int extra_escape_mode = symbol->input_mode & EXTRA_ESCAPE_MODE;
     const int mailmark = symbol->symbology == BARCODE_MAILMARK_2D;
     const int have_c40 = (symbol->option_3 & DM_C40_START) && symbol->option_1 >= 0;
     const int have_b256 = (symbol->option_3 & DM_B256_START) && symbol->option_1 >= 0;
@@ -1757,6 +1735,14 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
         target[tp++] = id2;
     }
 
+    if (extra_escape_mode && (symbol->symbology != BARCODE_DATAMATRIX || gs1)) {
+        if (symbol->symbology != BARCODE_DATAMATRIX) {
+            return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 843,
+                            "Can only use extra escape mode with non-variant Data Matrix");
+        }
+        return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 844, "Cannot use extra escape mode in GS1 mode");
+    }
+
     if (gs1) {
         target[tp++] = 232;
         if (debug_print) fputs("FN1 ", stdout);
@@ -1799,6 +1785,8 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
 
     for (i = 0; i < seg_count; i++) {
         const unsigned char *source;
+        unsigned char *src_buf;
+        char *fncs;
         int length;
         int src_inc = 0, len_dec = 0;
         int b256_end = 0, c40_end = 0;
@@ -1812,6 +1800,29 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
         }
         source = segs[i].source + src_inc;
         length = segs[i].length - len_dec;
+
+        src_buf = (unsigned char *) z_alloca(length + 1);
+        fncs = (char *) z_alloca(length);
+
+        if (gs1) {
+            memset(fncs, gs1 == 1, length);
+        } else {
+            memset(fncs, 0, length);
+            if (extra_escape_mode) {
+                int len;
+                if ((error_number = z_extra_escapes(symbol, source, length, segs[i].eci, src_buf, fncs, &len))) {
+                    return error_number;
+                }
+                if (len != length) {
+                    assert(len < length);
+                    length = len;
+                    assert(length > 0);
+                    src_buf[length] = '\0';
+                    source = src_buf;
+                    have_extra_escapes = 1;
+                }
+            }
+        }
 
         if (mailmark) {
             assert(seg_count == 1);
@@ -1834,6 +1845,7 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
             if (b256_have_fnc1) {
                 b256_end = 0;
             } else {
+                int b256_len;
                 if (symbol->option_1 == 0) {
                     b256_end = length;
                 } else if (symbol->option_1 < tot_length) {
@@ -1841,21 +1853,27 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
                 } else {
                     b256_end = symbol->option_1 - tot_length < length ? symbol->option_1 - tot_length : length;
                 }
-                if (gs1 == 1) {
-                    /* Stop at first FNC1 */
-                    const int b256_len = b256_end;
-                    for (b256_end = 0; b256_end < b256_len && source[b256_end] != '\x1D'; b256_end++);
-                    b256_have_fnc1 = b256_end != b256_len;
+                /* Stop at first FNC1 */
+                b256_len = b256_end;
+                for (b256_end = 0; b256_end < b256_len; b256_end++) {
+                    if (fncs[b256_end] && source[b256_end] == '\x1D') {
+                        break;
+                    }
                 }
+                b256_have_fnc1 = b256_end != b256_len;
             }
         }
-        if ((error_number = dm_encode(symbol, source, length, segs[i].eci, i + 1 == seg_count, gs1, b256_end, c40_end,
-                                        target, &tp))) {
+        if ((error_number = dm_encode(symbol, source, length, segs[i].eci, i + 1 == seg_count, fncs, b256_end,
+                                        c40_end, target, &tp))) {
             assert(error_number >= ZINT_ERROR);
             return error_number;
         }
-        if (content_segs && segs[i].eci) {
-            z_ct_set_seg_eci(symbol, i, segs[i].eci);
+        if (content_segs) {
+            if (have_extra_escapes) {
+                z_ct_set_seg_extra_escapes_eci(symbol, i, segs[i].eci);
+            } else if (segs[i].eci) {
+                z_ct_set_seg_eci(symbol, i, segs[i].eci);
+            }
         }
         tot_length += length;
     }

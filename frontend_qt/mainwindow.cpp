@@ -2026,6 +2026,7 @@ void MainWindow::change_options()
             dm_startmode_ui_set();
             tabMain->insertTab(1, m_optionWidget, tr("D&ata Matrix"));
             connect(get_widget(QSL("radDMStand")), SIGNAL(toggled(bool)), SLOT(update_preview()));
+            connect(get_widget(QSL("radDMExtraEsc")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("radDMGS1")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("radDMHIBC")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("cmbDMSize")), SIGNAL(currentIndexChanged(int)), SLOT(update_preview()));
@@ -3111,6 +3112,11 @@ void MainWindow::update_preview()
             } else {
                 set_gs1_mode(false);
                 checkBox->setEnabled(false);
+            }
+
+            if (get_rad_val(QSL("radDMExtraEsc"))) {
+                m_bc.bc.setSymbol(BARCODE_DATAMATRIX);
+                m_bc.bc.setInputMode(m_bc.bc.inputMode() | EXTRA_ESCAPE_MODE);
             }
 
             m_bc.bc.setOption2(get_cmb_index(QSL("cmbDMSize")));
@@ -4546,7 +4552,7 @@ void MainWindow::save_sub_settings(QSettings &settings, int symbology)
         case BARCODE_HIBC_DM:
             settings.setValue(QSL("studio/bc/datamatrix/size"), get_cmb_index(QSL("cmbDMSize")));
             settings.setValue(QSL("studio/bc/datamatrix/encoding_mode"), get_rad_grp_index(
-                QStringList() << QSL("radDMStand") << QSL("radDMGS1") << QSL("radDMHIBC")));
+                QStringList() << QSL("radDMStand") << QSL("radDMGS1") << QSL("radDMHIBC") << QSL("radDMExtraEsc")));
             settings.setValue(QSL("studio/bc/datamatrix/chk_suppress_rect"), get_chk_val(QSL("chkDMRectangle")));
             settings.setValue(QSL("studio/bc/datamatrix/chk_allow_dmre"), get_chk_val(QSL("chkDMRE")));
             settings.setValue(QSL("studio/bc/datamatrix/chk_gs_sep"), get_chk_val(QSL("chkDMGSSep")));
@@ -5024,7 +5030,7 @@ void MainWindow::load_sub_settings(QSettings &settings, int symbology)
         case BARCODE_HIBC_DM:
             set_cmb_from_setting(settings, QSL("studio/bc/datamatrix/size"), QSL("cmbDMSize"));
             set_rad_from_setting(settings, QSL("studio/bc/datamatrix/encoding_mode"),
-                QStringList() << QSL("radDMStand") << QSL("radDMGS1") << QSL("radDMHIBC"));
+                QStringList() << QSL("radDMStand") << QSL("radDMGS1") << QSL("radDMHIBC") << QSL("radDMExtraEsc"));
             set_chk_from_setting(settings, QSL("studio/bc/datamatrix/chk_suppress_rect"), QSL("chkDMRectangle"));
             set_chk_from_setting(settings, QSL("studio/bc/datamatrix/chk_allow_dmre"), QSL("chkDMRE"));
             set_chk_from_setting(settings, QSL("studio/bc/datamatrix/chk_gs_sep"), QSL("chkDMGSSep"));

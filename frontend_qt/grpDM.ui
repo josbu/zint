@@ -389,6 +389,18 @@ the data with a slash &quot;/&quot;</string>
         </property>
        </widget>
       </item>
+      <item row="0" column="3">
+       <widget class="QRadioButton" name="radDMExtraEsc">
+        <property name="text">
+         <string>Manual FN&amp;C1s (Extra Escape)</string>
+        </property>
+        <property name="toolTip">
+         <string>Process special escape sequence &quot;\^1&quot;
+allowing manual FNC1s
+(literal &quot;\^&quot; may be escaped with &quot;\^^&quot;)</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

@@ -98,6 +98,32 @@ ret /pixs known {
         pixs 0 tmppixs 0 j getinterval putinterval
     } if
 
+    b (databarlimitedcomposite) eq {
+        % Add RHS 5-space quiet zone
+        /cpypixs pixs length array def
+        cpypixs 0 pixs 0 pixs length getinterval putinterval
+        /pixw pixs length pixx idiv def
+        /pixs [
+            0 pixx cpypixs length 1 sub {
+                /i exch def
+                cpypixs i pixx getinterval aload pop 0 0 0 0 0
+            } for
+        ] def
+        /pixx pixx 5 add def
+    } if
+
+    b (ean13composite) eq b (ean8composite) eq or b (upcacomposite) eq or b (upcecomposite) eq or {
+        d (|) search {
+            /linear exch def
+            pop pop
+            linear ( ) search {  % Have add-on?
+                pop pop pop
+                % Remove last row from pixs array which just contains add-on overhang
+                /pixs [ pixs 0 pixs length pixx sub getinterval aload pop ] def
+            } { pop } ifelse
+        } { pop } ifelse
+    } if
+
     /xs systemdict /xs known { systemdict /xs get cvi } { 0 } ifelse def
     /xe systemdict /xe known { systemdict /xe get cvi } { 0 } ifelse def
 

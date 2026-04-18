@@ -226,7 +226,7 @@ static int c128_cost(const unsigned char source[], const int length, const int i
    https://github.com/bwipp/postscriptbarcode/pull/278 */
 static int c128_set_values(const unsigned char source[], const int length, const int start_idx,
             const char priority[C128_STATES], const char fncs[C128_MAX], const char manuals[C128_MAX],
-            int values[C128_VALUES_MAX], int *p_final_cset) {
+            int values[C128_VALUES_MAX], int *p_first_cset, int *p_final_cset) {
 
     short (*costs)[C128_STATES] = (short (*)[C128_STATES]) z_alloca(sizeof(*costs) * length);
     char (*modes)[C128_STATES] = (char (*)[C128_STATES]) z_alloca(sizeof(*modes) * length);
@@ -241,6 +241,18 @@ static int c128_set_values(const unsigned char source[], const int length, const
 
     if (costs[0][0] > C128_SYMBOL_MAX) { /* Total minimal cost (glyph count) */
         return costs[0][0];
+    }
+
+    if (p_first_cset) {
+        *p_first_cset = modes[0][0];
+    }
+
+    /* Make sure FNC1 in 2nd position after single alpha does not switch modes before FNC1 */
+    if (length > 1 && !fncs[0] && fncs[1] && z_isalpha(source[0])) {
+        const int mode = modes[0][0];
+        if (mode == (mode & 0x0F) && mode != modes[1][mode]) {
+            modes[1][mode] = mode;
+        }
     }
 
     /* Output codewords into `values` */
@@ -377,6 +389,7 @@ INTERNAL int zint_code128(struct zint_symbol *symbol, unsigned char source[], in
     char priority[C128_STATES];
     int values[C128_VALUES_MAX] = {0};
     int glyph_count;
+    int first_cset;
     unsigned char src_buf[C128_MAX + 1];
     unsigned char *src = source;
     const int ab_only = symbol->symbology == BARCODE_CODE128AB;
@@ -397,23 +410,27 @@ INTERNAL int zint_code128(struct zint_symbol *symbol, unsigned char source[], in
         char manual = 0;
         int j = 0;
         for (i = 0; i < length; i++) {
-            if (source[i] == '\\' && i + 2 < length && source[i + 1] == '^'
-                    && ((source[i + 2] >= '@' && source[i + 2] <= 'C') || source[i + 2] == '1'
-                        || source[i + 2] == '^')) {
-                if (source[i + 2] == '^') { /* Escape sequence '\^^' */
-                    manuals[j] = manual;
-                    src_buf[j++] = source[i++];
-                    manuals[j] = manual;
-                    src_buf[j++] = source[i++];
-                    /* Drop second '^' */
-                } else if (source[i + 2] == '1') { /* FNC1 */
-                    i += 2;
-                    fncs[j] = have_fnc1 = 1;
-                    manuals[j] = manual;
-                    src_buf[j++] = '\x1D'; /* Manual FNC1 dummy */
-                } else { /* Manual mode A/B/C/@ */
-                    i += 2;
-                    manual = source[i] == 'C' ? C128_C0 : source[i] - '@'; /* Assuming A0 = 1, B0 = 2 */
+            if (source[i] == '\\' && i + 2 < length && source[i + 1] == '^') {
+                const unsigned char ch = source[i + 2];
+                if ((ch >= '@' && ch <= 'C') || ch == '1' || ch == '^') {
+                    if (ch == '^') { /* Escape sequence '\^^' */
+                        manuals[j] = manual;
+                        src_buf[j++] = source[i++];
+                        manuals[j] = manual;
+                        src_buf[j++] = source[i++];
+                        /* Drop second '^' */
+                    } else if (ch == '1') { /* FNC1 */
+                        i += 2;
+                        fncs[j] = have_fnc1 = 1;
+                        manuals[j] = manual;
+                        src_buf[j++] = '\x1D'; /* Manual FNC1 dummy */
+                    } else { /* Manual mode A/B/C/@ */
+                        i += 2;
+                        manual = ch == 'C' ? C128_C0 : ch - '@'; /* Assuming A0 = 1, B0 = 2 */
+                    }
+                } else {
+                    return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 348, "Unrecognized extra escape \"\\^%c\"",
+                                    !z_isascii(ch) || z_iscntrl(ch) ? '?' : ch);
                 }
             } else {
                 manuals[j] = manual;
@@ -468,7 +485,8 @@ INTERNAL int zint_code128(struct zint_symbol *symbol, unsigned char source[], in
     }
     c128_set_priority(priority, have_a, have_b, have_c, have_extended);
 
-    glyph_count = c128_set_values(src, length, start_idx, priority, fncs, manuals, values, NULL /*p_final_cset*/);
+    glyph_count = c128_set_values(src, length, start_idx, priority, fncs, manuals, values, &first_cset,
+                                    NULL /*p_final_cset*/);
 
     if (symbol->debug & ZINT_DEBUG_PRINT) {
         printf("Data (%d): %.*s", length, length >= 100 ? 1 : length >= 10 ? 2 : 3, " ");
@@ -487,6 +505,36 @@ INTERNAL int zint_code128(struct zint_symbol *symbol, unsigned char source[], in
 
     /* ISO/IEC 15417:2007 leaves dimensions/height as application specification */
 
+    /* Do content segs before HRT to deal with manual FNC1s in 1st position & 2nd position */
+    if (content_segs) {
+        if (have_fnc1) {
+            int mv_idx = 0;
+            assert(length > 0);
+            /* Remove manual FNC1 in 1st position */
+            if (fncs[0]) {
+                mv_idx = 1;
+            /* Remove manual FNC1 in 2nd position, alphabetic */
+            } else if (length > 1 && fncs[1] && z_isalpha(src[0])) {
+                mv_idx = 2;
+            /* Remove manual FNC1 in 2nd position, 2 digits */
+            } else if (first_cset == C128_C0 && length > 2 && fncs[2] && z_isdigit(src[0]) && z_isdigit(src[1])) {
+                mv_idx = 3;
+            }
+            if (mv_idx) {
+                memmove(src + (mv_idx - 1), src + mv_idx, length - mv_idx);
+                memmove(fncs + (mv_idx - 1), fncs + mv_idx, length - mv_idx);
+                length--;
+            }
+        }
+        if ((symbol->input_mode & 0x07) == DATA_MODE) {
+            if (z_ct_cpy(symbol, src, length)) {
+                return ZINT_ERROR_MEMORY; /* `z_ct_cpy()` only fails with OOM */
+            }
+        } else if (z_ct_cpy_iso8859_1(symbol, src, length)) {
+            return ZINT_ERROR_MEMORY; /* `z_ct_cpy_iso8859_1()` only fails with OOM */
+        }
+    }
+
     /* HRT */
     if (have_fnc1) {
         /* Remove any manual FNC1 dummies ('\x1D') */
@@ -499,16 +547,6 @@ INTERNAL int zint_code128(struct zint_symbol *symbol, unsigned char source[], in
         length = j;
     }
     error_number = z_hrt_cpy_iso8859_1(symbol, src, length); /* Returns warning only */
-
-    if (content_segs) {
-        if ((symbol->input_mode & 0x07) == DATA_MODE) {
-            if (z_ct_cpy(symbol, src, length)) {
-                return ZINT_ERROR_MEMORY; /* `z_ct_cpy()` only fails with OOM */
-            }
-        } else if (z_ct_cpy_iso8859_1(symbol, src, length)) {
-            return ZINT_ERROR_MEMORY; /* `z_ct_cpy_iso8859_1()` only fails with OOM */
-        }
-    }
 
     return error_number;
 }
@@ -553,7 +591,7 @@ INTERNAL int zint_gs1_128_cc(struct zint_symbol *symbol, unsigned char source[],
     c128_set_priority(priority, 0 /*have_a*/, 1 /*have_b*/, 1 /*have_c*/, 0 /*have_extended*/);
 
     glyph_count = c128_set_values(reduced, reduced_length, 1 /*start_idx*/, priority, fncs, manuals, values,
-                                    &final_cset);
+                                    NULL /*p_first_cset*/, &final_cset);
 
     if (symbol->debug & ZINT_DEBUG_PRINT) {
         printf("Data (%d): %.*s", reduced_length, reduced_length >= 100 ? 1 : reduced_length >= 10 ? 2 : 3, " ");

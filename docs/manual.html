@@ -334,7 +334,7 @@
 <h1 class="title">Zint Barcode Generator and Zint Barcode Studio User
 Manual</h1>
 <p class="author">Version 2.16.0.9</p>
-<p class="date">March 2026</p>
+<p class="date">April 2026</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -1491,10 +1491,58 @@ is hexadecimal (000000-10FFFF)</td>
 </tr>
 </tbody>
 </table>
-<p>(Special escape sequences are available for Code 128 only to manually
-switch Code Sets and insert special <code>FNC1</code> characters - see
-<a href="#standard-code-128-iso-15417">6.1.10.1 Standard Code 128 (ISO
-15417)</a> for details.)</p>
+<p>Extra escape sequences are available for certain symbologies using
+the <code>--extraesc</code> option that allows the insertion of special
+characters or, in the case of Code 128 only, to manually switch Code
+Sets. Extra escapes begin with the sequence backslash caret
+(“<code>\^</code>”):</p>
+<table id="tbl:extra_escapes">
+<caption><span class="table-label">Table 3:</span> Extra Escape
+Sequences</caption>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 41%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Extra Escape Sequence</th>
+<th style="text-align: left;">Interpretation</th>
+<th>Available for Symbology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>\^1</code></td>
+<td style="text-align: left;">Insert <code>FNC1</code> character</td>
+<td>Code128, Data Matrix</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>\^^</code></td>
+<td style="text-align: left;">Literal <code>\^</code></td>
+<td>Code128, Data Matrix</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>\^A</code>, <code>\^B</code>,
+<code>\^C</code></td>
+<td style="text-align: left;">Select Code Set A, B or C
+respectively</td>
+<td>Code128 only</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>\^@</code></td>
+<td style="text-align: left;">Exit manual Code Set selection and resume
+automatic Code Set selection</td>
+<td>Code128 only</td>
+</tr>
+</tbody>
+</table>
+<p>Currently the only special character recognized is the Function Code
+1 character <code>FNC1</code>. If your data contains the sequence
+“<code>\^</code>” then it must be escaped using the extra escape
+sequence “<code>\^^</code>”, i.e. by doubling the caret.</p>
+<p>See <a href="#standard-code-128-iso-15417">6.1.10.1 Standard Code 128
+(ISO 15417)</a> for the details on manually switching Code Sets.</p>
 <p>Input data can be read directly from file using the <code>-i</code>
 or <code>--input</code> switch as shown below. The input file is assumed
 to be UTF-8 formatted unless an alternative mode is selected. This
@@ -1521,7 +1569,7 @@ types:</p>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> there.eps <span class="at">-d</span> <span class="st">&quot;This Text&quot;</span></span></code></pre></div>
 <p>The currently supported output file formats are:</p>
 <table id="tbl:output_file_formats">
-<caption><span class="table-label">Table 3:</span> Output File
+<caption><span class="table-label">Table 4:</span> Output File
 Formats</caption>
 <thead>
 <tr>
@@ -1588,7 +1636,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href=
 <p>Names are treated case-insensitively by the CLI, and the
 <code>BARCODE_</code> prefix and any underscores are optional.</p>
 <table id="tbl:barcode_types">
-<caption><span class="table-label">Table 4:</span> Barcode Types
+<caption><span class="table-label">Table 5:</span> Barcode Types
 (Symbologies)</caption>
 <colgroup>
 <col style="width: 11%" />
@@ -2334,7 +2382,7 @@ X-dimension of 0.2 (or for MaxiCode EMF output, 4). The maximum scale
 for both raster and vector is 200.</p>
 <p>To summarize the more intricate details:</p>
 <table id="tbl:scaling_multipliers" style="width:92%;">
-<caption><span class="table-label">Table 5:</span> Scaling Multipliers
+<caption><span class="table-label">Table 6:</span> Scaling Multipliers
 and Minima</caption>
 <colgroup>
 <col style="width: 15%" />
@@ -2491,7 +2539,7 @@ Chinese (Hanzi) characters which are also converted from UTF-8.</p>
 default character set is GB 2312 (Chinese); and UPNQR, whose default
 character set is Latin-2 (ISO/IEC 8859-2 plus ASCII).</p>
 <table id="tbl:default_character_sets">
-<caption><span class="table-label">Table 6:</span> Default Character
+<caption><span class="table-label">Table 7:</span> Default Character
 Sets</caption>
 <thead>
 <tr>
@@ -2626,11 +2674,11 @@ behaviour.</p>
 <p>If your data contains characters that are not in the default
 character set, you may encode it using an ECI-aware symbology and an ECI
 value from <span class="cross-ref-group"><a href="#tbl:eci_codes"
-class="cross-ref">Table 8: ECI Codes</a></span> below. The ECI
+class="cross-ref">Table 9: ECI Codes</a></span> below. The ECI
 information is added to your code symbol as prefix data. The symbologies
 that support ECI are:</p>
 <table id="tbl:eci_aware_symbologies">
-<caption><span class="table-label">Table 7:</span> ECI-Aware
+<caption><span class="table-label">Table 8:</span> ECI-Aware
 Symbologies</caption>
 <tbody>
 <tr>
@@ -2661,7 +2709,7 @@ followed by the value in the column <code>"ECI Code"</code> in the table
 below. The input data should be UTF-8 formatted. Zint automatically
 translates the data into the target encoding.</p>
 <table id="tbl:eci_codes">
-<caption><span class="table-label">Table 8:</span> ECI Codes</caption>
+<caption><span class="table-label">Table 9:</span> ECI Codes</caption>
 <thead>
 <tr>
 <th>ECI Code</th>
@@ -2809,7 +2857,7 @@ role="doc-noteref"><sup>9</sup></a></td>
 symbol (unless the data contains non-default character set characters).
 In this case, the default character set applies (see <span
 class="cross-ref-group"><a href="#tbl:default_character_sets"
-class="cross-ref">Table 6: Default Character Sets</a></span> above).</p>
+class="cross-ref">Table 7: Default Character Sets</a></span> above).</p>
 <p>If no ECI is specified or a value of 0 is given, and the data does
 contain characters other than in the default character set, then Zint
 will automatically insert the appropriate single-byte ECI if possible
@@ -2892,7 +2940,7 @@ alt="zint -b QRCODE --binary -d &quot;\xE2\x82\xAC\xE5\xB8\xB8&quot; --esc" />
 Options</h3>
 <p>The following symbologies accept GS1 data:</p>
 <table>
-<caption><span class="table-label">Table 9:</span> GS1-Enabled
+<caption><span class="table-label">Table 10:</span> GS1-Enabled
 Symbologies</caption>
 <thead>
 <tr>
@@ -3084,7 +3132,7 @@ you that there is a problem.</p>
 behaviour specify the <code>-o</code> option using special characters in
 the output filename as shown in the table below:</p>
 <table id="tbl:batch_filename_formatting">
-<caption><span class="table-label">Table 10:</span> Batch Filename
+<caption><span class="table-label">Table 11:</span> Batch Filename
 Formatting</caption>
 <thead>
 <tr>
@@ -3117,7 +3165,7 @@ Formatting</caption>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> EAN13 <span class="at">--batch</span> <span class="at">-i</span> ean13nos.txt <span class="at">-o</span> <span class="st">&quot;file~~~.svg&quot;</span></span></code></pre></div>
 <p>The following table shows some examples to clarify this method:</p>
 <table id="tbl:batch_filename_examples">
-<caption><span class="table-label">Table 11:</span> Batch Filename
+<caption><span class="table-label">Table 12:</span> Batch Filename
 Examples</caption>
 <thead>
 <tr>
@@ -3156,7 +3204,7 @@ Examples</caption>
 <p>The special characters can span directories also, which is useful
 when creating a large number of barcodes:</p>
 <table id="tbl:batch_dir_examples">
-<caption><span class="table-label">Table 12:</span> Batch Directory
+<caption><span class="table-label">Table 13:</span> Batch Directory
 Examples</caption>
 <thead>
 <tr>
@@ -3192,7 +3240,7 @@ required. For example:</p>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> MICROPDF417 <span class="at">--direct</span> <span class="at">--filetype</span><span class="op">=</span>pcx <span class="at">-d</span> <span class="st">&quot;Data to encode&quot;</span></span></code></pre></div>
 <p>This command will output the symbol as a PCX file to stdout. For the
 supported output file formats see <span class="cross-ref-group"><a
-href="#tbl:output_file_formats" class="cross-ref">Table 3: Output File
+href="#tbl:output_file_formats" class="cross-ref">Table 4: Output File
 Formats</a></span>.</p>
 <hr />
 <p>CAUTION: Outputting binary files to the command shell without
@@ -3236,7 +3284,7 @@ alt="zint -b CODEONE -d &quot;123456789012345678&quot; --dotty --vers=9" />
 input data, the <code>--seg1</code> to <code>--seg9</code> options can
 be used. Each option is of the form <code>--segN=ECI,data</code> where
 <code>ECI</code> is the ECI code (see <span class="cross-ref-group"><a
-href="#tbl:eci_codes" class="cross-ref">Table 8: ECI Codes</a></span>)
+href="#tbl:eci_codes" class="cross-ref">Table 9: ECI Codes</a></span>)
 and <code>data</code> is the data to which this applies. This is in
 addition to the ECI and data specified using the <code>--eci</code> and
 <code>-d</code> options which must still be present and which in effect
@@ -3248,7 +3296,7 @@ ECI 7 (Cyrillic), and segment 2 with ECI 20 (Shift JIS). Segments must
 be consecutive.</p>
 <p>Naturally the symbology must be ECI-aware (see <span
 class="cross-ref-group"><a href="#tbl:eci_aware_symbologies"
-class="cross-ref">Table 7: ECI-Aware Symbologies</a></span>).</p>
+class="cross-ref">Table 8: ECI-Aware Symbologies</a></span>).</p>
 <figure>
 <img src="images/aztec_segs.svg" class="i2d"
 alt="zint -b AZTEC --eci=9 -d &quot;Κείμενο&quot; --seg1=7,&quot;Текст&quot; --seg2=20,&quot;文章&quot;" />
@@ -3569,7 +3617,7 @@ is by altering the contents of the <code>zint_symbol</code> structure
 between the creation and encoding stages. The <code>zint_symbol</code>
 structure consists of the following members:</p>
 <table id="tbl:api_structure_zint_symbol">
-<caption><span class="table-label">Table 13:</span> API Structure
+<caption><span class="table-label">Table 14:</span> API Structure
 <code>zint_symbol</code></caption>
 <colgroup>
 <col style="width: 26%" />
@@ -3913,7 +3961,7 @@ back to the calling application. In addition the <code>errtxt</code>
 member is set to a message detailing the nature of the error. The errors
 generated by Zint are:</p>
 <table id="tbl:api_warnings_errors">
-<caption><span class="table-label">Table 14:</span> API Warning and
+<caption><span class="table-label">Table 15:</span> API Warning and
 Error Return Values</caption>
 <colgroup>
 <col style="width: 39%" />
@@ -4054,7 +4102,7 @@ below:</p>
 <h2 id="specifying-a-symbology">5.9 Specifying a Symbology</h2>
 <p>Symbologies can be specified by number or by name as listed in <span
 class="cross-ref-group"><a href="#tbl:barcode_types"
-class="cross-ref">Table 4: Barcode Types (Symbologies)</a></span>. For
+class="cross-ref">Table 5: Barcode Types (Symbologies)</a></span>. For
 example</p>
 <div class="sourceCode" id="cb74"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>symbol<span class="op">-&gt;</span>symbology <span class="op">=</span> BARCODE_LOGMARS<span class="op">;</span></span></code></pre></div>
 <h2 id="adjusting-output-options">5.10 Adjusting Output Options</h2>
@@ -4064,7 +4112,7 @@ table below simply <code>OR</code> them together when adjusting this
 value:</p>
 <div class="sourceCode" id="cb75"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>symbol<span class="op">-&gt;</span>output_options <span class="op">|=</span> BARCODE_BIND <span class="op">|</span> READER_INIT<span class="op">;</span></span></code></pre></div>
 <table id="tbl:api_output_options">
-<caption><span class="table-label">Table 15:</span> API
+<caption><span class="table-label">Table 16:</span> API
 <code>output_options</code> Values</caption>
 <colgroup>
 <col style="width: 34%" />
@@ -4184,7 +4232,7 @@ href="#feedback">5.16 Feedback</a>).</td>
 <p>The way in which the input data is encoded can be set using the
 <code>input_mode</code> member:</p>
 <table id="tbl:api_input_mode">
-<caption><span class="table-label">Table 16:</span> API
+<caption><span class="table-label">Table 17:</span> API
 <code>input_mode</code> Values</caption>
 <colgroup>
 <col style="width: 30%" />
@@ -4249,7 +4297,7 @@ other shortcuts if available (affects <code>AZTEC</code>,
 <tr>
 <td style="text-align: left;"><code>EXTRA_ESCAPE_MODE</code></td>
 <td style="text-align: left;">Process special symbology-specific escape
-sequences (<code>CODE128</code> only).</td>
+sequences (<code>CODE128</code> and <code>DATAMATRIX</code> only).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>GS1SYNTAXENGINE_MODE</code></td>
@@ -4282,10 +4330,10 @@ optional. So, for example, you can set</p>
 <p>is not valid.</p>
 <p>Permissible escape sequences (<code>ESCAPE_MODE</code>) are listed in
 <span class="cross-ref-group"><a href="#tbl:escape_sequences"
-class="cross-ref">Table 2: Escape Sequences</a></span>, and the special
-Code 128-only <code>EXTRA_ESCAPE_MODE</code> escape sequences are given
-in <a href="#standard-code-128-iso-15417">6.1.10.1 Standard Code 128
-(ISO 15417)</a>.</p>
+class="cross-ref">Table 2: Escape Sequences</a></span>, and the extra
+escape sequences (<code>EXTRA_ESCAPE_MODE</code>) are listed in <span
+class="cross-ref-group"><a href="#tbl:extra_escapes"
+class="cross-ref">Table 3: Extra Escape Sequences</a></span>.</p>
 <p>The GS1 options <code>GS1PARENS_MODE</code> (CLI
 <code>--gs1parens</code>) , <code>GS1NOCHECK_MODE</code> (CLI
 <code>--gs1nocheck</code>), <code>GS1SYNTAXENGINE_MODE</code> (CLI
@@ -4333,7 +4381,7 @@ contains. The <code>zint_seg</code> structure is of the form:</p>
 <span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> eci<span class="op">;</span>               <span class="co">/* Extended Channel Interpretation */</span></span>
 <span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
 <p>The symbology must support ECIs (see <span class="cross-ref-group"><a
-href="#tbl:eci_aware_symbologies" class="cross-ref">Table 7: ECI-Aware
+href="#tbl:eci_aware_symbologies" class="cross-ref">Table 8: ECI-Aware
 Symbologies</a></span>). For example:</p>
 <div class="sourceCode" id="cb81"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;zint.h&gt;</span></span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">**</span>argv<span class="op">)</span></span>
@@ -4423,7 +4471,7 @@ symbology. This can be determined using another additional function:</p>
 <p>by <code>OR</code>-ing the flags below in the <code>cap_flag</code>
 argument and checking the return to see which are set.</p>
 <table id="tbl:api_cap">
-<caption><span class="table-label">Table 17:</span> API Capability
+<caption><span class="table-label">Table 18:</span> API Capability
 Flags</caption>
 <colgroup>
 <col style="width: 35%" />
@@ -4541,7 +4589,7 @@ class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a>
 return the actual ECC percentage used in <code>option_1</code> as
 <code>P &lt;&lt; 8</code>, where P is the integer percentage, the low
 byte containing the values given in <span class="cross-ref-group"><a
-href="#tbl:aztec_eccs" class="cross-ref">Table 40: Aztec Code Error
+href="#tbl:aztec_eccs" class="cross-ref">Table 41: Aztec Code Error
 Correction Modes</a></span> (with the addition of <code>0</code> meaning
 less than 5% + 3 codewords and <code>-1</code> meaning minimum 3
 codewords). Micro PDF417 also will return the ECC percentage in
@@ -4692,8 +4740,8 @@ alt="zint -b C25INTER --compliantheight -d &quot;9212320967&quot;" />
 <p>No check digit is added by default, but can be set the same as for <a
 href="#standard-code-2-of-5">6.1.2.1 Standard Code 2 of 5</a>.</p>
 <h4 id="code-2-of-5-data-logic">6.1.2.5 Code 2 of 5 Data Logic</h4>
-<p>Data Logic does not include a check digit by default and can encode
-numeric input (digits 0-9) up to a maximum of 113 digits.</p>
+<p>Data Logic can encode numeric input (digits 0-9) up to a maximum of
+113 digits.</p>
 <figure>
 <img src="images/c25logic.svg" class="lin"
 alt="zint -b C25LOGIC -d &quot;9212320967&quot;" />
@@ -5003,7 +5051,7 @@ alt="zint -b MSI_PLESSEY -d &quot;6502&quot; --vers=2" />
 setting <code>--vers</code> (API <code>option_2</code>), shown in the
 table below:</p>
 <table id="tbl:msi_plessey_check_digits">
-<caption><span class="table-label">Table 18:</span> MSI Plessey Check
+<caption><span class="table-label">Table 19:</span> MSI Plessey Check
 Digit Options</caption>
 <thead>
 <tr>
@@ -5048,9 +5096,9 @@ Digit Options</caption>
 digits.</p>
 <h3 id="telepen">6.1.6 Telepen</h3>
 <h4 id="telepen-alpha">6.1.6.1 Telepen Alpha</h4>
-<p>Telepen Alpha was developed by SB Electronic Systems Limited and can
-encode ASCII text input, up to a maximum of 69 characters. Telepen
-includes a hidden modulo-127 check digit, added by Zint.</p>
+<p>Telepen Alpha was developed in 1972 by SB Electronic Systems Limited
+and can encode ASCII text input, up to a maximum of 69 characters.
+Telepen includes a hidden modulo-127 check digit, added by Zint.</p>
 <figure>
 <img src="images/telepen.svg" class="lin"
 alt="zint -b TELEPEN --compliantheight -d &quot;Z80&quot;" />
@@ -5230,29 +5278,34 @@ Zint supports the encoding of ISO/IEC 8859-1 (non-English) characters in
 Code 128 symbols. The ISO/IEC 8859-1 character set is shown in Annex <a
 href="#a.2-latin-alphabet-no.-1-isoiec-8859-1">A.2 Latin Alphabet No. 1
 (ISO/IEC 8859-1)</a>.</p>
-<p>Manual switching of Code Sets is possible using the
+<p>Manual insertion of <code>FNC1</code> is possible using the
 <code>--extraesc</code> option (API
 <code>input_mode |= EXTRA_ESCAPE_MODE</code>), which apart from
-processing normal escape sequences also processes the Code 128-specific
-escapes <code>\^A</code>, <code>\^B</code>, <code>\^C</code> and
+processing normal escape sequences also processes the extra escape
+sequences given in <span class="cross-ref-group"><a
+href="#tbl:extra_escapes" class="cross-ref">Table 3: Extra Escape
+Sequences</a></span>. For instance</p>
+<div class="sourceCode" id="cb106"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> CODE128 <span class="at">-d</span> <span class="st">&quot;A\^1BC\^1DEF&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
+<p>encodes the data <code>"A&lt;FNC1&gt;BC&lt;FNC1&gt;DEF"</code>, where
+<code>&lt;FNC1&gt;</code> represents the <code>FNC1</code>
+character.</p>
+<p>If the data contains an extra escape sequence, it can be escaped by
+doubling the caret (<code>^</code>). For instance</p>
+<div class="sourceCode" id="cb107"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> CODE128 <span class="at">-d</span> <span class="st">&quot;A\^1BC\^^1DEF&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
+<p>will encode the data <code>"A&lt;FNC1&gt;BC\^1DEF"</code>.</p>
+<p>Manual switching of Code Sets is possible using the Code 128-specific
+extra escapes <code>\^A</code>, <code>\^B</code>, <code>\^C</code> and
 <code>\^@</code> (the latter turns off manual Code Set selection). For
 instance the following will force switching to Code Set B for the data
 <code>"5678"</code> (normally Code Set C would be used throughout):</p>
-<div class="sourceCode" id="cb106"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> CODE128 <span class="at">-d</span> <span class="st">&quot;1234\^B5678&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
+<div class="sourceCode" id="cb108"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> CODE128 <span class="at">-d</span> <span class="st">&quot;1234\^B5678&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
 <p>The manually selected Code Set will apply until the next Code Set
 escape sequence or until a <code>\^@</code>, with the exception that
 data that cannot be represented in that Code Set will be switched as
-appropriate. If the data contains an extra escape sequence, it can be
-escaped by doubling the caret (<code>^</code>). For instance</p>
-<div class="sourceCode" id="cb107"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> CODE128 <span class="at">-d</span> <span class="st">&quot;\^AABC\^^BDEF&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
-<p>will encode the data <code>"ABC\^BDEF"</code> in Code Set A.</p>
-<p>There is also the extra escape <code>\^1</code>, which will encode a
-special Function Code 1 character (<code>FNC1</code>) anywhere you
-choose in the data, for instance</p>
-<div class="sourceCode" id="cb108"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> CODE128 <span class="at">-d</span> <span class="st">&quot;A\^1BC\^1DEF&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
+appropriate.</p>
 <p>Zint can encode a maximum of 102 symbol characters, which allows for
 e.g. 202 all-numeric or 101 all-uppercase characters. Sizes above 120
 digits (60 alphanumerics) are not recommended.</p>
@@ -5342,7 +5395,7 @@ usually be <code>"%"</code> (ASCII 37). If 27 characters are supplied,
 “relabel”, see below). The rest of the 27-character input must be
 alphanumeric, and is of the form:</p>
 <table id="tbl:dpd_input_fields">
-<caption><span class="table-label">Table 19:</span> DPD Input
+<caption><span class="table-label">Table 20:</span> DPD Input
 Fields</caption>
 <colgroup>
 <col style="width: 26%" />
@@ -5490,7 +5543,7 @@ alt="zint -b CHANNEL -d &quot;453678&quot; --compliantheight" />
 <p>The maximum values permitted depend on the number of channels used as
 shown in the table below:</p>
 <table id="tbl:channel_maxima">
-<caption><span class="table-label">Table 20:</span> Channel Value
+<caption><span class="table-label">Table 21:</span> Channel Value
 Ranges</caption>
 <thead>
 <tr>
@@ -5780,7 +5833,7 @@ pattern. The type of linear component to be used is determined using the
 <code>symbology</code>) as with other encoding methods. Valid values are
 shown below.</p>
 <table id="tbl:composite_symbologies">
-<caption><span class="table-label">Table 21:</span> GS1 Composite
+<caption><span class="table-label">Table 22:</span> GS1 Composite
 Symbology Values</caption>
 <colgroup>
 <col style="width: 11%" />
@@ -6035,7 +6088,7 @@ input data. Reed-Solomon error correction data is generated by Zint.
 Encoding behaviour is determined by the length of the input data
 according to the formula shown in the following table.</p>
 <table id="tbl:auspost_input_formats" style="width:86%;">
-<caption><span class="table-label">Table 22:</span> Australia Post Input
+<caption><span class="table-label">Table 23:</span> Australia Post Input
 Formats</caption>
 <colgroup>
 <col style="width: 13%" />
@@ -6157,7 +6210,7 @@ alt="zint -b MAILMARK_4S --compliantheight -d &quot;21B2254800659JW5O9QA6Y&quot;
 respectively. The rules for the input data are complex, as summarized in
 the following table.</p>
 <table id="tbl:mailmark_4s_input_fields">
-<caption><span class="table-label">Table 23:</span> Royal Mail 4-State
+<caption><span class="table-label">Table 24:</span> Royal Mail 4-State
 Mailmark Input Fields</caption>
 <colgroup>
 <col style="width: 11%" />
@@ -6191,7 +6244,7 @@ Mailmark Input Fields</caption>
 <p>The 6 Destination+DPS (Destination Post Code plus Delivery Point
 Suffix) patterns are:</p>
 <table id="tbl:mailmark_4s_destination_dps">
-<caption><span class="table-label">Table 24:</span> Royal Mail 4-State
+<caption><span class="table-label">Table 25:</span> Royal Mail 4-State
 Mailmark Destination+DPS Patterns</caption>
 <tbody>
 <tr>
@@ -6291,7 +6344,7 @@ ID (<code>BARCODE_HIBC_DM</code>) can be used to encode Health Industry
 Barcode (HIBC) data. Note that only ECC 200 symbols are supported, the
 older standards (ECC 000 to 140) have now been removed from Zint.</p>
 <table id="tbl:datamatrix_sizes">
-<caption><span class="table-label">Table 25:</span> Data Matrix
+<caption><span class="table-label">Table 26:</span> Data Matrix
 Sizes</caption>
 <thead>
 <tr>
@@ -6416,7 +6469,7 @@ symbols (versions 1-24) at the command line by using the option
 <p>Data Matrix Rectangular Extension (ISO/IEC 21471) codes may be
 generated with the following values as before:</p>
 <table id="tbl:dmre_sizes">
-<caption><span class="table-label">Table 26:</span> DMRE Sizes</caption>
+<caption><span class="table-label">Table 27:</span> DMRE Sizes</caption>
 <thead>
 <tr>
 <th>Input</th>
@@ -6498,6 +6551,22 @@ option <code>--dmre</code> (API <code>option_3 = DM_DMRE</code>).</p>
 <code>GS</code> (Group Separator, ASCII 29) as separator. Use the option
 <code>--gssep</code> to change to <code>GS</code> (API
 <code>output_options |= GS1_GS_SEPARATOR</code>).</p>
+<p>Manual insertion of <code>FNC1</code> is possible using the
+<code>--extraesc</code> option (API
+<code>input_mode |= EXTRA_ESCAPE_MODE</code>), which apart from
+processing normal escape sequences also processes the extra escape
+sequences given in <span class="cross-ref-group"><a
+href="#tbl:extra_escapes" class="cross-ref">Table 3: Extra Escape
+Sequences</a></span>. For instance</p>
+<div class="sourceCode" id="cb118"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> DATAMATRIX <span class="at">-d</span> <span class="st">&quot;A\^1BC\^1DEF&quot;</span> <span class="at">--extraesc</span></span></code></pre></div>
+<p>encodes the data <code>"A&lt;FNC1&gt;BC&lt;FNC1&gt;DEF"</code>, where
+<code>&lt;FNC1&gt;</code> represents the <code>FNC1</code> character. If
+the data contains an extra escape sequence, it can be escaped by
+doubling the caret (<code>^</code>), i.e. <code>"\^^"</code> encodes
+<code>"\^"</code>. Note that if using ECIs with manual FNC1s then the
+ECIs must be ASCII compatible.<a href="#fn24" class="footnote-ref"
+id="fnref24" role="doc-noteref"><sup>24</sup></a></p>
 <p>By default Zint uses a “de facto” codeword placement for symbols of
 size 144 x 144 (version 24). To override this and use the now clarified
 ISO/IEC standard placement, use option <code>--dmiso144</code> (API
@@ -6536,7 +6605,7 @@ href="#royal-mail-4-state-mailmark">6.5.4 Royal Mail 4-State
 Mailmark</a>, and offers space for customer data following an initial
 pre-formatted 45 character section, as summarized below.</p>
 <table id="tbl:mailmark_2d_input_fields">
-<caption><span class="table-label">Table 27:</span> Royal Mail 2D
+<caption><span class="table-label">Table 28:</span> Royal Mail 2D
 Mailmark Input Fields</caption>
 <thead>
 <tr>
@@ -6609,7 +6678,7 @@ alphabetic limitation (<code>'L'</code> versus <code>'A'</code>) does
 not apply, only the initial “outward” part is required (the rest can be
 blank), and the whole field can be blank:</p>
 <table id="tbl:mailmark_2d_destination_dps">
-<caption><span class="table-label">Table 28:</span> Royal Mail 2D
+<caption><span class="table-label">Table 29:</span> Royal Mail 2D
 Mailmark Destination+DPS Patterns</caption>
 <tbody>
 <tr>
@@ -6636,7 +6705,7 @@ Mailmark Destination+DPS Patterns</caption>
 except without the DPS (<code>'NA'</code>), and the trailing “inward”
 part cannot be blank (although the whole field can be):</p>
 <table id="tbl:mailmark_2d_rts">
-<caption><span class="table-label">Table 29:</span> Royal Mail 2D
+<caption><span class="table-label">Table 30:</span> Royal Mail 2D
 Mailmark RTS Patterns</caption>
 <tbody>
 <tr>
@@ -6652,7 +6721,7 @@ Mailmark RTS Patterns</caption>
 <p>Three sizes are defined, one rectangular, with varying maximum
 amounts of optional customer data:</p>
 <table id="tbl:mailmark_2d_sizes">
-<caption><span class="table-label">Table 30:</span> Royal Mail 2D
+<caption><span class="table-label">Table 31:</span> Royal Mail 2D
 Mailmark Sizes</caption>
 <thead>
 <tr>
@@ -6707,7 +6776,7 @@ alt="zint -b QRCODE -d &quot;QR Code Symbol&quot; --mask=5" />
 <code>--secure</code> option (API <code>option_1</code>) as shown in the
 following table.</p>
 <table id="tbl:qrcode_eccs">
-<caption><span class="table-label">Table 31:</span> QR Code ECC
+<caption><span class="table-label">Table 32:</span> QR Code ECC
 Levels</caption>
 <thead>
 <tr>
@@ -6749,7 +6818,7 @@ Levels</caption>
 version required (1-40). The size of symbol generated is shown in the
 table below.</p>
 <table id="tbl:qrcode_sizes">
-<caption><span class="table-label">Table 32:</span> QR Code
+<caption><span class="table-label">Table 33:</span> QR Code
 Sizes</caption>
 <thead>
 <tr>
@@ -6926,8 +6995,8 @@ be manually specified by using the <code>--mask</code> switch with
 values 0-7, or in the API by setting
 <code>option_3 = (N + 1) &lt;&lt; 8</code> where N is 0-7. To use with
 <code>ZINT_FULL_MULTIBYTE</code> set</p>
-<div class="sourceCode" id="cb118"><pre
-class="sourceCode c"><code class="sourceCode c"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a>option_3 <span class="op">=</span> ZINT_FULL_MULTIBYTE <span class="op">|</span> <span class="op">(</span>N <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span></span></code></pre></div>
+<div class="sourceCode" id="cb119"><pre
+class="sourceCode c"><code class="sourceCode c"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>option_3 <span class="op">=</span> ZINT_FULL_MULTIBYTE <span class="op">|</span> <span class="op">(</span>N <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span></span></code></pre></div>
 <p>The <code>--fast</code> option (API
 <code>input_mode |= FAST_MODE</code>) may be used when leaving Zint to
 automatically select a mask to reduce the number of masks to try to four
@@ -6955,7 +7024,7 @@ alt="zint -b MICROQR -d &quot;01234567&quot;" />
 table below. Note that versions M1 and M2 have restrictions on what
 characters can be encoded.</p>
 <table id="tbl:micrqr_sizes" style="width:93%;">
-<caption><span class="table-label">Table 33:</span> Micro QR Code
+<caption><span class="table-label">Table 34:</span> Micro QR Code
 Sizes</caption>
 <colgroup>
 <col style="width: 11%" />
@@ -7006,7 +7075,7 @@ codewords can be adjusted using the <code>--secure</code> option (API
 <code>option_1</code>); however ECC level H is not available for any
 version, and ECC level Q is only available for version M4:</p>
 <table id="tbl:micrqr_eccs" style="width:99%;">
-<caption><span class="table-label">Table 34:</span> Micro QR ECC
+<caption><span class="table-label">Table 35:</span> Micro QR ECC
 Levels</caption>
 <colgroup>
 <col style="width: 12%" />
@@ -7059,8 +7128,8 @@ be manually specified by using the <code>--mask</code> switch with
 values 0-3, or in the API by setting
 <code>option_3 = (N + 1) &lt;&lt; 8</code> where N is 0-3. To use with
 <code>ZINT_FULL_MULTIBYTE</code> set</p>
-<div class="sourceCode" id="cb119"><pre
-class="sourceCode c"><code class="sourceCode c"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>option_3 <span class="op">=</span> ZINT_FULL_MULTIBYTE <span class="op">|</span> <span class="op">(</span>N <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span></span></code></pre></div>
+<div class="sourceCode" id="cb120"><pre
+class="sourceCode c"><code class="sourceCode c"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>option_3 <span class="op">=</span> ZINT_FULL_MULTIBYTE <span class="op">|</span> <span class="op">(</span>N <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span></span></code></pre></div>
 <h3 id="rectangular-micro-qr-code-rmqr-iso-23941">6.6.5 Rectangular
 Micro QR Code (rMQR) (ISO 23941)</h3>
 <p>A rectangular version of QR Code, rMQR supports encoding of GS1 data,
@@ -7077,7 +7146,7 @@ alt="zint -b RMQR -d &quot;0123456&quot;" />
 <code>--secure</code> option (API <code>option_1</code>), however only
 ECC levels M and H are valid for this type of symbol.</p>
 <table id="tbl:rmqr_eccs">
-<caption><span class="table-label">Table 35:</span> rMQR ECC
+<caption><span class="table-label">Table 36:</span> rMQR ECC
 Levels</caption>
 <thead>
 <tr>
@@ -7107,7 +7176,7 @@ Levels</caption>
 table below. Input values between 33 and 38 fix the height of the symbol
 while allowing Zint to determine the minimum symbol width.</p>
 <table id="tbl:rmqr_sizes">
-<caption><span class="table-label">Table 36:</span> rMQR Sizes</caption>
+<caption><span class="table-label">Table 37:</span> rMQR Sizes</caption>
 <colgroup>
 <col style="width: 9%" />
 <col style="width: 12%" />
@@ -7325,8 +7394,8 @@ or if your data is already Latin-2 formatted use the
 <code>input_mode = DATA_MODE</code>).</p>
 <p>The following example creates a symbol from data saved as a Latin-2
 file:</p>
-<div class="sourceCode" id="cb120"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> upnqr.png <span class="at">-b</span> UPNQR <span class="at">--scale</span><span class="op">=</span>3 <span class="at">--binary</span> <span class="at">-i</span> upn.txt</span></code></pre></div>
+<div class="sourceCode" id="cb121"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> upnqr.png <span class="at">-b</span> UPNQR <span class="at">--scale</span><span class="op">=</span>3 <span class="at">--binary</span> <span class="at">-i</span> upn.txt</span></code></pre></div>
 <p>A mask may be manually specified and the <code>--fast</code> option
 used as with <a href="#qr-code-iso-18004">6.6.3 QR Code (ISO
 18004)</a>.</p>
@@ -7348,7 +7417,7 @@ secondary message usually consists of address data in a data structure.
 The format of the primary message required by Zint is given in the
 following table.</p>
 <table id="tbl:maxicode_scm">
-<caption><span class="table-label">Table 37:</span> MaxiCode Structured
+<caption><span class="table-label">Table 38:</span> MaxiCode Structured
 Carrier Message Format</caption>
 <colgroup>
 <col style="width: 16%" />
@@ -7384,9 +7453,9 @@ your parcel courier.</td>
 <p>The primary message can be set at the command prompt using the
 <code>--primary</code> switch (API <code>primary</code>). The secondary
 message uses the normal data entry method. For example:</p>
-<div class="sourceCode" id="cb121"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> test.eps <span class="at">-b</span> MAXICODE <span class="at">--primary</span><span class="op">=</span><span class="st">&quot;999999999840012&quot;</span> <span class="dt">\</span></span>
-<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-d</span> <span class="st">&quot;Secondary Message Here&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb122"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> test.eps <span class="at">-b</span> MAXICODE <span class="at">--primary</span><span class="op">=</span><span class="st">&quot;999999999840012&quot;</span> <span class="dt">\</span></span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-d</span> <span class="st">&quot;Secondary Message Here&quot;</span></span></code></pre></div>
 <p>When using the API the primary message must be placed in the
 <code>primary</code> string. The secondary is entered in the same way as
 described in <a href="#encoding-and-saving-to-file">5.2 Encoding and
@@ -7399,9 +7468,9 @@ to be prefixed by the ISO/IEC 15434 Format <code>"01"</code>
 <code>vv</code> is a 2-digit version, by using the <code>--scmvv</code>
 switch (API <code>option_2 = vv + 1</code>). For example to use the
 common version <code>"96"</code> (ASC MH10/SC 8):</p>
-<div class="sourceCode" id="cb122"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> MAXICODE <span class="at">--primary</span><span class="op">=</span><span class="st">&quot;152382802840001&quot;</span> <span class="at">--scmvv</span><span class="op">=</span>96 <span class="at">--esc</span> <span class="at">-d</span> <span class="dt">\</span></span>
-<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;1Z00004951\GUPSN\G06X610\G159\G1234567\G1/1\G\GY\G1 MAIN ST\GNY\GNY\R\E&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb123"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> MAXICODE <span class="at">--primary</span><span class="op">=</span><span class="st">&quot;152382802840001&quot;</span> <span class="at">--scmvv</span><span class="op">=</span>96 <span class="at">--esc</span> <span class="at">-d</span> <span class="dt">\</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;1Z00004951\GUPSN\G06X610\G159\G1234567\G1/1\G\GY\G1 MAIN ST\GNY\GNY\R\E&quot;</span></span></code></pre></div>
 <p>will prefix <code>"[)&gt;\R01\G96"</code> to the secondary message.
 (<code>\R</code>, <code>\G</code> and <code>\E</code> are the escape
 sequences for Record Separator, Group Separator and End of Transmission
@@ -7411,8 +7480,8 @@ Sequences</a></span>.)</p>
 <p>Modes 4 to 6 can be accessed using the <code>--mode</code> switch
 (API <code>option_1</code>). Modes 4 to 6 do not have a primary message.
 For example:</p>
-<div class="sourceCode" id="cb123"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> test.eps <span class="at">-b</span> MAXICODE <span class="at">--mode</span><span class="op">=</span>4 <span class="at">-d</span> <span class="st">&quot;A MaxiCode Message in Mode 4&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb124"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-o</span> test.eps <span class="at">-b</span> MAXICODE <span class="at">--mode</span><span class="op">=</span>4 <span class="at">-d</span> <span class="st">&quot;A MaxiCode Message in Mode 4&quot;</span></span></code></pre></div>
 <p>Mode 6 is reserved for the maintenance of scanner hardware and should
 not be used to encode user data.</p>
 <p>This symbology uses Latin-1 character encoding by default but also
@@ -7421,7 +7490,7 @@ can be placed in a MaxiCode symbol depends on the type of characters
 used in the text.</p>
 <p>Example maximum data lengths are given in the table below:</p>
 <table id="tbl:maxicode_data_length_maxima" style="width:100%;">
-<caption><span class="table-label">Table 38:</span> MaxiCode Data Length
+<caption><span class="table-label">Table 39:</span> MaxiCode Data Length
 Maxima</caption>
 <colgroup>
 <col style="width: 9%" />
@@ -7505,7 +7574,7 @@ symbols, meaning they have a smaller bullseye pattern at the centre of
 the symbol.</li>
 </ol>
 <table id="tbl:aztec_sizes">
-<caption><span class="table-label">Table 39:</span> Aztec Code
+<caption><span class="table-label">Table 40:</span> Aztec Code
 Sizes</caption>
 <thead>
 <tr>
@@ -7653,7 +7722,7 @@ by setting the <code>--secure</code> option (API <code>option_1</code>)
 to a value from the following table.</li>
 </ol>
 <table id="tbl:aztec_eccs">
-<caption><span class="table-label">Table 40:</span> Aztec Code Error
+<caption><span class="table-label">Table 41:</span> Aztec Code Error
 Correction Modes</caption>
 <thead>
 <tr>
@@ -7726,7 +7795,7 @@ are roughly square (versions A through to H) and variable-width versions
 (versions S and T). These can be selected by using <code>--vers</code>
 (API <code>option_2</code>) as shown in the table below:</p>
 <table id="tbl:codeone_sizes">
-<caption><span class="table-label">Table 41:</span> Code One
+<caption><span class="table-label">Table 42:</span> Code One
 Sizes</caption>
 <colgroup>
 <col style="width: 10%" />
@@ -7848,7 +7917,7 @@ specified using the <code>--vers</code> option (API
 specified by using the <code>--secure</code> option (API
 <code>option_1</code>), according to the following tables.</p>
 <table id="tbl:gridmatrix_sizes">
-<caption><span class="table-label">Table 42:</span> Grid Matrix
+<caption><span class="table-label">Table 43:</span> Grid Matrix
 Sizes</caption>
 <thead>
 <tr>
@@ -7912,7 +7981,7 @@ Sizes</caption>
 </tbody>
 </table>
 <table id="tbl:gridmatrix_eccs">
-<caption><span class="table-label">Table 43:</span> Grid Matrix Error
+<caption><span class="table-label">Table 44:</span> Grid Matrix Error
 Correction Modes</caption>
 <thead>
 <tr>
@@ -7996,7 +8065,7 @@ alt="zint -b HANXIN -d &quot;Hanxin Code symbol&quot;" />
 option (API <code>option_2</code>) to a value between 1 and 84 according
 to the following table.</p>
 <table id="tbl:hanxin_sizes">
-<caption><span class="table-label">Table 44:</span> Han Xin
+<caption><span class="table-label">Table 45:</span> Han Xin
 Sizes</caption>
 <thead>
 <tr>
@@ -8300,7 +8369,7 @@ most capacious of all the barcodes supported by Zint.</p>
 Xin Code which can be set by using the <code>--secure</code> option (API
 <code>option_1</code>) to a value from the following table.</p>
 <table id="tbl:hanxin_eccs">
-<caption><span class="table-label">Table 45:</span> Han Xin Error
+<caption><span class="table-label">Table 46:</span> Han Xin Error
 Correction Modes</caption>
 <thead>
 <tr>
@@ -8337,8 +8406,8 @@ be manually specified by using the <code>--mask</code> switch with
 values 0-3, or in the API by setting
 <code>option_3 = (N + 1) &lt;&lt; 8</code> where N is 0-3. To use with
 <code>ZINT_FULL_MULTIBYTE</code> set</p>
-<div class="sourceCode" id="cb124"><pre
-class="sourceCode c"><code class="sourceCode c"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a>option_3 <span class="op">=</span> ZINT_FULL_MULTIBYTE <span class="op">|</span> <span class="op">(</span>N <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span></span></code></pre></div>
+<div class="sourceCode" id="cb125"><pre
+class="sourceCode c"><code class="sourceCode c"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>option_3 <span class="op">=</span> ZINT_FULL_MULTIBYTE <span class="op">|</span> <span class="op">(</span>N <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span></span></code></pre></div>
 <h3 id="ultracode">6.6.14 Ultracode</h3>
 <p>This symbology uses a grid of coloured elements to encode data. ECI
 and GS1 modes are supported.</p>
@@ -8352,7 +8421,7 @@ alt="zint -b ULTRA -d &quot;HEIMASÍÐA KENNARAHÁSKÓLA ÍSLANDS&quot;" />
 <code>--secure</code> option (API <code>option_1</code>) to a value as
 shown in the following table.</p>
 <table id="tbl:ultra_eccs">
-<caption><span class="table-label">Table 46:</span> Ultracode Error
+<caption><span class="table-label">Table 47:</span> Ultracode Error
 Correction Values</caption>
 <thead>
 <tr>
@@ -8396,8 +8465,8 @@ Correction Values</caption>
 </table>
 <p>Zint does not currently implement data compression by default, but
 this can be initiated through the API by setting</p>
-<div class="sourceCode" id="cb125"><pre
-class="sourceCode c"><code class="sourceCode c"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>symbol<span class="op">-&gt;</span>option_3 <span class="op">=</span> ULTRA_COMPRESSION<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb126"><pre
+class="sourceCode c"><code class="sourceCode c"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a>symbol<span class="op">-&gt;</span>option_3 <span class="op">=</span> ULTRA_COMPRESSION<span class="op">;</span></span></code></pre></div>
 <p>With compression, up to 504 digits, 375 alphanumerics or 252 bytes
 can be encoded.</p>
 <p>Revision 2 of Ultracode (2023) may be specified using
@@ -8426,7 +8495,7 @@ alt="zint -b FIM --compliantheight -d &quot;C&quot;" />
 <p>There are only 5 valid symbols which can be generated using the
 characters A-E as shown in the table below.</p>
 <table id="tbl:fim_characters">
-<caption><span class="table-label">Table 47:</span> Valid FIM
+<caption><span class="table-label">Table 48:</span> Valid FIM
 Characters</caption>
 <thead>
 <tr>
@@ -8639,7 +8708,7 @@ Latin Alphabet No. 1 (ISO/IEC 8859-1)</a>.</p>
 <p>The ubiquitous ASCII standard is well known to most computer users.
 It’s reproduced here for reference.</p>
 <table id="tbl:ascii">
-<caption><span class="table-label">Table 48:</span> ASCII</caption>
+<caption><span class="table-label">Table 49:</span> ASCII</caption>
 <thead>
 <tr>
 <th>Hex</th>
@@ -8838,11 +8907,11 @@ It’s reproduced here for reference.</p>
 European languages like French, German, Italian and Spanish. This
 extension is the default encoding of many barcodes (see <span
 class="cross-ref-group"><a href="#tbl:default_character_sets"
-class="cross-ref">Table 6: Default Character Sets</a></span>) when a
+class="cross-ref">Table 7: Default Character Sets</a></span>) when a
 codepoint above hex 9F is encoded. Note that codepoints hex 80 to 9F are
 not defined.</p>
 <table id="tbl:iso_iec_8869_1">
-<caption><span class="table-label">Table 49:</span> ISO/IEC
+<caption><span class="table-label">Table 50:</span> ISO/IEC
 8859-1</caption>
 <thead>
 <tr>
@@ -9048,28 +9117,28 @@ properties that correspond to the <code>zint_symbol</code> structure
 method <code>render()</code> which takes a Qt <code>QPainter</code> to
 paint with, and a <code>QRectF</code> rectangular area specifying where
 to paint into:</p>
-<div class="sourceCode" id="cb126"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Encode and display barcode in `paintRect` using `painter`.</span></span>
-<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a><span class="co">   Note: legacy argument `mode` is not used */</span></span>
-<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> render<span class="op">(</span><span class="ex">QPainter</span><span class="op">&amp;</span> painter<span class="op">,</span> <span class="at">const</span> <span class="ex">QRectF</span><span class="op">&amp;</span> paintRect<span class="op">,</span></span>
-<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a>            AspectRatioMode mode <span class="op">=</span> IgnoreAspectRatio<span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb127"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Encode and display barcode in `paintRect` using `painter`.</span></span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a><span class="co">   Note: legacy argument `mode` is not used */</span></span>
+<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> render<span class="op">(</span><span class="ex">QPainter</span><span class="op">&amp;</span> painter<span class="op">,</span> <span class="at">const</span> <span class="ex">QRectF</span><span class="op">&amp;</span> paintRect<span class="op">,</span></span>
+<span id="cb127-4"><a href="#cb127-4" aria-hidden="true" tabindex="-1"></a>            AspectRatioMode mode <span class="op">=</span> IgnoreAspectRatio<span class="op">);</span></span></code></pre></div>
 <p><code>render()</code> will emit one of two Qt signals -
 <code>encoded</code> on successful encoding and drawing, or
 <code>errored</code> on failure. The client can connect and act
 appropriately, for instance:</p>
-<div class="sourceCode" id="cb127"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span>qzint<span class="op">,</span> <span class="ex">SIGNAL</span><span class="op">(</span>encoded<span class="op">()),</span> <span class="ex">SLOT</span><span class="op">(</span>on_encoded<span class="op">()));</span></span>
-<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span>qzint<span class="op">,</span> <span class="ex">SIGNAL</span><span class="op">(</span>errored<span class="op">()),</span> <span class="ex">SLOT</span><span class="op">(</span>on_errored<span class="op">()));</span></span></code></pre></div>
+<div class="sourceCode" id="cb128"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span>qzint<span class="op">,</span> <span class="ex">SIGNAL</span><span class="op">(</span>encoded<span class="op">()),</span> <span class="ex">SLOT</span><span class="op">(</span>on_encoded<span class="op">()));</span></span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a><span class="fu">connect</span><span class="op">(</span>qzint<span class="op">,</span> <span class="ex">SIGNAL</span><span class="op">(</span>errored<span class="op">()),</span> <span class="ex">SLOT</span><span class="op">(</span>on_errored<span class="op">()));</span></span></code></pre></div>
 <p>where <code>qzint</code> is an instance of <code>Zint::QZint</code>
 and <code>on_encoded()</code> and <code>on_error()</code> are Qt slot
 methods provided by the caller. On error, the error value and message
 can be retrieved by the methods <code>getError()</code> and
 <code>lastError()</code> respectively.</p>
 <p>The other main method is <code>save_to_file()</code>:</p>
-<div class="sourceCode" id="cb128"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Encode and print barcode to file `filename`.</span></span>
-<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a><span class="co">   Only sets `getError()` on error, not on warning */</span></span>
-<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> save_to_file<span class="op">(</span><span class="at">const</span> <span class="ex">QString</span><span class="op">&amp;</span> filename<span class="op">);</span> <span class="co">// `ZBarcode_Print()`</span></span></code></pre></div>
+<div class="sourceCode" id="cb129"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Encode and print barcode to file `filename`.</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a><span class="co">   Only sets `getError()` on error, not on warning */</span></span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> save_to_file<span class="op">(</span><span class="at">const</span> <span class="ex">QString</span><span class="op">&amp;</span> filename<span class="op">);</span> <span class="co">// `ZBarcode_Print()`</span></span></code></pre></div>
 <p>which takes a <code>filename</code> to output to. It too will emit an
 <code>errored</code> signal on failure, returning <code>false</code>
 (but nothing on success, which just returns <code>true</code>). Note
@@ -9084,12 +9153,12 @@ symbology capabilities, and utility methods such as
 <h1 id="annex-c.-tcl-backend-binding">Annex C. Tcl Backend Binding</h1>
 <p>A Tcl binding is available in the <code>"backend_tcl</code>”
 sub-directory. To make on Unix:</p>
-<div class="sourceCode" id="cb129"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> backend_tcl</span>
-<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoconf</span></span>
-<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span></span>
-<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
-<span id="cb129-5"><a href="#cb129-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span></code></pre></div>
+<div class="sourceCode" id="cb130"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> backend_tcl</span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoconf</span></span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span></span>
+<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
+<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span></code></pre></div>
 <p>For Windows, a Microsoft Visual C++ project file is available at
 <code>"backend_tcl\zint_tcl.vcxproj"</code>. Note that this assumes that
 Tcl/Tk is available in <code>"C:\Tcl"</code> and that the libraries are
@@ -9100,21 +9169,21 @@ to match your setup. There is also a Visual Studio makefile available at
 <code>"backend_tcl\win\README.txt"</code>.</p>
 <p>Once built and installed, invoke the Tcl/Tk CLI
 <code>"wish"</code>:</p>
-<div class="sourceCode" id="cb130"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="ex">wish</span></span></code></pre></div>
+<div class="sourceCode" id="cb131"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="ex">wish</span></span></code></pre></div>
 <p>and ignoring the Tk window click back to the command prompt
 <code>"%"</code> and type:</p>
-<div class="sourceCode" id="cb131"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="ex">package</span> require zint</span>
-<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> help</span></code></pre></div>
+<div class="sourceCode" id="cb132"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="ex">package</span> require zint</span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> help</span></code></pre></div>
 <p>which will show the usage message, with options very similar to the
 Zint CLI. (One notable difference is that boolean options such as
 <code>-bold</code> take a <code>1</code> or <code>0</code> as an
 argument.)</p>
 <p>A demonstration Tcl/Tk program which is also useful in itself is
 available at <code>"backend_tcl/demo/demo.tcl"</code>. To run type:</p>
-<div class="sourceCode" id="cb132"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="ex">wish</span> demo/demo.tcl</span></code></pre></div>
+<div class="sourceCode" id="cb133"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="ex">wish</span> demo/demo.tcl</span></code></pre></div>
 <p>which will display the following window.</p>
 <figure>
 <img src="images/tcl_demo.png" class="pop"
@@ -9347,14 +9416,14 @@ are:</p>
 </dd>
 <dt><code>--extraesc</code></dt>
 <dd>
-<p>For Code 128 only, as well as processing the normal escape sequences
-above, process the special escape sequences <code>\^A</code>,
-<code>\^B</code>, <code>\^C</code> and <code>\^@</code> that allow
-manual switching of Code Sets, and the special escape sequence
-<code>\^1</code> that inserts an <code>FNC1</code> character. The
-sequence <code>\@</code> turns off manual switching. The sequence
-<code>\^^</code> can be used to encode data that contains special escape
-sequences.</p>
+<p>As well as processing the normal escape sequences above, process the
+special escape sequences beginning with <code>\^</code>. For Code 128
+and Data Matrix, process the escape sequence <code>\^1</code> that
+inserts an <code>FNC1</code> character, and the escaping sequence
+<code>\^^</code> that encodes a literal <code>\^</code>. For Code 128
+only, process the escape sequences <code>\^A</code>, <code>\^B</code>,
+<code>\^C</code> and <code>\^@</code> that allow manual switching of
+Code Sets. The sequence <code>\^@</code> turns off manual switching.</p>
 </dd>
 <dt><code>--fast</code></dt>
 <dd>
@@ -9867,17 +9936,17 @@ Error counterpart of warning if <code>--werror</code> given
 <h2 id="examples">EXAMPLES</h2>
 <p>Create “out.png” (or “out.gif” if zint built without PNG support) in
 the current directory, as a Code 128 symbol.</p>
-<div class="sourceCode" id="cb141"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-d</span> <span class="st">&#39;This Text&#39;</span></span></code></pre></div>
-<p>Create “qr.svg” in the current directory, as a QR Code symbol.</p>
 <div class="sourceCode" id="cb142"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> QRCode <span class="at">-d</span> <span class="st">&#39;This Text&#39;</span> <span class="at">-o</span> <span class="st">&#39;qr.svg&#39;</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-d</span> <span class="st">&#39;This Text&#39;</span></span></code></pre></div>
+<p>Create “qr.svg” in the current directory, as a QR Code symbol.</p>
+<div class="sourceCode" id="cb143"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> QRCode <span class="at">-d</span> <span class="st">&#39;This Text&#39;</span> <span class="at">-o</span> <span class="st">&#39;qr.svg&#39;</span></span></code></pre></div>
 <p>Use batch mode to read from an input file “ean13nos.txt” containing a
 list of 13-digit GTINs, each on a separate line, to create a series of
 EAN-13 barcodes, formatting the output filenames to “ean001.gif”,
 “ean002.gif” etc. using the special character “~”.</p>
-<div class="sourceCode" id="cb143"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> EAN13 <span class="at">--batch</span> <span class="at">-i</span> <span class="st">&#39;ean13nos.txt&#39;</span> <span class="at">-o</span> <span class="st">&#39;ean~~~.gif&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb144"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> EAN13 <span class="at">--batch</span> <span class="at">-i</span> <span class="st">&#39;ean13nos.txt&#39;</span> <span class="at">-o</span> <span class="st">&#39;ean~~~.gif&#39;</span></span></code></pre></div>
 <h2 id="bugs">BUGS</h2>
 <p>Please send bug reports to
 https://sourceforge.net/p/zint/tickets/.</p>
@@ -9925,7 +9994,7 @@ file format BMP!<a href="#fnref3" class="footnote-back"
 role="doc-backlink">↩︎</a></p></li>
 <li id="fn4"><p>The symbology names marked with an asterisk
 (<code>*</code>) in <span class="cross-ref-group"><a
-href="#tbl:barcode_types" class="cross-ref">Table 4: Barcode Types
+href="#tbl:barcode_types" class="cross-ref">Table 5: Barcode Types
 (Symbologies)</a></span> above used different names in previous versions
 of Zint. These names are now deprecated but are still recognised by
 Zint. Those marked with a dagger (<code>†</code>) are replacements for
@@ -10022,6 +10091,11 @@ href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 Film Database at <a
 href="https://thebigfilmdatabase.merinorus.com">https://thebigfilmdatabase.merinorus.com</a>.<a
 href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p>ASCII-compatible ECIs are ECIs 3 to 18 and 21 to 27
+(see <span class="cross-ref-group"><a href="#tbl:eci_codes"
+class="cross-ref">Table 9: ECI Codes</a></span>). Note in particular
+that ECI 899, 8-bit binary, is not considered ASCII-compatible.<a
+href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </body>

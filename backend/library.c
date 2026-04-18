@@ -366,6 +366,12 @@ static int supports_non_iso8859_1(const int symbology) {
     return 0;
 }
 
+/* Returns 1 if `symbol` can process EXTRA_ESCAPE_MODE */
+static int supports_extra_escape_mode(const struct zint_symbol *const symbol) {
+    return symbol->symbology == BARCODE_CODE128
+                || (symbol->symbology == BARCODE_DATAMATRIX && (symbol->input_mode & 0x07) != GS1_MODE);
+}
+
 /* Returns 1 if symbology supports HRT */
 static int has_hrt(const int symbology) {
 
@@ -720,7 +726,8 @@ static int escape_char_process(struct zint_symbol *symbol, const unsigned char *
     int val;
     int i;
     unsigned int unicode;
-    const int extra_escape_mode = (symbol->input_mode & EXTRA_ESCAPE_MODE) && symbol->symbology == BARCODE_CODE128;
+    const int extra_escape_mode = symbol->input_mode & EXTRA_ESCAPE_MODE;
+    const int can_extra_escape = supports_extra_escape_mode(symbol);
     const int escape_parens = (symbol->input_mode & GS1PARENS_MODE)
                                 && ((symbol->input_mode & 0x07) == GS1_MODE || check_force_gs1(symbol->symbology));
 
@@ -748,10 +755,14 @@ static int escape_char_process(struct zint_symbol *symbol, const unsigned char *
                     if (escaped_string) escaped_string[out_posn] = vals[z_posn(escs, ch)];
                     in_posn += 2;
                     break;
-                case '^': /* CODE128 specific */
-                    if (!extra_escape_mode) {
-                        return z_errtxt(ZINT_ERROR_INVALID_DATA, symbol, 798,
-                                        "Escape '\\^' only valid for Code 128 in extra escape mode");
+                case '^': /* Symbology specific */
+                    if (!extra_escape_mode || !can_extra_escape) {
+                        if (!extra_escape_mode) {
+                            return z_errtxt(ZINT_ERROR_INVALID_DATA, symbol, 798,
+                                            "Escape '\\^' only valid in extra escape mode");
+                        }
+                        return z_errtxt(ZINT_ERROR_INVALID_DATA, symbol, 213,
+                                        "Extra escape '\\^' not valid for this symbology and/or input mode");
                     }
                     /* Pass thru unaltered */
                     if (escaped_string) {
@@ -814,7 +825,7 @@ static int escape_char_process(struct zint_symbol *symbol, const unsigned char *
                     }
                     /* Exclude reversed BOM and surrogates and out-of-range */
                     if (unicode == 0xFFFE || (unicode >= 0xD800 && unicode < 0xE000) || unicode > 0x10FFFF) {
-                        return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 246,
+                        return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 216,
                                         "Value of escape sequence '%.*s' in input out of range",
                                         ch == 'u' ? 6 : 8, input_string + in_posn);
                     }
@@ -849,7 +860,8 @@ static int escape_char_process(struct zint_symbol *symbol, const unsigned char *
                     break;
                 default:
                     return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 234,
-                                    "Unrecognised escape character '\\%c' in input", ch);
+                                    "Unrecognised escape character '\\%c' in input",
+                                    !z_isascii(ch) || z_iscntrl(ch) ? '?' : ch);
                     break;
             }
         } else {
@@ -991,7 +1003,7 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
     }
 
     escape_mode = (symbol->input_mode & ESCAPE_MODE)
-                    || ((symbol->input_mode & EXTRA_ESCAPE_MODE) && symbol->symbology == BARCODE_CODE128);
+                    || ((symbol->input_mode & EXTRA_ESCAPE_MODE) && supports_extra_escape_mode(symbol));
     content_segs = symbol->output_options & BARCODE_CONTENT_SEGS;
 
     local_segs = (struct zint_seg *) z_alloca(sizeof(struct zint_seg) * (seg_count > 0 ? seg_count : 1));
@@ -1074,7 +1086,7 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
     }
 
     if (total_len > ZINT_MAX_DATA_LEN) {
-        return error_tag(ZINT_ERROR_TOO_LONG, symbol, 243, "Input too long");
+        return error_tag(ZINT_ERROR_TOO_LONG, symbol, 214, "Input too long");
     }
 
     /* Reconcile symbol ECI and first segment ECI if both set */
@@ -1191,7 +1203,7 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
     if ((symbol->input_mode & 0x07) == UNICODE_MODE) {
         for (i = 0; i < seg_count; i++) {
             if (!z_is_valid_utf8(local_segs[i].source, local_segs[i].length)) {
-                return error_tag(ZINT_ERROR_INVALID_DATA, symbol, 245, "Invalid UTF-8 in input");
+                return error_tag(ZINT_ERROR_INVALID_DATA, symbol, 215, "Invalid UTF-8 in input");
             }
         }
         /* Only strip BOM on first segment */
@@ -1245,7 +1257,7 @@ int ZBarcode_Encode_Segs(struct zint_symbol *symbol, const struct zint_seg segs[
             return error_tag(ZINT_ERROR_INVALID_OPTION, symbol, 210, "Selected symbology does not support GS1 mode");
         }
     } else if (content_segs && supports_non_iso8859_1(symbol->symbology)) {
-        /* Copy these as-is. The content seg `eci` will need to be updated individually */
+        /* Copy these as-is. The content seg `eci` (& maybe `source`) will need to be updated individually */
         if (z_ct_cpy_segs(symbol, local_segs, seg_count)) {
             return error_tag(ZINT_ERROR_MEMORY, symbol, -1, NULL); /* `z_ct_cpy_segs()` only fails with OOM */
         }

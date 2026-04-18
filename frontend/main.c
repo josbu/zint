@@ -195,7 +195,7 @@ static void usage(const int no_png, const int have_gs1syntaxengine) {
            "  --eci=INTEGER         Set the ECI code for the data (segment 0)\n", stdout);
     fputs( "  --embedfont           Embed font in vector output (SVG only)\n"
            "  --esc                 Process escape sequences in input data\n"
-           "  --extraesc            Process symbology-specific escape sequences (Code 128)\n"
+           "  --extraesc            Process extra symbology-specific escape sequences\n"
            "  --fast                Use faster encodation or other shortcuts if available\n"
            "  --fg=COLOUR           Specify a foreground colour (as RGB(A) or \"C,M,Y,K\")\n", stdout);
     printf("  --filetype=TYPE       Set output file type BMP/EMF/EPS/GIF/PCX%s/SVG/TIF/TXT\n", no_png_type);

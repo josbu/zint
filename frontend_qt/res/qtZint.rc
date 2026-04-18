@@ -5,11 +5,7 @@
 #define VER_FILEVERSION     2,16,0,9
 #define VER_FILEVERSION_STR "2.16.0.9\0"
 
-#ifdef GCC_WINDRES
 VS_VERSION_INFO VERSIONINFO
-#else
-VS_VERSION_INFO VERSIONINFO
-#endif
 FILEVERSION     VER_FILEVERSION
 PRODUCTVERSION  VER_FILEVERSION
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
@@ -24,23 +20,24 @@ FILESUBTYPE     VFT2_UNKNOWN
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "000904b0"
+        BLOCK "040904B0"
+        //language ID = U.S. English, char set = Windows, Unicode
         BEGIN
-            VALUE "CompanyName",      "Robin Stuart & BogDan Vatra"
-            VALUE "FileDescription",  "qtZint barcode generator"
+            VALUE "CompanyName",      "Zint\0"
+            VALUE "FileDescription",  "qtZint barcode generator\0"
             VALUE "FileVersion",      VER_FILEVERSION_STR
-            VALUE "InternalName",     "qtZint"
-            VALUE "LegalCopyright",   "Copyright © 2025 Robin Stuart & BogDan Vatra"
-            VALUE "License",          "GNU General Public License version 3"
-            VALUE "OriginalFilename", "qtZint"
-            VALUE "ProductName",      "Zint Barcode Studio"
+            VALUE "InternalName",     "qtZint\0"
+            VALUE "LegalCopyright",   "Copyright © 2026 Robin Stuart & BogDan Vatra\0"
+            VALUE "OriginalFilename", "qtZint\0"
+            VALUE "ProductName",      "Zint Barcode Studio\0"
             VALUE "ProductVersion",   VER_FILEVERSION_STR
-            VALUE "WWW",              "https://www.zint.org.uk"
+            VALUE "License",          "GPL-3.0-or-later\0"
+            VALUE "WWW",              "https://www.zint.org.uk\0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x9, 1200
+        VALUE "Translation", 0x0409, 1200
     END
 END
 100 ICON MOVEABLE PURE LOADONCALL DISCARDABLE "zint-qt.ico"

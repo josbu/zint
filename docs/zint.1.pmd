@@ -1,6 +1,6 @@
 % ZINT(1) Version 2.16.0.9
 %
-% March 2026
+% April 2026
 
 [//]: # ( vim: set ts=4 sw=4 et : )
 
@@ -193,10 +193,10 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 
 `--extraesc`
 
-:   For Code 128 only, as well as processing the normal escape sequences above, process the special escape sequences
-    `\^A`, `\^B`, `\^C` and `\^@` that allow manual switching of Code Sets, and the special escape sequence `\^1` that
-    inserts an `FNC1` character. The sequence `\@` turns off manual switching. The sequence `\^^` can be used to
-    encode data that contains special escape sequences.
+:   As well as processing the normal escape sequences above, process the special escape sequences beginning with `\^`.
+    For Code 128 and Data Matrix, process the escape sequence `\^1` that inserts an `FNC1` character, and the escaping
+    sequence `\^^` that encodes a literal `\^`. For Code 128 only, process the escape sequences `\^A`, `\^B`, `\^C`
+    and `\^@` that allow manual switching of Code Sets. The sequence `\^@` turns off manual switching.
 
 `--fast`
 

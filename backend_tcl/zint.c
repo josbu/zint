@@ -577,7 +577,7 @@ static const char help_message[] = "zint tcl(stub,obj) dll\n"
     "   -eci choice: ECI to use\n"
     /* cli option --embedfont not supported (vector output only) */
     "   -esc bool: process escape sequences in input data\n"
-    "   -extraesc bool: process symbology-specific escape sequences (Code 128 only)\n"
+    "   -extraesc bool: process symbology-specific escape sequences (Code 128 and Data Matrix only)\n"
     "   -fast bool: use fast encodation (Aztec, Data Matrix, MicroPDF417, PDF417, QR, UPNQR)\n"
     "   -fg color: set foreground color as 6 or 8 hex rrggbbaa\n"
     /* replaces cli options --binary and --gs1 */

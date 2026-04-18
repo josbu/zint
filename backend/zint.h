@@ -324,7 +324,7 @@ extern "C" {
 #define FAST_MODE               0x0080  /* Use faster if less optimal encodation or other shortcuts if available */
                                         /* (affects AZTEC, DATAMATRIX, MICROPDF417, PDF417, QRCODE & UPNQR only) */
 #define EXTRA_ESCAPE_MODE       0x0100  /* Process special symbology-specific escape sequences as well as others */
-                                        /* Note: currently Code 128 only */
+                                        /* Note: currently Code 128 and Data Matrix only */
 #define GS1SYNTAXENGINE_MODE    0x0200  /* Use the GS1 Syntax Engine (if available) to strictly validate GS1 input */
 #define GS1RAW_MODE             0x0400  /* Process GS1 data literally (no AI delimiters), parsing GSs as FNC1s */
 

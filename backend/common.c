@@ -776,6 +776,41 @@ INTERNAL int z_utf8_to_unicode(struct zint_symbol *symbol, const unsigned char s
     return 0;
 }
 
+/* Process `source` for manual FNC1 extra escape sequences, placing result in `dest` with result length in `p_len`,
+   and setting `fncs` with found FNC1s. `dest` & `fncs` must be at least `length` in size. `eci` is checked to be
+   ASCII-compatible (UTF-8 & single-byte ECIs, excl. Binary 899). On error sets `errtxt` & returns error no. */
+INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char source[], const int length,
+                const int eci, unsigned char dest[], char *fncs, int *p_len) {
+    int i, j = 0;
+    if (eci == 20 || eci == 25 || eci >= 28) {
+        return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 716, "Extra escape mode requires ASCII-compatible ECI");
+    }
+    for (i = 0; i < length; i++) {
+        if (source[i] == '\\' && i + 2 < length && source[i + 1] == '^') {
+            const unsigned char ch = source[i + 2];
+            if (ch == '1' || ch == '^') {
+                if (ch == '^') { /* Escape sequence '\^^' */
+                    dest[j++] = source[i++];
+                    dest[j++] = source[i++];
+                    /* Drop second '^' */
+                } else { /* ch == '1' FNC1 */
+                    i += 2;
+                    fncs[j] = 1;
+                    dest[j++] = '\x1D'; /* Manual FNC1 dummy */
+                }
+            } else {
+                return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 717, "Unrecognized extra escape \"\\^%c\"",
+                                !z_isascii(ch) || z_iscntrl(ch) ? '?' : ch);
+            }
+        } else {
+            dest[j++] = source[i];
+        }
+    }
+    *p_len = j;
+
+    return 0;
+}
+
 /* Treats source as ISO/IEC 8859-1 and copies into `symbol->text`, converting to UTF-8. Control chars (incl. DEL) and
    non-ISO/IEC 8859-1 (0x80-9F) are replaced with spaces. Returns warning if truncated, else 0 */
 INTERNAL int z_hrt_cpy_iso8859_1(struct zint_symbol *symbol, const unsigned char source[], const int length) {
@@ -988,10 +1023,52 @@ INTERNAL int z_ct_cpy_segs(struct zint_symbol *symbol, const struct zint_seg seg
     return 0;
 }
 
-/* Update the ECI of content seg `seg_idx` to `eci`, to reflect (feedback) the actual ECI used */
-INTERNAL void z_ct_set_seg_eci(struct zint_symbol *symbol, const int seg_idx, const int eci) {
+/* Process content seg `seg_idx` buffer for manual FNC1 extra escape sequences (which must exist),
+   and update its ECI to `eci`, if set, to reflect (feedback) the actual ECI used */
+INTERNAL void z_ct_set_seg_extra_escapes_eci(struct zint_symbol *symbol, const int seg_idx, const int eci) {
+    int i, j = 0;
+    unsigned char *source;
+    int length;
+    const int no_fnc1_position_check = seg_idx != 0 || eci != 0;
+
     assert(symbol->content_segs);
     assert(seg_idx >= 0 && seg_idx < symbol->content_seg_count);
+    assert(symbol->content_segs[seg_idx].source);
+
+    source = symbol->content_segs[seg_idx].source;
+    length = symbol->content_segs[seg_idx].length;
+
+    for (i = 0; i < length; i++) {
+        if (source[i] == '\\' && i + 2 < length && source[i + 1] == '^'
+                && (source[i + 2] == '1' || source[i + 2] == '^')) {
+            if (source[i + 2] == '^') { /* Escape sequence '\^^' */
+                source[j++] = source[i++];
+                source[j++] = source[i++];
+                /* Drop second '^' */
+            } else { /* source[i + 2] == '1' FNC1 */
+                /* Do not emit <GS> if FNC1 in 1st/2nd position */
+                if (no_fnc1_position_check || j > 2 || (j == 1 && !z_isalpha(source[0]))
+                        || (j == 2 && (!z_isdigit(source[0]) || !z_isdigit(source[1]))) ) {
+                    source[j++] = '\x1D'; /* GS */
+                }
+                i += 2;
+            }
+        } else {
+            source[j++] = source[i];
+        }
+    }
+    assert(j > 0 && j < length);
+    symbol->content_segs[seg_idx].length = j;
+    if (eci) {
+        symbol->content_segs[seg_idx].eci = eci;
+    }
+}
+
+/* Update the ECI of content seg `seg_idx` to `eci`, to reflect (feedback) the actual ECI used */
+INTERNAL void z_ct_set_seg_eci(struct zint_symbol *symbol, const int seg_idx, const int eci) {
+    assert(seg_idx >= 0 && seg_idx < symbol->content_seg_count);
+    assert(eci);
+    assert(symbol->content_segs);
     symbol->content_segs[seg_idx].eci = eci;
 }
 
