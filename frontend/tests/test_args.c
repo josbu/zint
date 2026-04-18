@@ -30,7 +30,7 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 
 #ifndef _WIN32
-#include <sys/wait.h>
+#include <sys/wait.h> /* For WIFEXITED/WEXITSTATUS */
 #endif
 
 #include "testcommon.h"

@@ -47,6 +47,9 @@
 #include <assert.h>
 #include <limits.h>
 #include <sys/stat.h>
+#ifndef _WIN32
+#include <sys/wait.h> /* For WIFEXITED/WEXITSTATUS */
+#endif
 
 #include "testcommon.h"
 #include "../eci.h"

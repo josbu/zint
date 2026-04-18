@@ -1,6 +1,6 @@
 name: CI
 
-# .github/workflows/ci.yml 2025-12-09
+# .github/workflows/ci.yml 2026-04-18
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch (or test branch github_ci push)
 on:
@@ -20,7 +20,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install libpng-dev
       run: sudo apt-get install libpng-dev
@@ -64,7 +64,7 @@ jobs:
       BUILD_TYPE: Debug
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install libpng-dev
       run: sudo apt-get install libpng-dev
@@ -105,7 +105,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Create Build Environment
       shell: bash
@@ -164,7 +164,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Create Build Environment
       shell: bash
@@ -221,7 +221,7 @@ jobs:
     runs-on: macOS-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Create Build Environment
       shell: bash
@@ -231,9 +231,9 @@ jobs:
       shell: bash
       run: brew install libpng
 
-    - name: Install Qt5
+    - name: Install Qt6
       shell: bash
-      run: brew install qt5
+      run: brew install qt6
 
     - name: Install GS1 Syntax Engine
       run: git clone --depth=1 https://github.com/gs1/gs1-syntax-engine && cd gs1-syntax-engine/src/c-lib && make lib && (sudo make install || true)
@@ -241,7 +241,7 @@ jobs:
     - name: Configure CMake
       working-directory: build
       shell: bash
-      run: PATH=$PATH:/opt/homebrew/opt/qt@5/bin cmake $GITHUB_WORKSPACE -DCMAKE_C_FLAGS='-I /usr/local/include' -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZINT_TEST=ON -DZINT_STATIC=ON
+      run: PATH=$PATH:/opt/homebrew/opt/qt@6/bin cmake $GITHUB_WORKSPACE -DCMAKE_C_FLAGS='-I /usr/local/include' -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZINT_TEST=ON -DZINT_STATIC=ON -DZINT_QT6=ON
 
     - name: Build
       working-directory: build
@@ -257,7 +257,7 @@ jobs:
     runs-on: macOS-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Create Build Environment
       shell: bash
@@ -282,7 +282,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Build FreeBSD
       id: build-freebsd
