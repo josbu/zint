@@ -3650,12 +3650,6 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
     }
 
     /* Hack in various adjustments */
-    if (symbology == BARCODE_DBAR_OMN || symbology == BARCODE_DBAR_LTD || symbology == BARCODE_DBAR_EXP) {
-        /* Begin with space */
-        char adj[] = " -sbs";
-        memmove(cmd + GS_INITIAL_LEN + sizeof(adj) - 1, cmd + GS_INITIAL_LEN, strlen(cmd) + 1 - GS_INITIAL_LEN);
-        memcpy(cmd + GS_INITIAL_LEN, adj, sizeof(adj) - 1);
-    }
     if (symbology == BARCODE_CODE11 || symbology == BARCODE_CODE39 || symbology == BARCODE_EXCODE39
             || symbology == BARCODE_CODABAR || symbology == BARCODE_PZN
             || symbology == BARCODE_CODE32 || symbology == BARCODE_VIN) {
