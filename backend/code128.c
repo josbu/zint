@@ -158,7 +158,8 @@ static int c128_cost(const unsigned char source[], const int length, const int i
     const unsigned char ch = source[i];
     const char *const latch_len = prior_cset == 0 ? c128_start_latch_len[start_idx] : c128_latch_len[prior_cset];
     const int is_fnc1 = ch == '\x1D' && fncs[i];
-    const int can_c = is_fnc1 || (z_isdigit(ch) && z_isdigit(source[i + 1])); /* Assumes source NUL-terminated */
+    const int can_c = is_fnc1 ? i != 1 || !z_isalpha(source[0]) /* Don't use C if FNC1 in 2nd position after alpha */
+                                : (z_isdigit(ch) && z_isdigit(source[i + 1])); /* Assumes source NUL-terminated */
     const int manual_c_fail = !can_c && manuals[i] == C128_C0; /* C requested but not doable */
     int min_cost = 999999; /* Max possible cost less than 2 * 256 */
     int min_mode = 0;
@@ -247,14 +248,6 @@ static int c128_set_values(const unsigned char source[], const int length, const
         *p_first_cset = modes[0][0];
     }
 
-    /* Make sure FNC1 in 2nd position after single alpha does not switch modes before FNC1 */
-    if (length > 1 && !fncs[0] && fncs[1] && z_isalpha(source[0])) {
-        const int mode = modes[0][0];
-        if (mode == (mode & 0x0F) && mode != modes[1][mode]) {
-            modes[1][mode] = mode;
-        }
-    }
-
     /* Output codewords into `values` */
     for (i = 0; i < length; i++) {
         const unsigned char ch = source[i];
@@ -309,6 +302,7 @@ static int c128_set_values(const unsigned char source[], const int length, const
 
 /* Helper to write out symbol, calculating check digit */
 static void c128_expand(struct zint_symbol *symbol, int values[C128_VALUES_MAX], int glyph_count) {
+    static const char stop[7] = { '2','3','3','1','1','1','2' };
     char dest[640]; /* (102 + 1 (check digit)) * 6 + 7 (Stop) = 625 */
     char *d = dest;
     int total_sum;
@@ -329,7 +323,7 @@ static void c128_expand(struct zint_symbol *symbol, int values[C128_VALUES_MAX],
     values[glyph_count++] = total_sum; /* For debug/test */
 
     /* Stop character */
-    memcpy(d, "2331112", 7);
+    memcpy(d, stop, 7);
     d += 7;
     values[glyph_count++] = 106; /* For debug/test */
 

@@ -1752,6 +1752,7 @@ static void test_fuzz(const testCtx *const p_ctx) {
                     "\136\136",
                     162, ZINT_ERROR_TOO_LONG, "Error 341: Input too long, requires 167 symbol characters (maximum 102)", 3
                 }, /* fuzz_data (2nd, 2026-01-12) */
+        /*  1*/ { BARCODE_CODE128, DATA_MODE | EXTRA_ESCAPE_MODE, -1, -1, "\\^CC\\^177#", -1, 0, "", 3 },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;

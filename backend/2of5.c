@@ -90,10 +90,12 @@ static int c25_common(struct zint_symbol *symbol, const unsigned char source[], 
     d += start_length;
 
     if (is_matrix) {
+        /* Standard, Data Logic */
         for (i = 0; i < length; i++, d += 6) {
             memcpy(d, C25MatrixTable[local_source[i] - '0'], 6);
         }
     } else {
+        /* IATA, Industrial */
         for (i = 0; i < length; i++, d += 10) {
             memcpy(d, C25IndustTable[local_source[i] - '0'], 10);
         }

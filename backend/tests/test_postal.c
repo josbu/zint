@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -72,7 +72,7 @@ static void test_large(const testCtx *const p_ctx) {
         /* 20*/ { BARCODE_PLANET, "1", 13, 0, 2, 143, "" },
         /* 21*/ { BARCODE_PLANET, "1", 14, ZINT_WARN_NONCOMPLIANT, 2, 153, "Warning 478: Input length 14 is not standard (should be 11 or 13 digits)" },
         /* 22*/ { BARCODE_PLANET, "1", 38, ZINT_WARN_NONCOMPLIANT, 2, 393, "Warning 478: Input length 38 is not standard (should be 11 or 13 digits)" },
-        /* 23*/ { BARCODE_PLANET, "1", 39, ZINT_ERROR_TOO_LONG, -1, -1, "Error 482: Input length 39 too long (maximum 38)" },
+        /* 23*/ { BARCODE_PLANET, "1", 39, ZINT_ERROR_TOO_LONG, -1, -1, "Error 480: Input length 39 too long (maximum 38)" },
         /* 24*/ { BARCODE_KIX, "1", 18, 0, 3, 143, "" },
         /* 25*/ { BARCODE_KIX, "1", 19, ZINT_ERROR_TOO_LONG, -1, -1, "Error 490: Input length 19 too long (maximum 18)" },
         /* 26*/ { BARCODE_DAFT, "D", 576, 0, 3, 1151, "" },
@@ -352,10 +352,10 @@ static void test_input(const testCtx *const p_ctx) {
         /* 34*/ { BARCODE_PLANET, -1, 0, "1234567890", ZINT_WARN_NONCOMPLIANT, 2, 113, 12, "Warning 478: Input length 10 is not standard (should be 11 or 13 digits)", 0, "BWIPP requires standard lengths" },
         /* 35*/ { BARCODE_PLANET, -1, 0, "123456789012", ZINT_WARN_NONCOMPLIANT, 2, 133, 12, "Warning 478: Input length 12 is not standard (should be 11 or 13 digits)", 0, "BWIPP requires standard lengths" },
         /* 36*/ { BARCODE_PLANET, -1, 0, "12345678901234", ZINT_WARN_NONCOMPLIANT, 2, 153, 12, "Warning 478: Input length 14 is not standard (should be 11 or 13 digits)", 0, "BWIPP requires standard lengths" },
-        /* 37*/ { BARCODE_PLANET, -1, 0, "1234567890A", ZINT_ERROR_INVALID_DATA, -1, -1, -1, "Error 483: Invalid character at position 11 in input (digits only)", 1, "" },
+        /* 37*/ { BARCODE_PLANET, -1, 0, "1234567890A", ZINT_ERROR_INVALID_DATA, -1, -1, -1, "Error 481: Invalid character at position 11 in input (digits only)", 1, "" },
         /* 38*/ { BARCODE_KIX, -1, 0, "0123456789ABCDEFGH", 0, 3, 143, 8, "", 1, "" },
         /* 39*/ { BARCODE_KIX, -1, 0, "a", 0, 3, 7, 8, "", 1, "" }, /* Converts to upper */
-        /* 40*/ { BARCODE_KIX, -1, 0, ",", ZINT_ERROR_INVALID_DATA, -1, -1, -1, "Error 491: Invalid character at position 1 in input (alphanumerics only)", 1, "" },
+        /* 40*/ { BARCODE_KIX, -1, 0, ",", ZINT_ERROR_INVALID_DATA, -1, -1, -1, "Error 489: Invalid character at position 1 in input (alphanumerics only)", 1, "" },
         /* 41*/ { BARCODE_DAFT, -1, 0, "DAFT", 0, 3, 7, 8, "", 1, "" },
         /* 42*/ { BARCODE_DAFT, -1, 0, "a", 0, 3, 1, 8, "", 1, "" }, /* Converts to upper */
         /* 43*/ { BARCODE_DAFT, -1, 0, "B", ZINT_ERROR_INVALID_DATA, -1, -1, -1, "Error 493: Invalid character at position 1 in input (\"D\", \"A\", \"F\" and \"T\" only)", 1, "" },

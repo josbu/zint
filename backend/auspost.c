@@ -33,36 +33,45 @@
 static const char AusGDSET[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #";
 #define AUS_GDSET_F (IS_NUM_F | IS_UPR_F | IS_LWR_F | IS_SPC_F | IS_HSH_F)
 
+/* The contents of data_pattern conform to the following standard:
+   0 = Tracker, Ascender and Descender
+   1 = Tracker and Ascender
+   2 = Tracker and Descender
+   3 = Tracker only */
+
+/* N Encoding Table (numeric) */
 static const char AusNTable[10][2] = {
-    {'0','0'}, {'0','1'}, {'0','2'}, {'1','0'}, {'1','1'}, {'1','2'}, {'2','0'}, {'2','1'}, {'2','2'}, {'3','0'}
+    { 0,0 }, { 0,1 }, { 0,2 }, { 1,0 }, { 1,1 }, { 1,2 }, { 2,0 }, { 2,1 }, { 2,2 }, { 3,0 }
 };
 
+/* C Encoding Table (GDSET) */
 static const char AusCTable[64][3] = {
-    {'2','2','2'}, {'3','0','0'}, {'3','0','1'}, {'3','0','2'}, {'3','1','0'}, {'3','1','1'},
-    {'3','1','2'}, {'3','2','0'}, {'3','2','1'}, {'3','2','2'}, {'0','0','0'}, {'0','0','1'},
-    {'0','0','2'}, {'0','1','0'}, {'0','1','1'}, {'0','1','2'}, {'0','2','0'}, {'0','2','1'},
-    {'0','2','2'}, {'1','0','0'}, {'1','0','1'}, {'1','0','2'}, {'1','1','0'}, {'1','1','1'},
-    {'1','1','2'}, {'1','2','0'}, {'1','2','1'}, {'1','2','2'}, {'2','0','0'}, {'2','0','1'},
-    {'2','0','2'}, {'2','1','0'}, {'2','1','1'}, {'2','1','2'}, {'2','2','0'}, {'2','2','1'},
-    {'0','2','3'}, {'0','3','0'}, {'0','3','1'}, {'0','3','2'}, {'0','3','3'}, {'1','0','3'},
-    {'1','1','3'}, {'1','2','3'}, {'1','3','0'}, {'1','3','1'}, {'1','3','2'}, {'1','3','3'},
-    {'2','0','3'}, {'2','1','3'}, {'2','2','3'}, {'2','3','0'}, {'2','3','1'}, {'2','3','2'},
-    {'2','3','3'}, {'3','0','3'}, {'3','1','3'}, {'3','2','3'}, {'3','3','0'}, {'3','3','1'},
-    {'3','3','2'}, {'3','3','3'}, {'0','0','3'}, {'0','1','3'}
+    { 2,2,2 }, { 3,0,0 }, { 3,0,1 }, { 3,0,2 }, { 3,1,0 }, {3,1,1 },
+    { 3,1,2 }, { 3,2,0 }, { 3,2,1 }, { 3,2,2 }, { 0,0,0 }, {0,0,1 },
+    { 0,0,2 }, { 0,1,0 }, { 0,1,1 }, { 0,1,2 }, { 0,2,0 }, {0,2,1 },
+    { 0,2,2 }, { 1,0,0 }, { 1,0,1 }, { 1,0,2 }, { 1,1,0 }, {1,1,1 },
+    { 1,1,2 }, { 1,2,0 }, { 1,2,1 }, { 1,2,2 }, { 2,0,0 }, {2,0,1 },
+    { 2,0,2 }, { 2,1,0 }, { 2,1,1 }, { 2,1,2 }, { 2,2,0 }, {2,2,1 },
+    { 0,2,3 }, { 0,3,0 }, { 0,3,1 }, { 0,3,2 }, { 0,3,3 }, {1,0,3 },
+    { 1,1,3 }, { 1,2,3 }, { 1,3,0 }, { 1,3,1 }, { 1,3,2 }, {1,3,3 },
+    { 2,0,3 }, { 2,1,3 }, { 2,2,3 }, { 2,3,0 }, { 2,3,1 }, {2,3,2 },
+    { 2,3,3 }, { 3,0,3 }, { 3,1,3 }, { 3,2,3 }, { 3,3,0 }, {3,3,1 },
+    { 3,3,2 }, { 3,3,3 }, { 0,0,3 }, { 0,1,3 }
 };
 
+/* Bar to Decimal Conversion Table (Reed-Solomon) */
 static const char AusBarTable[64][3] = {
-    {'0','0','0'}, {'0','0','1'}, {'0','0','2'}, {'0','0','3'}, {'0','1','0'}, {'0','1','1'},
-    {'0','1','2'}, {'0','1','3'}, {'0','2','0'}, {'0','2','1'}, {'0','2','2'}, {'0','2','3'},
-    {'0','3','0'}, {'0','3','1'}, {'0','3','2'}, {'0','3','3'}, {'1','0','0'}, {'1','0','1'},
-    {'1','0','2'}, {'1','0','3'}, {'1','1','0'}, {'1','1','1'}, {'1','1','2'}, {'1','1','3'},
-    {'1','2','0'}, {'1','2','1'}, {'1','2','2'}, {'1','2','3'}, {'1','3','0'}, {'1','3','1'},
-    {'1','3','2'}, {'1','3','3'}, {'2','0','0'}, {'2','0','1'}, {'2','0','2'}, {'2','0','3'},
-    {'2','1','0'}, {'2','1','1'}, {'2','1','2'}, {'2','1','3'}, {'2','2','0'}, {'2','2','1'},
-    {'2','2','2'}, {'2','2','3'}, {'2','3','0'}, {'2','3','1'}, {'2','3','2'}, {'2','3','3'},
-    {'3','0','0'}, {'3','0','1'}, {'3','0','2'}, {'3','0','3'}, {'3','1','0'}, {'3','1','1'},
-    {'3','1','2'}, {'3','1','3'}, {'3','2','0'}, {'3','2','1'}, {'3','2','2'}, {'3','2','3'},
-    {'3','3','0'}, {'3','3','1'}, {'3','3','2'}, {'3','3','3'}
+    { 0,0,0 }, { 0,0,1 }, { 0,0,2 }, { 0,0,3 }, { 0,1,0 }, { 0,1,1 },
+    { 0,1,2 }, { 0,1,3 }, { 0,2,0 }, { 0,2,1 }, { 0,2,2 }, { 0,2,3 },
+    { 0,3,0 }, { 0,3,1 }, { 0,3,2 }, { 0,3,3 }, { 1,0,0 }, { 1,0,1 },
+    { 1,0,2 }, { 1,0,3 }, { 1,1,0 }, { 1,1,1 }, { 1,1,2 }, { 1,1,3 },
+    { 1,2,0 }, { 1,2,1 }, { 1,2,2 }, { 1,2,3 }, { 1,3,0 }, { 1,3,1 },
+    { 1,3,2 }, { 1,3,3 }, { 2,0,0 }, { 2,0,1 }, { 2,0,2 }, { 2,0,3 },
+    { 2,1,0 }, { 2,1,1 }, { 2,1,2 }, { 2,1,3 }, { 2,2,0 }, { 2,2,1 },
+    { 2,2,2 }, { 2,2,3 }, { 2,3,0 }, { 2,3,1 }, { 2,3,2 }, { 2,3,3 },
+    { 3,0,0 }, { 3,0,1 }, { 3,0,2 }, { 3,0,3 }, { 3,1,0 }, { 3,1,1 },
+    { 3,1,2 }, { 3,1,3 }, { 3,2,0 }, { 3,2,1 }, { 3,2,2 }, { 3,2,3 },
+    { 3,3,0 }, { 3,3,1 }, { 3,3,2 }, { 3,3,3 }
 };
 
 #include <assert.h>
@@ -71,7 +80,7 @@ static const char AusBarTable[64][3] = {
 #include "reedsol.h"
 
 static unsigned char aus_convert_pattern(const char data, const int shift) {
-    return (data - '0') << shift;
+    return data << shift;
 }
 
 /* Adds Reed-Solomon error correction to auspost */
@@ -104,15 +113,15 @@ INTERNAL int zint_daft_set_height(struct zint_symbol *symbol, const float min_he
 
 /* Handles Australia Posts's 4 State Codes */
 INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], int length) {
-    /* Customer Standard Barcode, Barcode 2 or Barcode 3 system determined automatically
-       (i.e. the FCC doesn't need to be specified by the user) dependent
+    /* Standard Customer Barcode, Customer Barcode 2 or Customer Barcode 3 system determined automatically
+       (i.e. the Format Control Code (FCC) doesn't need to be specified by the user) dependent
        on the length of the input string */
+    static const unsigned char fccs[7][2] = {
+    /*  Null         Standard     Barcode 2    Barcode 3    Reply        Route        Redirect */
+        { '0','0' }, { '1','1' }, { '5','9' }, { '6','2' }, { '4','5' }, { '8','7' }, { '9','2' }
+    };
+    static const char start_stop[2] = { 1,3 };
 
-    /* The contents of data_pattern conform to the following standard:
-       0 = Tracker, Ascender and Descender
-       1 = Tracker and Ascender
-       2 = Tracker and Descender
-       3 = Tracker only */
     int i;
     int error_number;
     int writer;
@@ -121,7 +130,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
 
     char data_pattern[200];
     char *d = data_pattern;
-    unsigned char fcc[2] = {0}; /* Suppress clang-tidy warning clang-analyzer-core.UndefinedBinaryOperatorResult */
+    int fcc_idx; /* Index into `fccs[]` */
     unsigned char local_source[30];
     int zeroes = 0;
     const int content_segs = symbol->output_options & BARCODE_CONTENT_SEGS;
@@ -150,13 +159,13 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
         /* Format control code (FCC) */
         switch (length) {
             case 8:
-                memcpy(fcc, "11", 2);
+                fcc_idx = 1; /* FCC 11 Standard Customer */
                 break;
             case 13:
-                memcpy(fcc, "59", 2);
+                fcc_idx = 2; /* FCC 59 Customer 2 */
                 break;
             case 16:
-                memcpy(fcc, "59", 2);
+                fcc_idx = 2; /* FCC 59 Customer 2 */
                 if ((i = z_not_sane(NEON_F, source, length))) {
                     return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 402,
                                     "Invalid character at position %d in input (digits only for FCC 59 length 16)",
@@ -164,10 +173,10 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
                 }
                 break;
             case 18:
-                memcpy(fcc, "62", 2);
+                fcc_idx = 3; /* FCC 62 Customer 3 */
                 break;
             case 23:
-                memcpy(fcc, "62", 2);
+                fcc_idx = 3; /* FCC 62 Customer 3 */
                 if ((i = z_not_sane(NEON_F, source, length))) {
                     return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 406,
                                     "Invalid character at position %d in input (digits only for FCC 62 length 23)",
@@ -175,12 +184,13 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
                 }
                 break;
         }
-    } else {
-        switch (symbol->symbology) {
-            case BARCODE_AUSREPLY: memcpy(fcc, "45", 2); break;
-            case BARCODE_AUSROUTE: memcpy(fcc, "87", 2); break;
-            case BARCODE_AUSREDIRECT: memcpy(fcc, "92", 2); break;
+        /* Check if DPID all zeros (Null) */
+        for (i = 0; i < 8 && source[i] == '0'; i++);
+        if (i == 8) {
+            fcc_idx = 0; /* Null */
         }
+    } else {
+        fcc_idx = symbol->symbology - BARCODE_AUSREPLY + 4; /* 4 (FCC 45), 5 (FCC 87) or 6 (FCC 92) */
 
         /* Add leading zeros as required */
         zeroes = 8 - length;
@@ -188,7 +198,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
     }
 
     if (symbol->debug & ZINT_DEBUG_PRINT) {
-        printf("AUSPOST FCC: %.2s\n", fcc);
+        printf("AUSPOST FCC: %.2s\n", fccs[fcc_idx]);
     }
 
     memcpy(local_source + zeroes, source, length);
@@ -201,12 +211,12 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
     }
 
     /* Start character */
-    memcpy(d, "13", 2);
+    memcpy(d, start_stop, 2);
     d += 2;
 
     /* Encode the FCC */
     for (reader = 0; reader < 2; reader++, d += 2) {
-        memcpy(d, AusNTable[fcc[reader] - '0'], 2);
+        memcpy(d, AusNTable[fccs[fcc_idx][reader] - '0'], 2);
     }
 
     /* Delivery Point Identifier (DPID) */
@@ -233,7 +243,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
         case 22:
         case 37:
         case 52:
-            *d++ = '3';
+            *d++ = 3;
             break;
         default:
             break;
@@ -243,22 +253,22 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
     d = aus_rs_error(data_pattern, d);
 
     /* Stop character */
-    memcpy(d, "13", 2);
+    memcpy(d, start_stop, 2);
     d += 2;
 
     /* Turn the symbol into a bar pattern ready for plotting */
-    writer = 0;
     h = (int) (d - data_pattern);
-    for (loopey = 0; loopey < h; loopey++) {
-        if (data_pattern[loopey] == '1' || data_pattern[loopey] == '0') {
+    for (loopey = 0, writer = 0; loopey < h; loopey++, writer += 2) {
+        if (data_pattern[loopey] == 1 || data_pattern[loopey] == 0) {
             z_set_module(symbol, 0, writer);
         }
         z_set_module(symbol, 1, writer);
-        if (data_pattern[loopey] == '2' || data_pattern[loopey] == '0') {
+        if (data_pattern[loopey] == 2 || data_pattern[loopey] == 0) {
             z_set_module(symbol, 2, writer);
         }
-        writer += 2;
     }
+    symbol->rows = 3; /* Not stackable */
+    symbol->width = writer - 1;
 
     if (symbol->output_options & COMPLIANT_HEIGHT) {
         /* Australia Post Customer Barcoding Technical Specifications (Revised Aug 2012) Dimensions, placement and
@@ -278,10 +288,8 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
         symbol->row_height[1] = 2.0f;
         error_number = zint_daft_set_height(symbol, 0.0f, 0.0f);
     }
-    symbol->rows = 3; /* Not stackable */
-    symbol->width = writer - 1;
 
-    if (content_segs && z_ct_cpy_cat(symbol, fcc, 2, '\xFF' /*separator (none)*/, local_source, length)) {
+    if (content_segs && z_ct_cpy_cat(symbol, fccs[fcc_idx], 2, '\xFF' /*separator (none)*/, local_source, length)) {
         return ZINT_ERROR_MEMORY; /* `z_ct_cpy_cat()` only fails with OOM */
     }
 

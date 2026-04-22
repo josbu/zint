@@ -514,6 +514,7 @@ INTERNAL int zint_datamatrix(struct zint_symbol *symbol, struct zint_seg segs[],
 /* https://www.royalmailtechnical.com/rmt_docs/User_Guides_2021/Mailmark_Barcode_definition_document_20210215.pdf */
 INTERNAL int zint_mailmark_2d(struct zint_symbol *symbol, unsigned char source[], int length) {
     static const char spaces[9] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+    static const char jgb_prefix[4] = { 'J','G','B',' ' };
     unsigned char local_source[90 + 1];
     char postcode[10];
     int i;
@@ -531,11 +532,11 @@ INTERNAL int zint_mailmark_2d(struct zint_symbol *symbol, unsigned char source[]
     /* Add prefix if missing */
     memcpy(local_source, source, 4);
     z_to_upper(local_source, 3);
-    if (memcmp(local_source, "JGB ", 4) != 0) {
+    if (memcmp(local_source, jgb_prefix, 4) != 0) {
         if (length > 86) {
             return z_errtxtf(ZINT_ERROR_TOO_LONG, symbol, 861, "Input length %d too long (maximum 86)", length);
         }
-        memcpy(local_source, "JGB ", 4);
+        memcpy(local_source, jgb_prefix, 4);
         memcpy(local_source + 4, source, length);
         length += 4;
     } else {

@@ -66,6 +66,7 @@ static const char BC412Table[35][8] = {
 };
 
 INTERNAL int zint_bc412(struct zint_symbol *symbol, unsigned char source[], int length) { /* IBM BC412 */
+    static const char stop_start[4] = { '1','1','1','2' }; /* 1st 3 stop, last 2 start */
     unsigned char padded_source[20];
     int posns[35];
     int i, counter_odd = 0, counter_even = 0, check_sum = 0;
@@ -119,7 +120,7 @@ INTERNAL int zint_bc412(struct zint_symbol *symbol, unsigned char source[], int 
     posns[1] = check_sum;
 
     /* Start character */
-    memcpy(d, "12", 2);
+    memcpy(d, stop_start + 2, 2);
     d += 2;
 
     for (i = 0; i <= length; i++, d += 8) {
@@ -127,7 +128,7 @@ INTERNAL int zint_bc412(struct zint_symbol *symbol, unsigned char source[], int 
     }
 
     /* Stop character */
-    memcpy(d, "111", 3);
+    memcpy(d, stop_start, 3);
     d += 3;
 
     z_expand(symbol, dest, (int) (d - dest));

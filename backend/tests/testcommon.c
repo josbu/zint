@@ -3262,6 +3262,11 @@ int testUtilBwipp(int index, const struct zint_symbol *symbol, int option_1, int
                             bwipp_opts = bwipp_opts_buf;
                         }
                     }
+                    /* Check for Null - for when supported by BWIPP */
+                    for (i = 0; i < 8 && data[i] == '0'; i++);
+                    if (i == 8) {
+                        prefix = "00";
+                    }
                     memmove(bwipp_data + 2, bwipp_data, data_len + 1);
                     memmove(bwipp_data, prefix, 2);
                 }

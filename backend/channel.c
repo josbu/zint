@@ -175,7 +175,8 @@ nb0:    if (++B[0] <= bmax[0]) goto lb0;
 /* Channel Code - According to ANSI/AIM BC12-1998 */
 INTERNAL int zint_channel(struct zint_symbol *symbol, unsigned char source[], int length) {
     static const int max_ranges[] = { -1, -1, -1, 26, 292, 3493, 44072, 576688, 7742862 };
-    static const unsigned char zeroes_str[] = "0000000"; /* 7 zeroes */
+    static const unsigned char zeroes_str[7] = { '0','0','0','0','0','0','0' };
+    static const char finder_pattern[9] = { '1','1','1','1','1','1','1','1','1' };
     int S[8] = {0}, B[8] = {0};
     int target_value;
     char dest[30];
@@ -233,7 +234,7 @@ INTERNAL int zint_channel(struct zint_symbol *symbol, unsigned char source[], in
 
     CHNCHR(channels, target_value, B, S);
 
-    memcpy(d, "111111111", 9); /* Finder pattern */
+    memcpy(d, finder_pattern, 9); /* Finder pattern */
     d += 9;
     for (i = 8 - channels; i < 8; i++) {
         *d++ = z_itoc(S[i]);

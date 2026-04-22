@@ -213,13 +213,11 @@ INTERNAL LIB_DECL_FUNC_SRC(zint_codablockf); /* Codablock */
 INTERNAL LIB_DECL_FUNC_SRC(zint_nve18); /* NVE-18 */
 INTERNAL LIB_DECL_FUNC_SRC(zint_japanpost); /* Japanese Post */
 INTERNAL LIB_DECL_FUNC_SRC(zint_koreapost); /* Korea Post */
-INTERNAL LIB_DECL_FUNC_SRC(zint_planet); /* PLANET */
 INTERNAL LIB_DECL_FUNC_SEG(zint_micropdf417); /* Micro PDF417 */
 INTERNAL LIB_DECL_FUNC_SRC(zint_usps_imail); /* Intelligent Mail (aka USPS OneCode) */
 INTERNAL LIB_DECL_FUNC_SRC(zint_plessey); /* Plessey Code */
 INTERNAL LIB_DECL_FUNC_SRC(zint_telepen_num); /* Telepen Numeric */
 INTERNAL LIB_DECL_FUNC_SRC(zint_itf14); /* ITF-14 */
-INTERNAL LIB_DECL_FUNC_SRC(zint_kix); /* TNT KIX Code */
 INTERNAL LIB_DECL_FUNC_SEG(zint_aztec); /* Aztec Code */
 INTERNAL LIB_DECL_FUNC_SRC(zint_daft); /* DAFT Code */
 INTERNAL LIB_DECL_FUNC_SRC(zint_dpd); /* DPD Code */
@@ -531,9 +529,9 @@ static const barcode_src_func_t barcode_src_funcs[BARCODE_LAST + 1] = {
                NULL,     zint_auspost,     zint_auspost,     zint_auspost,        zint_eanx, /*65-69*/
         zint_rm4scc,             NULL,       zint_ean14,         zint_vin,  zint_codablockf, /*70-74*/
          zint_nve18,   zint_japanpost,   zint_koreapost,             NULL,    zint_dbar_omn, /*75-79*/
-      zint_dbar_omn,    zint_dbar_exp,      zint_planet,             NULL,             NULL, /*80-84*/
+      zint_dbar_omn,    zint_dbar_exp,     zint_postnet,             NULL,             NULL, /*80-84*/
     zint_usps_imail,     zint_plessey, zint_telepen_num,             NULL,       zint_itf14, /*85-89*/
-           zint_kix,             NULL,             NULL,        zint_daft,             NULL, /*90-94*/
+        zint_rm4scc,             NULL,             NULL,        zint_daft,             NULL, /*90-94*/
                NULL,         zint_dpd,     zint_microqr,             NULL,             NULL, /*95-99*/
                NULL,             NULL,             NULL,             NULL,             NULL, /*100-104*/
                NULL,             NULL,             NULL,             NULL,             NULL, /*105-109*/
@@ -1746,6 +1744,7 @@ int ZBarcode_BarcodeName(int symbol_id, char name[32]) {
         "CHANNEL",     "CODEONE",     "GRIDMATRIX",  "UPNQR",          "ULTRA",          /*140-144*/
         "RMQR",        "BC412",       "DXFILMEDGE",  "EAN8_CC",        "EAN13_CC",       /*145-149*/
     };
+    static const char barcode_prefix[8] = { 'B','A','R','C','O','D','E','_' };
 
     name[0] = '\0';
 
@@ -1754,7 +1753,7 @@ int ZBarcode_BarcodeName(int symbol_id, char name[32]) {
     }
     assert(symbol_id >= 0 && symbol_id < ARRAY_SIZE(names) && names[symbol_id][0]);
 
-    memcpy(name, "BARCODE_", 8);
+    memcpy(name, barcode_prefix, 8);
     memcpy(name + 8, names[symbol_id], strlen(names[symbol_id]) + 1); /* Include terminating NUL */
 
     return 0;
