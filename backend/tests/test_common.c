@@ -216,7 +216,7 @@ static void test_zero_fill(const testCtx *const p_ctx) {
     testStart(p_ctx->func_name);
 
     for (i = 0; i < data_size; i++) {
-        unsigned char dest[200];
+        unsigned char dest[20] = {0};
 
         if (testContinue(p_ctx, i)) continue;
 
