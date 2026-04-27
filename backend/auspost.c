@@ -30,10 +30,15 @@
  */
 /* SPDX-License-Identifier: BSD-3-Clause */
 
+#include <assert.h>
+#include <stdio.h>
+#include "common.h"
+#include "reedsol.h"
+
 static const char AusGDSET[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #";
 #define AUS_GDSET_F (IS_NUM_F | IS_UPR_F | IS_LWR_F | IS_SPC_F | IS_HSH_F)
 
-/* The contents of data_pattern conform to the following standard:
+/* The contents of encoding tables and data pattern `dest[]` conform to the following standard:
    0 = Tracker, Ascender and Descender
    1 = Tracker and Ascender
    2 = Tracker and Descender
@@ -46,55 +51,38 @@ static const char AusNTable[10][2] = {
 
 /* C Encoding Table (GDSET) */
 static const char AusCTable[64][3] = {
-    { 2,2,2 }, { 3,0,0 }, { 3,0,1 }, { 3,0,2 }, { 3,1,0 }, {3,1,1 },
-    { 3,1,2 }, { 3,2,0 }, { 3,2,1 }, { 3,2,2 }, { 0,0,0 }, {0,0,1 },
-    { 0,0,2 }, { 0,1,0 }, { 0,1,1 }, { 0,1,2 }, { 0,2,0 }, {0,2,1 },
-    { 0,2,2 }, { 1,0,0 }, { 1,0,1 }, { 1,0,2 }, { 1,1,0 }, {1,1,1 },
-    { 1,1,2 }, { 1,2,0 }, { 1,2,1 }, { 1,2,2 }, { 2,0,0 }, {2,0,1 },
-    { 2,0,2 }, { 2,1,0 }, { 2,1,1 }, { 2,1,2 }, { 2,2,0 }, {2,2,1 },
-    { 0,2,3 }, { 0,3,0 }, { 0,3,1 }, { 0,3,2 }, { 0,3,3 }, {1,0,3 },
-    { 1,1,3 }, { 1,2,3 }, { 1,3,0 }, { 1,3,1 }, { 1,3,2 }, {1,3,3 },
-    { 2,0,3 }, { 2,1,3 }, { 2,2,3 }, { 2,3,0 }, { 2,3,1 }, {2,3,2 },
-    { 2,3,3 }, { 3,0,3 }, { 3,1,3 }, { 3,2,3 }, { 3,3,0 }, {3,3,1 },
-    { 3,3,2 }, { 3,3,3 }, { 0,0,3 }, { 0,1,3 }
+    { 2,2,2 }, { 3,0,0 }, { 3,0,1 }, { 3,0,2 }, { 3,1,0 }, { 3,1,1 }, { 3,1,2 }, { 3,2,0 },
+    { 3,2,1 }, { 3,2,2 }, { 0,0,0 }, { 0,0,1 }, { 0,0,2 }, { 0,1,0 }, { 0,1,1 }, { 0,1,2 },
+    { 0,2,0 }, { 0,2,1 }, { 0,2,2 }, { 1,0,0 }, { 1,0,1 }, { 1,0,2 }, { 1,1,0 }, { 1,1,1 },
+    { 1,1,2 }, { 1,2,0 }, { 1,2,1 }, { 1,2,2 }, { 2,0,0 }, { 2,0,1 }, { 2,0,2 }, { 2,1,0 },
+    { 2,1,1 }, { 2,1,2 }, { 2,2,0 }, { 2,2,1 }, { 0,2,3 }, { 0,3,0 }, { 0,3,1 }, { 0,3,2 },
+    { 0,3,3 }, { 1,0,3 }, { 1,1,3 }, { 1,2,3 }, { 1,3,0 }, { 1,3,1 }, { 1,3,2 }, { 1,3,3 },
+    { 2,0,3 }, { 2,1,3 }, { 2,2,3 }, { 2,3,0 }, { 2,3,1 }, { 2,3,2 }, { 2,3,3 }, { 3,0,3 },
+    { 3,1,3 }, { 3,2,3 }, { 3,3,0 }, { 3,3,1 }, { 3,3,2 }, { 3,3,3 }, { 0,0,3 }, { 0,1,3 }
 };
 
 /* Bar to Decimal Conversion Table (Reed-Solomon) */
 static const char AusBarTable[64][3] = {
-    { 0,0,0 }, { 0,0,1 }, { 0,0,2 }, { 0,0,3 }, { 0,1,0 }, { 0,1,1 },
-    { 0,1,2 }, { 0,1,3 }, { 0,2,0 }, { 0,2,1 }, { 0,2,2 }, { 0,2,3 },
-    { 0,3,0 }, { 0,3,1 }, { 0,3,2 }, { 0,3,3 }, { 1,0,0 }, { 1,0,1 },
-    { 1,0,2 }, { 1,0,3 }, { 1,1,0 }, { 1,1,1 }, { 1,1,2 }, { 1,1,3 },
-    { 1,2,0 }, { 1,2,1 }, { 1,2,2 }, { 1,2,3 }, { 1,3,0 }, { 1,3,1 },
-    { 1,3,2 }, { 1,3,3 }, { 2,0,0 }, { 2,0,1 }, { 2,0,2 }, { 2,0,3 },
-    { 2,1,0 }, { 2,1,1 }, { 2,1,2 }, { 2,1,3 }, { 2,2,0 }, { 2,2,1 },
-    { 2,2,2 }, { 2,2,3 }, { 2,3,0 }, { 2,3,1 }, { 2,3,2 }, { 2,3,3 },
-    { 3,0,0 }, { 3,0,1 }, { 3,0,2 }, { 3,0,3 }, { 3,1,0 }, { 3,1,1 },
-    { 3,1,2 }, { 3,1,3 }, { 3,2,0 }, { 3,2,1 }, { 3,2,2 }, { 3,2,3 },
-    { 3,3,0 }, { 3,3,1 }, { 3,3,2 }, { 3,3,3 }
+    { 0,0,0 }, { 0,0,1 }, { 0,0,2 }, { 0,0,3 }, { 0,1,0 }, { 0,1,1 }, { 0,1,2 }, { 0,1,3 },
+    { 0,2,0 }, { 0,2,1 }, { 0,2,2 }, { 0,2,3 }, { 0,3,0 }, { 0,3,1 }, { 0,3,2 }, { 0,3,3 },
+    { 1,0,0 }, { 1,0,1 }, { 1,0,2 }, { 1,0,3 }, { 1,1,0 }, { 1,1,1 }, { 1,1,2 }, { 1,1,3 },
+    { 1,2,0 }, { 1,2,1 }, { 1,2,2 }, { 1,2,3 }, { 1,3,0 }, { 1,3,1 }, { 1,3,2 }, { 1,3,3 },
+    { 2,0,0 }, { 2,0,1 }, { 2,0,2 }, { 2,0,3 }, { 2,1,0 }, { 2,1,1 }, { 2,1,2 }, { 2,1,3 },
+    { 2,2,0 }, { 2,2,1 }, { 2,2,2 }, { 2,2,3 }, { 2,3,0 }, { 2,3,1 }, { 2,3,2 }, { 2,3,3 },
+    { 3,0,0 }, { 3,0,1 }, { 3,0,2 }, { 3,0,3 }, { 3,1,0 }, { 3,1,1 }, { 3,1,2 }, { 3,1,3 },
+    { 3,2,0 }, { 3,2,1 }, { 3,2,2 }, { 3,2,3 }, { 3,3,0 }, { 3,3,1 }, { 3,3,2 }, { 3,3,3 }
 };
 
-#include <assert.h>
-#include <stdio.h>
-#include "common.h"
-#include "reedsol.h"
-
-static unsigned char aus_convert_pattern(const char data, const int shift) {
-    return data << shift;
-}
-
 /* Adds Reed-Solomon error correction to auspost */
-static char *aus_rs_error(const char data_pattern[], char *d) {
-    const int length = (int) (d - data_pattern);
+static char *aus_rs_error(const char dest[], char *d) {
+    const int length = (int) (d - dest);
     int reader, triple_writer;
-    unsigned char triple[31];
+    unsigned char triple[17]; /* Max bars 67 - 12 (ECC) - 4 (start/stop) = 51 / 3 */
     unsigned char result[5];
     rs_t rs;
 
     for (reader = 2, triple_writer = 0; reader < length; reader += 3, triple_writer++) {
-        triple[triple_writer] = aus_convert_pattern(data_pattern[reader], 4)
-                                | aus_convert_pattern(data_pattern[reader + 1], 2)
-                                | aus_convert_pattern(data_pattern[reader + 2], 0);
+        triple[triple_writer] = (dest[reader] << 4) | (dest[reader + 1] << 2) | dest[reader + 2];
     }
 
     zint_rs_init_gf(&rs, 0x43);
@@ -120,7 +108,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
     /*  Null         Standard     Barcode 2    Barcode 3    Reply        Route        Redirect */
         { '0','0' }, { '1','1' }, { '5','9' }, { '6','2' }, { '4','5' }, { '8','7' }, { '9','2' }
     };
-    static const char start_stop[2] = { 1,3 };
+    static const char start_stop[2] = { 1,3 }; /* Full,tracker */
 
     int i;
     int error_number;
@@ -128,86 +116,85 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
     int loopey, reader;
     int h;
 
-    char data_pattern[200];
-    char *d = data_pattern;
+    char dest[67]; /* Max bars (Customer Barcode 3) */
+    char *d = dest;
     int fcc_idx; /* Index into `fccs[]` */
-    unsigned char local_source[30];
-    int zeroes = 0;
+    unsigned char src_buf[8]; /* For zero-padded DPID */
+    int not_all_digits = 0;
     const int content_segs = symbol->output_options & BARCODE_CONTENT_SEGS;
 
     /* Suppress clang-tidy-21 clang-analyzer-security.ArrayBound */
     assert(symbol->symbology == BARCODE_AUSPOST || symbol->symbology == BARCODE_AUSREPLY
             || symbol->symbology == BARCODE_AUSROUTE || symbol->symbology == BARCODE_AUSREDIRECT);
 
-    /* Do all of the length checking first to avoid stack smashing */
     if (symbol->symbology == BARCODE_AUSPOST) {
-        if (length != 8 && length != 13 && length != 16 && length != 18 && length != 23) {
+        if (length > 23) {
             return z_errtxtf(ZINT_ERROR_TOO_LONG, symbol, 401,
-                            "Input length %d wrong (8, 13, 16, 18 or 23 characters required)", length);
+                            "Input length %d too long (maximum 23)", length);
         }
-    } else if (length > 8) {
-        return z_errtxtf(ZINT_ERROR_TOO_LONG, symbol, 403, "Input length %d too long (maximum 8)", length);
-    }
-
-    /* Check input immediately to catch invalid chars */
-    if ((i = z_not_sane(AUS_GDSET_F, source, length))) {
-        return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 404,
-                        "Invalid character at position %d in input (alphanumerics, space and \"#\" only)", i);
-    }
-
-    if (symbol->symbology == BARCODE_AUSPOST) {
-        /* Format control code (FCC) */
-        switch (length) {
-            case 8:
-                fcc_idx = 1; /* FCC 11 Standard Customer */
-                break;
-            case 13:
-                fcc_idx = 2; /* FCC 59 Customer 2 */
-                break;
-            case 16:
-                fcc_idx = 2; /* FCC 59 Customer 2 */
-                if ((i = z_not_sane(NEON_F, source, length))) {
+        not_all_digits = z_not_sane(NEON_F, source, length);
+        if (length <= 8) {
+            if (not_all_digits) {
+                return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 405,
+                            "Invalid character at position %d in DPID (digits only for Standard Customer Barcode)",
+                            not_all_digits);
+            }
+            if (z_zero_fill(source, length, src_buf, 8)) {
+                source = src_buf;
+                length = 8;
+            }
+            fcc_idx = 1; /* FCC 11 Standard Customer */
+        } else {
+            if (not_all_digits) {
+                if ((i = z_not_sane(NEON_F, source, 8))) {
                     return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 402,
-                                    "Invalid character at position %d in input (digits only for FCC 59 length 16)",
-                                    i);
+                                    "Invalid character at position %d in DPID (digits only)", i);
                 }
-                break;
-            case 18:
-                fcc_idx = 3; /* FCC 62 Customer 3 */
-                break;
-            case 23:
-                fcc_idx = 3; /* FCC 62 Customer 3 */
-                if ((i = z_not_sane(NEON_F, source, length))) {
-                    return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 406,
-                                    "Invalid character at position %d in input (digits only for FCC 62 length 23)",
-                                    i);
+                if ((i = z_not_sane(AUS_GDSET_F, source + 8, length - 8))) {
+                    return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 404,
+                                    "Invalid character at position %d in input (alphanumerics, space and \"#\" only)",
+                                    i + 8);
                 }
-                break;
+            }
+            if (length > 18) {
+                if (not_all_digits) {
+                    return ZEXT z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 407,
+                                    "Invalid character at position %1$d in input (digits only for Customer Barcode 3"
+                                    " length %2$d)", not_all_digits, length);
+                }
+                fcc_idx = 3; /* FCC 62 Customer Barcode 3 all-digits */
+            } else if (length > 16 || (length > 13 && not_all_digits)) {
+                fcc_idx = 3; /* FCC 62 Customer Barcode 3 */
+            } else {
+                fcc_idx = 2; /* FCC 59 Customer Barcode 2 */
+            }
         }
+
         /* Check if DPID all zeros (Null) */
-        for (i = 0; i < 8 && source[i] == '0'; i++);
-        if (i == 8) {
-            fcc_idx = 0; /* Null */
+        if (z_chr_cnt(source, 8, '0') == 8) {
+            fcc_idx = 0; /* FCC 00 Null */
         }
     } else {
-        fcc_idx = symbol->symbology - BARCODE_AUSREPLY + 4; /* 4 (FCC 45), 5 (FCC 87) or 6 (FCC 92) */
+        if (length > 8) {
+            return z_errtxtf(ZINT_ERROR_TOO_LONG, symbol, 403, "Input length %d too long (maximum 8)", length);
+        }
 
+        if ((i = z_not_sane(NEON_F, source, length))) {
+            return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 406,
+                            "Invalid character at position %d in DPID (digits only)", i);
+        }
         /* Add leading zeros as required */
-        zeroes = 8 - length;
-        memset(local_source, '0', zeroes);
+        if (z_zero_fill(source, length, src_buf, 8)) {
+            source = src_buf;
+            length = 8;
+        }
+
+        /* Format control code (FCC) */
+        fcc_idx = symbol->symbology - BARCODE_AUSREPLY + 4; /* 4 (FCC 45), 5 (FCC 87) or 6 (FCC 92) */
     }
 
     if (symbol->debug & ZINT_DEBUG_PRINT) {
         printf("AUSPOST FCC: %.2s\n", fccs[fcc_idx]);
-    }
-
-    memcpy(local_source + zeroes, source, length);
-    length += zeroes;
-
-    /* Verify that the first 8 characters are numbers */
-    if ((i = z_not_sane(NEON_F, local_source, 8))) {
-        return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 405,
-                        "Invalid character at position %d in DPID (first 8 characters) (digits only)", i);
     }
 
     /* Start character */
@@ -221,49 +208,47 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
 
     /* Delivery Point Identifier (DPID) */
     for (reader = 0; reader < 8; reader++, d += 2) {
-        memcpy(d, AusNTable[local_source[reader] - '0'], 2);
+        memcpy(d, AusNTable[source[reader] - '0'], 2);
     }
 
     /* Customer Information */
     if (length > 8) {
-        if (length == 13 || length == 18) {
+        if (not_all_digits) {
             for (reader = 8; reader < length; reader++, d += 3) {
-                memcpy(d, AusCTable[z_posn(AusGDSET, local_source[reader])], 3);
+                memcpy(d, AusCTable[z_posn(AusGDSET, source[reader])], 3);
             }
-        } else if (length == 16 || length == 23) {
+        } else {
             for (reader = 8; reader < length; reader++, d += 2) {
-                memcpy(d, AusNTable[local_source[reader] - '0'], 2);
+                memcpy(d, AusNTable[source[reader] - '0'], 2);
             }
         }
     }
 
-    /* Filler bar */
-    h = (int) (d - data_pattern);
-    switch (h) {
-        case 22:
-        case 37:
-        case 52:
-            *d++ = 3;
-            break;
-        default:
-            break;
+    /* Filler bar(s) */
+    h = (int) (d - dest);
+    assert(h < 53);
+    for (i = h; i != 23 && i != 38 && i != 53; i++) {
+        *d++ = 3; /* Tracker */
+    }
+    if (symbol->debug & ZINT_DEBUG_PRINT) {
+        printf("Filler: %d\n", i - h);
     }
 
     /* Reed Solomon error correction */
-    d = aus_rs_error(data_pattern, d);
+    d = aus_rs_error(dest, d);
 
     /* Stop character */
     memcpy(d, start_stop, 2);
     d += 2;
 
     /* Turn the symbol into a bar pattern ready for plotting */
-    h = (int) (d - data_pattern);
+    h = (int) (d - dest);
     for (loopey = 0, writer = 0; loopey < h; loopey++, writer += 2) {
-        if (data_pattern[loopey] == 1 || data_pattern[loopey] == 0) {
+        if (dest[loopey] == 1 || dest[loopey] == 0) {
             z_set_module(symbol, 0, writer);
         }
         z_set_module(symbol, 1, writer);
-        if (data_pattern[loopey] == 2 || data_pattern[loopey] == 0) {
+        if (dest[loopey] == 2 || dest[loopey] == 0) {
             z_set_module(symbol, 2, writer);
         }
     }
@@ -289,7 +274,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
         error_number = zint_daft_set_height(symbol, 0.0f, 0.0f);
     }
 
-    if (content_segs && z_ct_cpy_cat(symbol, fccs[fcc_idx], 2, '\xFF' /*separator (none)*/, local_source, length)) {
+    if (content_segs && z_ct_cpy_cat(symbol, fccs[fcc_idx], 2, '\xFF' /*separator (none)*/, source, length)) {
         return ZINT_ERROR_MEMORY; /* `z_ct_cpy_cat()` only fails with OOM */
     }
 

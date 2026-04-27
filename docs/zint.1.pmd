@@ -194,9 +194,9 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 `--extraesc`
 
 :   As well as processing the normal escape sequences above, process the special escape sequences beginning with `\^`.
-    For Code 128 and Data Matrix, process the escape sequence `\^1` that inserts an `FNC1` character, and the escaping
-    sequence `\^^` that encodes a literal `\^`. For Code 128 only, process the escape sequences `\^A`, `\^B`, `\^C`
-    and `\^@` that allow manual switching of Code Sets. The sequence `\^@` turns off manual switching.
+    For Aztec Code, Code 128 and Data Matrix, process the escape sequence `\^1` that inserts an `FNC1` character, and
+    the escaping sequence `\^^` that encodes a literal `\^`. For Code 128 only, process the escape sequences `\^A`,
+    `\^B`, `\^C` and `\^@` that allow manual switching of Code Sets. The sequence `\^@` turns off manual switching.
 
 `--fast`
 

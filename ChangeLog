@@ -1,4 +1,4 @@
-Version 2.16.0.9 (dev) not released yet (2026-04-22)
+Version 2.16.0.9 (dev) not released yet (2026-04-27)
 ====================================================
 
 **Incompatible changes**
@@ -34,8 +34,9 @@ Changes
 - DATAMATRIX: new options "--dmb256=" (`option_3 = DM_B256_START`) & "--dmc40="
   (`option_3 = DM_C40_START`) to allow forcing of initial encodation for given
   no. (`option_1`) of initial characters, with 0 meaning all
-- DATAMATRIX: add manual FNC1 support
-- AUSPOST: support Null FCC (DPID all zeroes)
+- AZTEC/DATAMATRIX: add manual FNC1 support
+- AUSPOST: support FCC 00 Null (DPID all zeroes) and allow variable length data
+  input
 
 Bugs
 ----

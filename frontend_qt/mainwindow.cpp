@@ -1856,6 +1856,7 @@ void MainWindow::change_options()
         connect(get_widget(QSL("radAztecStand")), SIGNAL(toggled(bool)), SLOT(update_preview()));
         connect(get_widget(QSL("radAztecGS1")), SIGNAL(toggled(bool)), SLOT(update_preview()));
         connect(get_widget(QSL("radAztecHIBC")), SIGNAL(toggled(bool)), SLOT(update_preview()));
+        connect(get_widget(QSL("radAztecExtraEsc")), SIGNAL(toggled(bool)), SLOT(update_preview()));
         connect(get_widget(QSL("chkAztecFull")), SIGNAL(toggled(bool)), SLOT(update_preview()));
         connect(get_widget(QSL("chkAztecFast")), SIGNAL(toggled(bool)), SLOT(update_preview()));
         connect(get_widget(QSL("cmbAztecStructAppCount")), SIGNAL(currentIndexChanged(int)), SLOT(update_preview()));
@@ -2026,9 +2027,9 @@ void MainWindow::change_options()
             dm_startmode_ui_set();
             tabMain->insertTab(1, m_optionWidget, tr("D&ata Matrix"));
             connect(get_widget(QSL("radDMStand")), SIGNAL(toggled(bool)), SLOT(update_preview()));
-            connect(get_widget(QSL("radDMExtraEsc")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("radDMGS1")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("radDMHIBC")), SIGNAL(toggled(bool)), SLOT(update_preview()));
+            connect(get_widget(QSL("radDMExtraEsc")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("cmbDMSize")), SIGNAL(currentIndexChanged(int)), SLOT(update_preview()));
             connect(get_widget(QSL("chkDMRectangle")), SIGNAL(toggled(bool)), SLOT(update_preview()));
             connect(get_widget(QSL("chkDMRE")), SIGNAL(toggled(bool)), SLOT(update_preview()));
@@ -2952,10 +2953,14 @@ void MainWindow::update_preview()
             break;
 
         case BARCODE_AZTEC:
-            if (get_rad_val(QSL("radAztecHIBC")))
+            if (get_rad_val(QSL("radAztecHIBC"))) {
                 m_bc.bc.setSymbol(BARCODE_HIBC_AZTEC);
-            else
+            } else {
                 m_bc.bc.setSymbol(BARCODE_AZTEC);
+                if (get_rad_val(QSL("radAztecExtraEsc"))) {
+                    m_bc.bc.setInputMode(m_bc.bc.inputMode() | EXTRA_ESCAPE_MODE);
+                }
+            }
 
             if (get_rad_val(QSL("radAztecSize"))) {
                 m_bc.bc.setOption2(get_cmb_index(QSL("cmbAztecSize")) + 1);
@@ -4458,7 +4463,8 @@ void MainWindow::save_sub_settings(QSettings &settings, int symbology)
             settings.setValue(QSL("studio/bc/aztec/size"), m_aztecSizeIndex);
             settings.setValue(QSL("studio/bc/aztec/ecc"), m_aztecECCIndex);
             settings.setValue(QSL("studio/bc/aztec/encoding_mode"), get_rad_grp_index(
-                QStringList() << QSL("radAztecStand") << QSL("radAztecGS1") << QSL("radAztecHIBC")));
+                QStringList() << QSL("radAztecStand") << QSL("radAztecGS1") << QSL("radAztecHIBC")
+                                << QSL("radAztecExtraEsc")));
             settings.setValue(QSL("studio/bc/aztec/structapp_count"), get_cmb_index(QSL("cmbAztecStructAppCount")));
             settings.setValue(QSL("studio/bc/aztec/chk_full"), get_chk_val(QSL("chkAztecFull")));
             settings.setValue(QSL("studio/bc/aztec/chk_fast"), get_chk_val(QSL("chkAztecFast")));
@@ -4933,7 +4939,8 @@ void MainWindow::load_sub_settings(QSettings &settings, int symbology)
             }
             set_cmb_from_setting(settings, QSL("studio/bc/aztec/ecc"), QSL("cmbAztecECC"));
             set_rad_from_setting(settings, QSL("studio/bc/aztec/encoding_mode"),
-                QStringList() << QSL("radAztecStand") << QSL("radAztecGS1") << QSL("radAztecHIBC"));
+                QStringList() << QSL("radAztecStand") << QSL("radAztecGS1") << QSL("radAztecHIBC")
+                                << QSL("radAztecExtraEsc"));
             set_chk_from_setting(settings, QSL("studio/bc/aztec/chk_full"), QSL("chkAztecFull"));
             set_chk_from_setting(settings, QSL("studio/bc/aztec/chk_fast"), QSL("chkAztecFast"));
             set_cmb_from_setting(settings, QSL("studio/bc/aztec/structapp_count"), QSL("cmbAztecStructAppCount"));

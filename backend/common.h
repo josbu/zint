@@ -167,6 +167,9 @@ INTERNAL void z_to_upper(unsigned char source[], const int length);
 /* Returns the number of times a character `ch` occurs in `source` */
 INTERNAL int z_chr_cnt(const unsigned char source[], const int length, const unsigned char ch);
 
+/* Zero-fill `dest` buffer, appending `source'. Returns no. of zeroes added */
+INTERNAL int z_zero_fill(const unsigned char source[], const int length, unsigned char *dest, const int dest_length);
+
 /* `z_is_chr()` & `z_not_sane()` flags */
 #define IS_SPC_F    0x0001 /* Space */
 #define IS_HSH_F    0x0002 /* Hash sign # */
@@ -308,11 +311,15 @@ INTERNAL int z_utf8_to_unicode(struct zint_symbol *symbol, const unsigned char s
                 int *length, const int disallow_4byte);
 
 
-/* Process `source` for manual FNC1 extra escape sequences, placing result in `dest` with result length in `p_len`,
-   and setting `fncs` with found FNC1s. `dest` & `fncs` must be at least `length` in size. `eci` is checked to be
-   ASCII-compatible (UTF-8 & single-byte ECIs, excl. Binary 899). On error sets `errtxt` & returns error no. */
-INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char source[], const int length,
-                const int eci, unsigned char dest[], char *fncs, int *p_len);
+/* Check if `source` starts with manual FNC1 in 1st or 2nd position, returning length of extra escape sequence if so,
+   else 0 */
+INTERNAL int z_extra_escape_position_fnc1(const unsigned char source[], const int length);
+
+/* Process `source` for extra escape sequences, placing result in `dest`, updating `p_length`, and setting `fncs` with
+   any found FNC1s. Sets `p_have_extra_escapes` if any sequences found. `eci` is checked to be ASCII-compatible (UTF-8
+   & single-byte ECIs, excl. Binary 899). On error sets `errtxt` & returns error no. */
+INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char source[], int *p_length, const int eci,
+                unsigned char *dest, char *fncs, int *p_have_extra_escapes);
 
 
 /* Treats source as ISO/IEC 8859-1 and copies into `symbol->text`, converting to UTF-8. Control chars (incl. DEL) and

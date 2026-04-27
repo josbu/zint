@@ -1662,6 +1662,7 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
     int tp = 0;
     int in_macro = 0;
     int have_extra_escapes = 0;
+    int position_fnc1 = 0;
     int tot_length = 0, b256_have_fnc1 = 0;
     const struct zint_seg *last_seg = &segs[seg_count - 1];
     /* gs1 flag values: 0: no GS1, 1: GS1 with FNC1 serparator, 2: GS separator */
@@ -1737,16 +1738,29 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
 
     if (extra_escape_mode && (symbol->symbology != BARCODE_DATAMATRIX || gs1)) {
         if (symbol->symbology != BARCODE_DATAMATRIX) {
-            return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 843,
-                            "Can only use extra escape mode with non-variant Data Matrix");
+            return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 846,
+                            "Can only use Extra Escape mode with non-variant Data Matrix");
         }
-        return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 844, "Cannot use extra escape mode in GS1 mode");
+        return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 844, "Cannot use Extra Escape mode in GS1 mode");
     }
 
     if (gs1) {
-        target[tp++] = 232;
+        target[tp++] = 232; /* FNC1 */
         if (debug_print) fputs("FN1 ", stdout);
-    } /* FNC1 */
+    } else if (extra_escape_mode) {
+        if ((position_fnc1 = z_extra_escape_position_fnc1(segs[0].source, segs[0].length))) {
+            if (position_fnc1 == 4) {
+                target[tp++] = segs[0].source[0] + 1;
+                if (debug_print) fputs("EEA ", stdout);
+            } else if (position_fnc1 == 5) {
+                target[tp++] = z_to_int(segs[0].source, 2) + 130;
+                if (debug_print) fputs("EED ", stdout);
+            }
+            target[tp++] = 232; /* FNC1 */
+            if (debug_print) fputs("FN1 ", stdout);
+            have_extra_escapes = 1;
+        }
+    }
 
     if (symbol->output_options & READER_INIT) {
         if (gs1) {
@@ -1755,6 +1769,9 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
         if (symbol->structapp.count) {
             return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 727,
                             "Cannot have Structured Append and Reader Initialisation at the same time");
+        }
+        if (extra_escape_mode) {
+            return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 847, "Cannot use Reader Initialisation in Extra Escape mode");
         }
         target[tp++] = 234; /* Reader Programming */
         if (debug_print) fputs("RP ", stdout);
@@ -1785,8 +1802,6 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
 
     for (i = 0; i < seg_count; i++) {
         const unsigned char *source;
-        unsigned char *src_buf;
-        char *fncs;
         int length;
         int src_inc = 0, len_dec = 0;
         int b256_end = 0, c40_end = 0;
@@ -1798,75 +1813,72 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
                 len_dec += 2;  /* Remove RS + EOT from end */
             }
         }
-        source = segs[i].source + src_inc;
-        length = segs[i].length - len_dec;
+        source = segs[i].source + src_inc + position_fnc1;
+        length = segs[i].length - len_dec - position_fnc1;
 
-        src_buf = (unsigned char *) z_alloca(length + 1);
-        fncs = (char *) z_alloca(length);
+        if (length) {
+            unsigned char *src_buf = (unsigned char *) z_alloca(length + 1);
+            char *fncs = (char *) z_alloca(length);
 
-        if (gs1) {
-            memset(fncs, gs1 == 1, length);
-        } else {
-            memset(fncs, 0, length);
-            if (extra_escape_mode) {
-                int len;
-                if ((error_number = z_extra_escapes(symbol, source, length, segs[i].eci, src_buf, fncs, &len))) {
-                    return error_number;
-                }
-                if (len != length) {
-                    assert(len < length);
-                    length = len;
-                    assert(length > 0);
-                    src_buf[length] = '\0';
-                    source = src_buf;
-                    have_extra_escapes = 1;
-                }
-            }
-        }
-
-        if (mailmark) {
-            assert(seg_count == 1);
-            assert(length >= 45);
-            c40_end = 45; /* Min */
-            /* Allow specifying greater than 45 */
-            if (have_c40 && (symbol->option_1 == 0 || symbol->option_1 > 45)) {
-                c40_end = symbol->option_1 > 0 && symbol->option_1 < length ? symbol->option_1 : length;
-            }
-        /* `DM_C40_START` trumps `DM_B256_START` */
-        } else if (have_c40) {
-            if (symbol->option_1 == 0) {
-                c40_end = length;
-            } else if (symbol->option_1 < tot_length) {
-                c40_end = 0;
+            if (gs1) {
+                memset(fncs, gs1 == 1, length);
             } else {
-                c40_end = symbol->option_1 - tot_length < length ? symbol->option_1 - tot_length : length;
-            }
-        } else if (have_b256) {
-            if (b256_have_fnc1) {
-                b256_end = 0;
-            } else {
-                int b256_len;
-                if (symbol->option_1 == 0) {
-                    b256_end = length;
-                } else if (symbol->option_1 < tot_length) {
-                    b256_end = 0;
-                } else {
-                    b256_end = symbol->option_1 - tot_length < length ? symbol->option_1 - tot_length : length;
-                }
-                /* Stop at first FNC1 */
-                b256_len = b256_end;
-                for (b256_end = 0; b256_end < b256_len; b256_end++) {
-                    if (fncs[b256_end] && source[b256_end] == '\x1D') {
-                        break;
+                memset(fncs, 0, length);
+                if (extra_escape_mode) {
+                    if ((error_number = z_extra_escapes(symbol, source, &length, segs[i].eci, src_buf, fncs,
+                                                        &have_extra_escapes))) {
+                        return error_number;
+                    }
+                    if (have_extra_escapes) {
+                        source = src_buf;
                     }
                 }
-                b256_have_fnc1 = b256_end != b256_len;
             }
-        }
-        if ((error_number = dm_encode(symbol, source, length, segs[i].eci, i + 1 == seg_count, fncs, b256_end,
-                                        c40_end, target, &tp))) {
-            assert(error_number >= ZINT_ERROR);
-            return error_number;
+
+            if (mailmark) {
+                assert(seg_count == 1);
+                assert(length >= 45);
+                c40_end = 45; /* Min */
+                /* Allow specifying greater than 45 */
+                if (have_c40 && (symbol->option_1 == 0 || symbol->option_1 > 45)) {
+                    c40_end = symbol->option_1 > 0 && symbol->option_1 < length ? symbol->option_1 : length;
+                }
+            /* `DM_C40_START` trumps `DM_B256_START` */
+            } else if (have_c40) {
+                if (symbol->option_1 == 0) {
+                    c40_end = length;
+                } else if (symbol->option_1 < tot_length) {
+                    c40_end = 0;
+                } else {
+                    c40_end = symbol->option_1 - tot_length < length ? symbol->option_1 - tot_length : length;
+                }
+            } else if (have_b256) {
+                if (b256_have_fnc1) {
+                    b256_end = 0;
+                } else {
+                    int b256_len;
+                    if (symbol->option_1 == 0) {
+                        b256_end = length;
+                    } else if (symbol->option_1 < tot_length) {
+                        b256_end = 0;
+                    } else {
+                        b256_end = symbol->option_1 - tot_length < length ? symbol->option_1 - tot_length : length;
+                    }
+                    /* Stop at first FNC1 */
+                    b256_len = b256_end;
+                    for (b256_end = 0; b256_end < b256_len; b256_end++) {
+                        if (fncs[b256_end] && source[b256_end] == '\x1D') {
+                            break;
+                        }
+                    }
+                    b256_have_fnc1 = b256_end != b256_len;
+                }
+            }
+            if ((error_number = dm_encode(symbol, source, length, segs[i].eci, i + 1 == seg_count, fncs, b256_end,
+                                            c40_end, target, &tp))) {
+                assert(error_number >= ZINT_ERROR);
+                return error_number;
+            }
         }
         if (content_segs) {
             if (have_extra_escapes) {
@@ -1876,6 +1888,7 @@ static int dm_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
             }
         }
         tot_length += length;
+        position_fnc1 = 0;
     }
 
     *p_binlen = tp;

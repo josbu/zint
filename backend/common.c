@@ -81,6 +81,20 @@ INTERNAL int z_chr_cnt(const unsigned char source[], const int length, const uns
     return count;
 }
 
+/* Zero-fill `dest` buffer, appending `source'. Returns no. of zeroes added */
+INTERNAL int z_zero_fill(const unsigned char source[], const int length, unsigned char *dest, const int dest_length) {
+    const int zeroes = dest_length - length;
+    if (zeroes >= 0) {
+        if (zeroes > 0) {
+            memset(dest, '0', zeroes);
+        }
+        memcpy(dest + zeroes, source, length);
+    } else {
+        memcpy(dest, source, length);
+    }
+    return zeroes;
+}
+
 /* Flag table for `is_chr()` and `z_not_sane()` */
 #define IS_CLS_F    (IS_CLI_F | IS_SIL_F)
 static const unsigned short flags[256] = {
@@ -776,14 +790,38 @@ INTERNAL int z_utf8_to_unicode(struct zint_symbol *symbol, const unsigned char s
     return 0;
 }
 
-/* Process `source` for manual FNC1 extra escape sequences, placing result in `dest` with result length in `p_len`,
-   and setting `fncs` with found FNC1s. `dest` & `fncs` must be at least `length` in size. `eci` is checked to be
-   ASCII-compatible (UTF-8 & single-byte ECIs, excl. Binary 899). On error sets `errtxt` & returns error no. */
-INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char source[], const int length,
-                const int eci, unsigned char dest[], char *fncs, int *p_len) {
+/* Check if `source` starts with manual FNC1 in 1st or 2nd position, returning length of extra escape sequence if so,
+   else 0 */
+INTERNAL int z_extra_escape_position_fnc1(const unsigned char source[], const int length) {
+    if (length >= 3) {
+        if (source[0] == '\\' && source[1] == '^' && source[2] == '1') {
+            return 3;
+        }
+        if (length >= 4) {
+            if (z_isalpha(source[0]) && source[1] == '\\' && source[2] == '^' && source[3] == '1') {
+                return 4;
+            }
+            if (length >= 5) {
+                if (z_isdigit(source[0]) && z_isdigit(source[1]) && source[2] == '\\' && source[3] == '^'
+                        && source[4] == '1') {
+                    return 5;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+/* Process `source` for extra escape sequences, placing result in `dest`, updating `p_length`, and setting `fncs` with
+   any found FNC1s. Sets `p_have_extra_escapes` if any sequences found. `eci` is checked to be ASCII-compatible (UTF-8
+   & single-byte ECIs, excl. Binary 899). On error sets `errtxt` & returns error no. */
+INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char source[], int *p_length, const int eci,
+                unsigned char *dest, char *fncs, int *p_have_extra_escapes) {
+    const int length = *p_length;
     int i, j = 0;
+
     if (eci == 20 || eci == 25 || eci >= 28) {
-        return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 716, "Extra escape mode requires ASCII-compatible ECI");
+        return z_errtxt(ZINT_ERROR_INVALID_OPTION, symbol, 716, "Extra Escape mode requires ASCII-compatible ECI");
     }
     for (i = 0; i < length; i++) {
         if (source[i] == '\\' && i + 2 < length && source[i + 1] == '^') {
@@ -806,7 +844,12 @@ INTERNAL int z_extra_escapes(struct zint_symbol *symbol, const unsigned char sou
             dest[j++] = source[i];
         }
     }
-    *p_len = j;
+    if (j != length) {
+        assert(j > 0 && j < length);
+        dest[j] = '\0';
+        *p_length = j;
+        *p_have_extra_escapes = 1;
+    }
 
     return 0;
 }
@@ -1029,7 +1072,6 @@ INTERNAL void z_ct_set_seg_extra_escapes_eci(struct zint_symbol *symbol, const i
     int i, j = 0;
     unsigned char *source;
     int length;
-    const int no_fnc1_position_check = seg_idx != 0 || eci != 0;
 
     assert(symbol->content_segs);
     assert(seg_idx >= 0 && seg_idx < symbol->content_seg_count);
@@ -1047,7 +1089,7 @@ INTERNAL void z_ct_set_seg_extra_escapes_eci(struct zint_symbol *symbol, const i
                 /* Drop second '^' */
             } else { /* source[i + 2] == '1' FNC1 */
                 /* Do not emit <GS> if FNC1 in 1st/2nd position */
-                if (no_fnc1_position_check || j > 2 || (j == 1 && !z_isalpha(source[0]))
+                if (seg_idx != 0 || j > 2 || (j == 1 && !z_isalpha(source[0]))
                         || (j == 2 && (!z_isdigit(source[0]) || !z_isdigit(source[1]))) ) {
                     source[j++] = '\x1D'; /* GS */
                 }

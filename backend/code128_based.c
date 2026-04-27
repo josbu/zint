@@ -49,7 +49,7 @@ static int nve18_or_ean14(struct zint_symbol *symbol, const unsigned char source
     };
     const int idx = data_len == 17;
     unsigned char ean128_equiv[23];
-    int i, zeroes;
+    int i;
     unsigned char have_check_digit = '\0';
     unsigned char check_digit;
     int error_number;
@@ -79,10 +79,8 @@ static int nve18_or_ean14(struct zint_symbol *symbol, const unsigned char source
         length--;
     }
 
-    zeroes = data_len - length;
     memcpy(ean128_equiv, prefix[idx][!(symbol->input_mode & GS1PARENS_MODE)], 4);
-    memset(ean128_equiv + 4, '0', zeroes);
-    memcpy(ean128_equiv + 4 + zeroes, source, length);
+    z_zero_fill(source, length, ean128_equiv + 4, data_len);
 
     check_digit = (unsigned char) zint_gs1_check_digit(ean128_equiv + 4, data_len);
     if (have_check_digit && have_check_digit != check_digit) {

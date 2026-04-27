@@ -367,7 +367,8 @@ static int supports_non_iso8859_1(const int symbology) {
 /* Returns 1 if `symbol` can process EXTRA_ESCAPE_MODE */
 static int supports_extra_escape_mode(const struct zint_symbol *const symbol) {
     return symbol->symbology == BARCODE_CODE128
-                || (symbol->symbology == BARCODE_DATAMATRIX && (symbol->input_mode & 0x07) != GS1_MODE);
+                || ((symbol->symbology == BARCODE_AZTEC || symbol->symbology == BARCODE_DATAMATRIX)
+                    && (symbol->input_mode & 0x07) != GS1_MODE);
 }
 
 /* Returns 1 if symbology supports HRT */
@@ -752,12 +753,15 @@ static int escape_char_process(struct zint_symbol *symbol, const unsigned char *
                 case '\\':
                     if (escaped_string) escaped_string[out_posn] = vals[z_posn(escs, ch)];
                     in_posn += 2;
+                    /* Note: if given double backslash following by caret "\\^" then will be passed through as "\^",
+                       i.e. the start of an extra escape sequence, avoiding the check below, so each symbology needs
+                       to also check themselves */
                     break;
                 case '^': /* Symbology specific */
                     if (!extra_escape_mode || !can_extra_escape) {
                         if (!extra_escape_mode) {
                             return z_errtxt(ZINT_ERROR_INVALID_DATA, symbol, 798,
-                                            "Escape '\\^' only valid in extra escape mode");
+                                            "Escape '\\^' only valid in Extra Escape mode");
                         }
                         return z_errtxt(ZINT_ERROR_INVALID_DATA, symbol, 213,
                                         "Extra escape '\\^' not valid for this symbology and/or input mode");

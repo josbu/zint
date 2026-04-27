@@ -173,7 +173,7 @@ static void test_chr_cnt(const testCtx *const p_ctx) {
     static const struct item data[] = {
         /*  0*/ { "", -1, 'a', 0 },
         /*  1*/ { "BDAaED", -1, 'a', 1 },
-        /*  1*/ { "aBDAaaaEaDa", -1, 'a', 6 },
+        /*  2*/ { "aBDAaaaEaDa", -1, 'a', 6 },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -188,6 +188,44 @@ static void test_chr_cnt(const testCtx *const p_ctx) {
 
         ret = z_chr_cnt(ZCUCP(data[i].data), length, data[i].c);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
+    }
+
+    testFinish();
+}
+
+static void test_zero_fill(const testCtx *const p_ctx) {
+
+    struct item {
+        const char *data;
+        int length;
+        int dest_length;
+        int ret;
+        const char *expected;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { "", -1, 0, 0, "" },
+        /*  1*/ { "1", -1, 10, 9, "0000000001" },
+        /*  2*/ { "123456789", -1, 10, 1, "0123456789" },
+        /*  3*/ { "1234567890", -1, 10, 0, "1234567890" },
+        /*  4*/ { "12345678901", -1, 10, -1, "12345678901" },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, length, ret;
+
+    testStart(p_ctx->func_name);
+
+    for (i = 0; i < data_size; i++) {
+        unsigned char dest[200];
+
+        if (testContinue(p_ctx, i)) continue;
+
+        length = data[i].length == -1 ? (int) strlen(data[i].data) : data[i].length;
+
+        ret = z_zero_fill(ZCUCP(data[i].data), length, dest, data[i].dest_length);
+        assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
+        assert_zero(strcmp(ZCCP(dest), data[i].expected), "i:%d dest (%s) != expected (%s)\n",
+                    i, dest, data[i].expected);
     }
 
     testFinish();
@@ -773,20 +811,21 @@ static void test_extra_escapes(const testCtx *const p_ctx) {
         int ret;
         const char *expected;
         const char expected_fncs[32];
+        int expected_extra_escapes;
         const char *comment;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     static const struct item data[] = {
-        /*  0*/ { 0, "", -1, 0, "", {0}, "" },
-        /*  1*/ { 3, "ABC", -1, 0, "ABC", {0}, "" },
-        /*  2*/ { 4, "\\^1ABC", -1, 0, "\035ABC", {1}, "" },
-        /*  3*/ { 26, "\\^1\\^1A\\^1BC\\^1", -1, 0, "\035\035A\035BC\035", {1,1,0,1,0,0,1}, "" },
-        /*  4*/ { 27, "\\^^\\^1A\\^1BC\\^^1", -1, 0, "\\^\035A\035BC\\^1", {0,0,1,0,1}, "" },
-        /*  5*/ { 20, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, "" },
-        /*  6*/ { 25, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, "" },
-        /*  7*/ { 28, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, "" },
-        /*  8*/ { 29, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, "" },
-        /*  9*/ { 899, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, "" },
+        /*  0*/ { 0, "", -1, 0, "", {0}, 0, "" },
+        /*  1*/ { 3, "ABC", -1, 0, "ABC", {0}, 0, "" },
+        /*  2*/ { 4, "\\^1ABC", -1, 0, "\035ABC", {1}, 1, "" },
+        /*  3*/ { 26, "\\^1\\^1A\\^1BC\\^1", -1, 0, "\035\035A\035BC\035", {1,1,0,1,0,0,1}, 1, "" },
+        /*  4*/ { 27, "\\^^\\^1A\\^1BC\\^^1", -1, 0, "\\^\035A\035BC\\^1", {0,0,1,0,1}, 1, "" },
+        /*  5*/ { 20, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, 0, "" },
+        /*  6*/ { 25, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, 0, "" },
+        /*  7*/ { 28, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, 0, "" },
+        /*  8*/ { 29, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, 0, "" },
+        /*  9*/ { 899, "ABC", -1, ZINT_ERROR_INVALID_OPTION, "", {0}, 0, "" },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -800,9 +839,9 @@ static void test_extra_escapes(const testCtx *const p_ctx) {
     symbol->debug = debug;
 
     for (i = 0; i < data_size; i++) {
-        int len = 0;
         unsigned char dest[32] = {0};
         char fncs[32] = {0};
+        int have_extra_escapes = 0;
 
         if (testContinue(p_ctx, i)) continue;
 
@@ -813,14 +852,17 @@ static void test_extra_escapes(const testCtx *const p_ctx) {
         assert_nonzero(expected_length < (int) sizeof(dest), "i:%d expected_length %d >= sizeof(dest) %d\n",
                         i, expected_length, (int) sizeof(dest));
 
-        ret = z_extra_escapes(symbol, ZCUCP(data[i].data), length, data[i].eci, dest, fncs, &len);
+        ret = z_extra_escapes(symbol, ZCUCP(data[i].data), &length, data[i].eci, dest, fncs, &have_extra_escapes);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
         if (ret < ZINT_ERROR) {
-            assert_equal(len, expected_length, "i:%d len %d != expected_length %d (%s)\n",
-                        i, len, expected_length, dest);
+            assert_equal(length, expected_length, "i:%d length %d != expected_length %d (%s)\n",
+                        i, length, expected_length, dest);
             assert_zero(strcmp(ZCCP(dest), data[i].expected), "i:%d dest (%s) != expected (%s)\n",
                         i, dest, data[i].expected);
             assert_zero(memcmp(fncs, data[i].expected_fncs, expected_length), "i:%d fncs != expected_fncs\n", i);
+            assert_equal(have_extra_escapes, data[i].expected_extra_escapes,
+                        "i:%d have_extra_escapes %d != expected %d\n",
+                        i, have_extra_escapes, data[i].expected_extra_escapes);
         }
     }
 
@@ -1313,18 +1355,20 @@ static void test_ct_set_seg_extra_escapes_eci(const testCtx *const p_ctx) {
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     static const struct item data[] = {
-        /*  0*/ { 0, 1, 3, { { TU("\\^1A"), 0, 0 } }, { { TU("\035A"), 2, 3 } } },
+        /*  0*/ { 0, 1, 3, { { TU("\\^1A"), 0, 0 } }, { { TU("A"), 1, 3 } } },
         /*  1*/ { 0, 1, 0, { { TU("\\^1A"), 0, 0 } }, { { TU("A"), 1, 3 } } },
-        /*  2*/ { 0, 1, 4, { { TU("A\\^1"), 0, 0 } }, { { TU("A\035"), 2, 4 } } },
+        /*  2*/ { 0, 1, 4, { { TU("A\\^1"), 0, 0 } }, { { TU("A"), 1, 4 } } },
         /*  3*/ { 0, 1, 0, { { TU("A\\^1"), 0, 0 } }, { { TU("A"), 1, 3 } } },
         /*  4*/ { 0, 1, 0, { { TU("a\\^1"), 0, 0 } }, { { TU("a"), 1, 3 } } },
         /*  5*/ { 0, 1, 0, { { TU("12\\^1"), 0, 0 } }, { { TU("12"), 2, 3 } } },
-        /*  6*/ { 0, 1, 0, { { TU("?\\^1"), 0, 0 } }, { { TU("?\035"), 2, 3 } } },
-        /*  7*/ { 0, 1, 0, { { TU("1A\\^1"), 0, 0 } }, { { TU("1A\035"), 3, 3 } } },
-        /*  8*/ { 0, 1, 0, { { TU("\\^1\\^^1A\\^1"), 0, 0 } }, { { TU("\\^1A\035"), 5, 3 } } },
-        /*  9*/ { 0, 1, 5, { { TU("\\^1\\^^1A\\^1"), 0, 0 } }, { { TU("\035\\^1A\035"), 6, 5 } } },
-        /* 10*/ { 1, 2, 27, { { TU("\\^^A"), 0, 0 }, { TU("\\^1A\\^^1\\^1B\\^"), 0, 0 } }, { { TU("\\^^A"), 0, 0 }, { TU("\035A\\^1\035B\\^"), 9, 27 } } },
-        /* 11*/ { 1, 2, 0, { { TU("\\^^A"), 0, 0 }, { TU("\\^1A\\^^1\\^1B\\^"), 0, 0 } }, { { TU("\\^^A"), 0, 0 }, { TU("\035A\\^1\035B\\^"), 9, 3 } } },
+        /*  6*/ { 0, 1, 5, { { TU("12\\^1"), 0, 0 } }, { { TU("12"), 2, 5 } } },
+        /*  7*/ { 0, 1, 0, { { TU("?\\^1"), 0, 0 } }, { { TU("?\035"), 2, 3 } } },
+        /*  8*/ { 0, 1, 0, { { TU("1A\\^1"), 0, 0 } }, { { TU("1A\035"), 3, 3 } } },
+        /*  9*/ { 0, 1, 0, { { TU("\\^1\\^^1A\\^1"), 0, 0 } }, { { TU("\\^1A\035"), 5, 3 } } },
+        /* 10*/ { 0, 1, 5, { { TU("\\^1\\^^1A\\^1"), 0, 0 } }, { { TU("\\^1A\035"), 5, 5 } } },
+        /* 11*/ { 1, 2, 27, { { TU("\\^^A"), 0, 0 }, { TU("\\^1A\\^^1\\^1B\\^"), 0, 0 } }, { { TU("\\^^A"), 0, 0 }, { TU("\035A\\^1\035B\\^"), 9, 27 } } },
+        /* 12*/ { 1, 2, 0, { { TU("\\^^A"), 0, 0 }, { TU("\\^1A\\^^1\\^1B\\^"), 0, 0 } }, { { TU("\\^^A"), 0, 0 }, { TU("\035A\\^1\035B\\^"), 9, 3 } } },
+        /* 13*/ { 1, 2, 6, { { TU("\\^^A"), 0, 0 }, { TU("\\^1A\\^^1\\^1B\\^"), 0, 0 } }, { { TU("\\^^A"), 0, 0 }, { TU("\035A\\^1\035B\\^"), 9, 6 } } },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, ret;
@@ -1619,6 +1663,7 @@ int main(int argc, char *argv[]) {
         { "test_to_int", test_to_int },
         { "test_to_upper", test_to_upper },
         { "test_chr_cnt", test_chr_cnt },
+        { "test_zero_fill", test_zero_fill },
         { "test_is_chr", test_is_chr },
         { "test_not_sane", test_not_sane },
         { "test_not_sane_lookup", test_not_sane_lookup },

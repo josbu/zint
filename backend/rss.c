@@ -181,11 +181,8 @@ static uint64_t dbar_to_uint64(const unsigned char source[], const int length) {
 
 /* Helper to construct zero-padded GTIN14 with check digit, returning `buf` for convenience */
 static unsigned char *dbar_gtin14(const unsigned char *source, const int length, unsigned char buf[14]) {
-    const int zeroes = 13 - length;
+    const int zeroes = z_zero_fill(source, length, buf, 13);
 
-    assert(zeroes >= 0);
-    memset(buf, '0', zeroes);
-    memcpy(buf + zeroes, source, length);
     buf[zeroes + length] = zint_gs1_check_digit(buf, 13);
 
     return buf;

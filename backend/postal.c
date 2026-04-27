@@ -181,7 +181,7 @@ INTERNAL int zint_koreapost(struct zint_symbol *symbol, unsigned char source[], 
         {'1','3','1','5','0','6','1','3','1','3'}, {'0','4','1','3','1','3','1','7','1','3'},
         {              "17131713"               }, {              "13171713"               }
     };
-    int total, i, check, zeroes, error_number = 0;
+    int total, i, check, error_number = 0;
     unsigned char local_source[8];
     char dest[80];
     char *d = dest;
@@ -195,9 +195,7 @@ INTERNAL int zint_koreapost(struct zint_symbol *symbol, unsigned char source[], 
         return z_errtxtf(ZINT_ERROR_INVALID_DATA, symbol, 485,
                         "Invalid character at position %d in input (digits only)", i);
     }
-    zeroes = 6 - length;
-    memset(local_source, '0', zeroes);
-    memcpy(local_source + zeroes, source, length);
+    z_zero_fill(source, length, local_source, 6);
 
     total = 0;
     for (i = 0; i < 6; i++) {
