@@ -154,7 +154,7 @@ INTERNAL int zint_postnet(struct zint_symbol *symbol, unsigned char source[], in
     /* Stop character */
     *d++ = ascender;
 
-    h = d - dest;
+    h = (unsigned int) (d - dest);
     for (loopey = 0, writer = 0; loopey < h; loopey++, writer += 2) {
         if (dest[loopey] == ascender) {
             z_set_module(symbol, 0, writer);
@@ -390,7 +390,7 @@ static int rm4scc_enc(struct zint_symbol *symbol, const int *const posns, char *
     /* Stop character */
     *d++ = 0; /* Full */
 
-    *p_dest_len = d - dest;
+    *p_dest_len = (int) (d - dest);
 
     return KRSET[check_digit];
 }

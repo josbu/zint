@@ -98,9 +98,9 @@ namespace Zint {
         QColor color;
         int r, g, b, a;
         if (text.contains(',')) {
-            int comma1 = text.indexOf(',');
-            int comma2 = text.indexOf(',', comma1 + 1);
-            int comma3 = text.indexOf(',', comma2 + 1);
+            qsizetype comma1 = text.indexOf(',');
+            qsizetype comma2 = text.indexOf(',', comma1 + 1);
+            qsizetype comma3 = text.indexOf(',', comma2 + 1);
             int black = 100 - text.mid(comma3 + 1).toInt();
             int val = 100 - text.mid(0, comma1).toInt();
             r = (int) roundf((0xFF * val * black) / 10000.0f);
@@ -302,7 +302,7 @@ namespace Zint {
                 QByteArray bstr = m_text.toUtf8();
                 /* Note do our own rotation */
                 m_error = ZBarcode_Encode_and_Buffer_Vector(m_zintSymbol, (unsigned char *) bstr.data(),
-                            bstr.length(), 0);
+                            (int) bstr.length(), 0);
             } else {
                 struct zint_seg segs[maxSegs];
                 std::vector<QByteArray> bstrs;
@@ -960,7 +960,7 @@ namespace Zint {
             cpy_bytearray_left(m_zintSymbol->outfile, filename.toUtf8(), ARRAY_SIZE(m_zintSymbol->outfile) - 1);
             if (m_segs.empty()) {
                 QByteArray bstr = m_text.toUtf8();
-                m_error = ZBarcode_Encode_and_Print(m_zintSymbol, (unsigned char *) bstr.data(), bstr.length(),
+                m_error = ZBarcode_Encode_and_Print(m_zintSymbol, (unsigned char *) bstr.data(), (int) bstr.length(),
                                                     m_rotate_angle);
             } else {
                 struct zint_seg segs[maxSegs];
@@ -985,7 +985,7 @@ namespace Zint {
             cpy_bytearray_left(m_zintSymbol->outfile, filename.toUtf8(), ARRAY_SIZE(m_zintSymbol->outfile) - 1);
             if (m_segs.empty()) {
                 QByteArray bstr = m_text.toUtf8();
-                m_error = ZBarcode_Encode_and_Print(m_zintSymbol, (unsigned char *) bstr.data(), bstr.length(),
+                m_error = ZBarcode_Encode_and_Print(m_zintSymbol, (unsigned char *) bstr.data(), (int) bstr.length(),
                                                     m_rotate_angle);
             } else {
                 struct zint_seg segs[maxSegs];
@@ -1044,7 +1044,7 @@ namespace Zint {
             segs[i].eci = m_segs[i].m_eci;
             bstrs.push_back(m_segs[i].m_text.toUtf8());
             segs[i].source = (unsigned char *) bstrs.back().data();
-            segs[i].length = bstrs.back().length();
+            segs[i].length = (int) bstrs.back().length();
         }
         return i;
     }

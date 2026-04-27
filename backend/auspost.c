@@ -139,7 +139,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
                             "Invalid character at position %d in DPID (digits only for Standard Customer Barcode)",
                             not_all_digits);
             }
-            if (z_zero_fill(source, length, src_buf, 8)) {
+            if (z_zero_fill(source, length, src_buf, 8) > 0) {
                 source = src_buf;
                 length = 8;
             }
@@ -184,7 +184,7 @@ INTERNAL int zint_auspost(struct zint_symbol *symbol, unsigned char source[], in
                             "Invalid character at position %d in DPID (digits only)", i);
         }
         /* Add leading zeros as required */
-        if (z_zero_fill(source, length, src_buf, 8)) {
+        if (z_zero_fill(source, length, src_buf, 8) > 0) {
             source = src_buf;
             length = 8;
         }
