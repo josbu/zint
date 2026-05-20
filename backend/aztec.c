@@ -1318,10 +1318,6 @@ static int az_text_process(unsigned char *source, const int length, int bp, char
         }
     }
 
-    if (debug_print) {
-        printf("Binary String (%d): %.*s\n", bp, bp, binary_string);
-    }
-
     *data_length = bp;
     if (p_current_mode) {
         *p_current_mode = current_mode;
@@ -1344,6 +1340,7 @@ static int az_text_process_segs(struct zint_symbol *symbol, struct zint_seg segs
     /* Raw text dealt with by `ZBarcode_Encode_Segs()`, except for `eci` feedback.
        Note not updating `eci` for GS1 mode as not converted */
     const int content_segs = !gs1 && (symbol->output_options & BARCODE_CONTENT_SEGS);
+    const int debug_print = symbol->debug & ZINT_DEBUG_PRINT;
 
     if (gs1 || (extra_escape_mode
                     && (position_fnc1 = z_extra_escape_position_fnc1(segs[0].source, segs[0].length)))) {
@@ -1408,6 +1405,9 @@ static int az_text_process_segs(struct zint_symbol *symbol, struct zint_seg segs
                                                 &current_mode, &bp, symbol->debug))) {
                 return error_number;
             }
+        }
+        if (debug_print) {
+            printf("Binary String (%d): %.*s\n", bp, bp, binary_string);
         }
         if (content_segs) {
             if (have_extra_escapes) {
