@@ -1531,6 +1531,7 @@ namespace Zint {
                 || m_symbol == BARCODE_QRCODE || m_symbol == BARCODE_HIBC_QR || m_symbol == BARCODE_MICROQR
                 || m_symbol == BARCODE_RMQR || m_symbol == BARCODE_GRIDMATRIX || m_symbol == BARCODE_HANXIN
                 || m_symbol == BARCODE_CHANNEL || m_symbol == BARCODE_CODEONE || m_symbol == BARCODE_CODE93
+                || m_symbol == BARCODE_TELEPEN || m_symbol == BARCODE_TELEPEN_NUM
                 || m_symbol == BARCODE_ULTRA || m_symbol == BARCODE_VIN) {
             arg_int(cmd, "--vers=", option2());
         } else if (m_symbol == BARCODE_DAFT && option2() != 250) {

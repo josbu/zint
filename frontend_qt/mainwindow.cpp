@@ -2297,6 +2297,30 @@ void MainWindow::change_options()
             connect(get_widget(QSL("chkPlesseyShowChecks")), SIGNAL(toggled(bool)), SLOT(update_preview()));
         }
 
+    } else if (symbology == BARCODE_TELEPEN) {
+        QFile file(QSL(":/grpTelepen.ui"));
+        if (file.open(QIODevice::ReadOnly)) {
+            m_optionWidget = uiload.load(&file);
+            file.close();
+            load_sub_settings(settings, symbology);
+            vLayoutSpecific->addWidget(m_optionWidget);
+            set_smaller_font(QSL("noteTelepenDLE"));
+            grpSpecific->show();
+            connect(get_widget(QSL("chkTelepenAIM")), SIGNAL(toggled(bool)), SLOT(update_preview()));
+        }
+
+    } else if (symbology == BARCODE_TELEPEN_NUM) {
+        QFile file(QSL(":/grpTelepenNum.ui"));
+        if (file.open(QIODevice::ReadOnly)) {
+            m_optionWidget = uiload.load(&file);
+            file.close();
+            load_sub_settings(settings, symbology);
+            vLayoutSpecific->addWidget(m_optionWidget);
+            set_smaller_font(QSL("noteTelepenNumDLE"));
+            grpSpecific->show();
+            connect(get_widget(QSL("chkTelepenNumAIM")), SIGNAL(toggled(bool)), SLOT(update_preview()));
+        }
+
     } else if (symbology == BARCODE_ULTRA) {
         QFile file(QSL(":/grpUltra.ui"));
         if (!file.open(QIODevice::ReadOnly))
@@ -3398,6 +3422,20 @@ void MainWindow::update_preview()
         case BARCODE_PLESSEY:
             m_bc.bc.setSymbol(BARCODE_PLESSEY);
             if (get_chk_val(QSL("chkPlesseyShowChecks"))) {
+                m_bc.bc.setOption2(1);
+            }
+            break;
+
+        case BARCODE_TELEPEN:
+            m_bc.bc.setSymbol(BARCODE_TELEPEN);
+            if (get_chk_val(QSL("chkTelepenAIM"))) {
+                m_bc.bc.setOption2(1);
+            }
+            break;
+
+        case BARCODE_TELEPEN_NUM:
+            m_bc.bc.setSymbol(BARCODE_TELEPEN_NUM);
+            if (get_chk_val(QSL("chkTelepenNumAIM"))) {
                 m_bc.bc.setOption2(1);
             }
             break;
@@ -4697,6 +4735,14 @@ void MainWindow::save_sub_settings(QSettings &settings, int symbology)
             settings.setValue(QSL("studio/bc/plessey/chk_show_checks"), get_chk_val(QSL("chkPlesseyShowChecks")));
             break;
 
+        case BARCODE_TELEPEN:
+            settings.setValue(QSL("studio/bc/telepen/chk_aim"), get_chk_val(QSL("chkTelepenAIM")));
+            break;
+
+        case BARCODE_TELEPEN_NUM:
+            settings.setValue(QSL("studio/bc/telepen_num/chk_aim"), get_chk_val(QSL("chkTelepenNumAIM")));
+            break;
+
         case BARCODE_ULTRA:
             settings.setValue(QSL("studio/bc/ultra/autoresizing"), get_rad_grp_index(
                 QStringList() << QSL("radUltraAuto") << QSL("radUltraEcc")));
@@ -5174,6 +5220,14 @@ void MainWindow::load_sub_settings(QSettings &settings, int symbology)
 
         case BARCODE_PLESSEY:
             set_chk_from_setting(settings, QSL("studio/bc/plessey/chk_show_checks"), QSL("chkPlesseyShowChecks"));
+            break;
+
+        case BARCODE_TELEPEN:
+            set_chk_from_setting(settings, QSL("studio/bc/telepen/chk_aim"), QSL("chkTelepenAIM"));
+            break;
+
+        case BARCODE_TELEPEN_NUM:
+            set_chk_from_setting(settings, QSL("studio/bc/telepen_num/chk_aim"), QSL("chkTelepenNumAIM"));
             break;
 
         case BARCODE_ULTRA:

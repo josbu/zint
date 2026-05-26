@@ -1,6 +1,6 @@
 Zint Barcode Generator and Zint Barcode Studio User Manual
 Version 2.16.0.9
-April 2026
+May 2026
 
 *******************************************************************************
 * For reference the following is a text-only version of the Zint manual,      *
@@ -716,11 +716,17 @@ sequences are shown in the table below.
 
   \r          0x0D         CR      Carriage Return
 
+  \L          0x10         DLE     Data Link Escape
+
   \e          0x1B         ESC     Escape
+
+  \F          0x1C         FS      File Separator
 
   \G          0x1D         GS      Group Separator
 
   \R          0x1E         RS      Record Separator
+
+  \N          0x1F         US      Unit Separator
 
   \(          0x28         (       Opening parenthesis (only with --gs1parens)
 
@@ -771,7 +777,7 @@ the sequence backslash caret (“\^”):
 
   Table 3: Extra Escape Sequences
 
-Currently the only special character recognized is the Function Code 1 character
+Currently the only special character recognised is the Function Code 1 character
 FNC1. If your data contains the sequence “\^” then it must be escaped using the
 extra escape sequence “\^^”, i.e. by doubling the caret.
 
@@ -1278,18 +1284,18 @@ An alternative way to specify the scale, which takes the above details into
 account, is to specify measurable units using the --scalexdimdp option, which
 has the format
 
-    --scalexdimdp=X[,R]
+    --scalexdimdp[=X[,R]]
 
 where X is the X-dimension (in mm by default) and R is the resolution (in dpmm,
-dots per mm, by default). R is optional, and defaults to 12 dpmm, and X may be
-zero, in which case it uses a symbology-specific default. The units may be given
-in inches for X by appending "in", and in dpi (dots per inch) for R by appending
-"dpi". For example
+dots per mm, by default). R is optional, and defaults to 12 dpmm, and X is
+optional or may be zero, in which case it uses a symbology-specific default. The
+units may be given in inches for X by appending "in", and in dpi (dots per inch)
+for R by appending "dpi". For example
 
     zint -d "1234" --scalexdimdp=0.013in,300dpi
 
-Explicit metric units may also be given by appending "mm" and "dpmm" as
-appropriate, and may be mixed with U.S. units:
+Explicit metric units may also be given (for clarity) by appending "mm" and
+"dpmm" as appropriate, and may be mixed with U.S. units:
 
     zint -d "1234" --scalexdimdp=0.33mm,300dpi
 
@@ -1306,7 +1312,7 @@ pixels, or 4 pixels rounding to the nearest pixel:
 This will result in output of 37.29mm x 25.56mm (WxH) at 12 dpmm. The same
 result can be achieved using the --scalexdimdp option with
 
-    zint -b EAN13 -d "501234567890" --compliantheight --scalexdimdp=0
+    zint -b EAN13 -d "501234567890" --compliantheight --scalexdimdp
 
 as 0.33mm is the default X-dimension for EAN, and 12 dpmm the default
 resolution.
@@ -3190,18 +3196,42 @@ Telepen Alpha was developed in 1972 by SB Electronic Systems Limited and can
 encode ASCII text input, up to a maximum of 69 characters. Telepen includes a
 hidden modulo-127 check digit, added by Zint.
 
-[zint -b TELEPEN --compliantheight -d "Z80"]
+[zint -b TELEPEN --compliantheight -d "Z8000"]
+
+Full ASCII + Compressed Numeric Mode, which uses different AIM-defined
+Start/Stop characters, may be enabled by setting --vers=1 (API option_2 = 1). In
+this mode control character DLE (ASCII 16, escape sequence \L) indicates a
+switch from Full ASCII to Compressed Numeric, where each symbol character
+encodes a digit pair:
+
+[zint -b TELEPEN --compliantheight -d "Z\L8000" -esc --vers=1]
+
+However not all barcode readers recognise this mode so check before using.
 
 6.1.6.2 Telepen Numeric
 
 Telepen Numeric allows compression of numeric data into a Telepen symbol. Data
 can consist of pairs of numbers or pairs consisting of a numerical digit
 followed an X character. For example: 466333 and 466X33 are valid codes whereas
-46X333 is not (the digit pair "X3" is not valid). Up to 136 digits can be
+46X333 is not (the digit pair "X3" is not valid). Up to 138 digits can be
 encoded. Telepen Numeric includes a hidden modulo-127 check digit which is added
 by Zint.
 
 [zint -b TELEPEN_NUM --compliantheight -d "466X33"]
+
+Trailing ASCII characters may also be encoded by prefixing them with a DLE
+control character (ASCII 16, escape sequence \L) and appending them to the
+numeric data:
+
+[zint -b TELEPEN_NUM --compliantheight -d "12\LAB" –esc]
+
+This method allows odd numbers to be encoded without a leading zero:
+
+[zint -b TELEPEN_NUM --compliantheight -d "123\L4" –esc]
+
+AIM-defined Start/Stop characters may be enabled by setting --vers=1 (API
+option_2 = 1). This allows barcode readers that recognise them to detect
+Compressed Numeric data automatically.
 
 6.1.7 Code 39
 
@@ -5054,13 +5084,13 @@ international standards:
 - AIM Uniform Symbology Specification Code One (1994)
 - ISO/IEC 16022:2024 Information technology - Automatic identification and data
   capture techniques - Data Matrix bar code symbology specification
-- ISO/IEC 21471:2020 Information technology - Automatic identification and data
+- ISO/IEC 21471:2025 Information technology - Automatic identification and data
   capture techniques - Extended rectangular data matrix (DMRE) bar code
   symbology specification
 - AIM TSC1705001 (v 4.0 Draft 0.15) - Information technology - Automatic
   identification and data capture techniques - Bar code symbology
   specification - DotCode (Revised 28th May 2019)
-- ISO/IEC 15420:2009 Information technology - Automatic identification and data
+- ISO/IEC 15420:2025 Information technology - Automatic identification and data
   capture techniques - EAN/UPC bar code symbology specification
 - AIMD014 (v 1.63) - Information technology, Automatic identification and data
   capture techniques - Bar code symbology specification - Grid Matrix (Released
@@ -5084,6 +5114,7 @@ international standards:
 - ISO/IEC 23941:2022 Information technology - Automatic identification and data
   capture techniques - Rectangular Micro QR Code (rMQR) bar code symbology
   specification
+- AIM Europe X-25 - Uniform Symbology Specification Telepen (1991)
 - AIMD/TSC15032-43 (v 0.99c) - International Technical Specification - Ultracode
   Symbology (Draft) (Released 4th Nov 2015)
 
@@ -5102,6 +5133,13 @@ company references in particular.
 - GS1 General Specifications Release 26.0 (Jan 2026)
 - ANSI/HIBC 2.6-2016 - The Health Industry Bar Code (HIBC) Supplier Labeling
   Standard
+- ANSI/HIBC 1.3-2010 - The Health Industry Bar Code (HIBC) Provider Applications
+  Standard
+- ISO/IEC 15424:2025 Information technology - Automatic identification and data
+  capture techniques - Data carrier identifiers (including symbology
+  identifiers)
+- ISO/IEC 15434:2019 Information technology — Automatic identification and data
+  capture techniques — Syntax for high-capacity ADC media
 
 Annex A. Character Encoding
 
@@ -5253,7 +5291,7 @@ configured barcode is updated when the "Generate" button is pressed.
 
 Annex D. Man Page ZINT(1)
 
-% ZINT(1) Version 2.16.0.9 % % April 2026
+% ZINT(1) Version 2.16.0.9 % % May 2026
 
 NAME
 
@@ -5368,7 +5406,7 @@ OPTIONS
     the barcode’s specification, or if --height is not given, default to the
     height specified by the specification (if any).
 
--d, --data=DATA
+-d DATA, --data=DATA
 
     Specify the input DATA to encode. The --esc option may be used to enter
     non-printing characters using escape sequences. The DATA should be UTF-8,
@@ -5379,15 +5417,15 @@ OPTIONS
     Send output to stdout, which in most cases should be re-directed to a pipe
     or a file. Use --filetype to specify output format.
 
---dmb256=INTEGER
+--dmb256[=INTEGER]
 
-    For Data Matrix symbols, encode the first INTEGER input characters in Base
-    256 mode. 0 means all input.
+    For Data Matrix symbols, encode the first INTEGER (optional, 0 if not given)
+    input characters in Base 256 mode. 0 means all input.
 
---dmc40=INTEGER
+--dmc40[=INTEGER]
 
-    For Data Matrix symbols, encode the first INTEGER input characters in C40
-    mode. 0 means all input.
+    For Data Matrix symbols, encode the first INTEGER (optional, 0 if not given)
+    input characters in C40 mode. 0 means all input.
 
 --dmiso144
 
@@ -5445,9 +5483,12 @@ OPTIONS
         \v       (0x0B)    VT   Vertical Tab
         \f       (0x0C)    FF   Form Feed
         \r       (0x0D)    CR   Carriage Return
+        \L       (0x10)    DLE  Data Link Escape
         \e       (0x1B)    ESC  Escape
+        \F       (0x1C)    FS   File Separator
         \G       (0x1D)    GS   Group Separator
         \R       (0x1E)    RS   Record Separator
+        \N       (0x1F)    US   Unit Separator
         \(       (0x28)    (    Opening parenthesis (only with
                                 --gs1parens)
         \)       (0x29)    )    Closing parenthesis (only with
@@ -5475,8 +5516,8 @@ OPTIONS
 
 --fast
 
-    Use faster if less optimal encodation or other shortcuts (affects Data
-    Matrix, MicroPDF417, PDF417, QRCODE & UPNQR only).
+    Use faster if less optimal encodation or other shortcuts (affects Aztec
+    Code, Data Matrix, MicroPDF417, PDF417, QR Code & UPNQR only).
 
 --fg=COLOUR
 
@@ -5550,7 +5591,7 @@ OPTIONS
     Treat height as per-row. Affects Codablock F, Code 16K, Code 49, GS1 DataBar
     Expanded Stacked (DBAR_EXPSTK), MicroPDF417 and PDF417.
 
--i, --input=FILE
+-i FILE, --input=FILE
 
     Read the input data from FILE. Specify a single hyphen (-) for FILE to read
     from stdin.
@@ -5602,7 +5643,7 @@ OPTIONS
 
     Remove the Human Readable Text (HRT).
 
--o, --output=FILE
+-o FILE, --output=FILE
 
     Send the output to FILE. When not in batch mode, the default is “out.png”
     (or “out.gif” if zint built without PNG support). When in batch mode
@@ -5654,22 +5695,23 @@ OPTIONS
 
     See also --scalexdimdp below.
 
---scalexdimdp=X[,R]
+--scalexdimdp[=X[,R]]
 
     Scale the image according to X-dimension X and resolution R, where X is in
     mm and R is in dpmm (dots per mm). X and R may be floating-point. R is
-    optional and defaults to 12 dpmm (approximately 300 dpi). X may be zero in
-    which case a symbology-specific default is used.
+    optional and defaults to 12 dpmm (approximately 300 dpi). X is optional or
+    may be zero in which case a symbology-specific default is used.
 
     The scaling takes into account the output filetype, and deals with all the
-    details mentioned above. Units may be specified for X by appending “in”
-    (inch) or “mm”, and for R by appending “dpi” (dots per inch) or “dpmm” -
-    e.g. --scalexdimdp=0.013in,300dpi.
+    details mentioned above in --scale. Units may be specified for X by
+    appending “in” (inch) or “mm”, and for R by appending “dpi” (dots per inch)
+    or “dpmm” - e.g. --scalexdimdp=0.013in,300dpi.
 
---scmvv=INTEGER
+--scmvv[=INTEGER]
 
     For MaxiCode, prefix the Structured Carrier Message (SCM) with
-    "[)>\R01\Gvv", where vv is a 2-digit INTEGER.
+    "[)>\R01\Gvv", where vv is an optional 2-digit INTEGER. If INTEGER is
+    omitted it defaults to 96 (ASC MH10/SC 8).
 
 --secure=INTEGER
 
@@ -5711,7 +5753,8 @@ OPTIONS
     number of symbols in the sequence, and ID, which is optional, is the
     identifier that all symbols in the sequence share. Structured Append is
     supported by Aztec Code, Code One, Data Matrix, DotCode, Grid Matrix,
-    MaxiCode, MicroPDF417, PDF417, QR Code and Ultracode.
+    MaxiCode, MicroPDF417, PDF417, QR Code and Ultracode. Code One, DotCode and
+    MaxiCode do not support an ID.
 
 -t, --types
 
@@ -5870,12 +5913,14 @@ OPTIONS
                         5, 6   (mod-11 NCR, mod-11 NCR + mod-10)
                         +10    (hide)
 
-    For a few other symbologies, it specifies other characteristics:
+    For some other symbologies, it specifies other characteristics:
 
         Channel Code    3 to 8    (no. of channels)
         DAFT            50 to 900 (permille tracker ratio)
         DPD             1         (relabel)
         PZN             1         (PZN7 instead of default PZN8)
+        Telepen         1         (use AIM-defined Start/Stop)
+        Telepen Numeric 1         (use AIM-defined Start/Stop)
         Ultracode       2         (revision 2)
         VIN             1         (add international prefix)
 
@@ -5888,7 +5933,7 @@ OPTIONS
     Set the height of vertical whitespace above and below the barcode, where
     INTEGER is in integral multiples of the X-dimension.
 
--w, --whitesp=INTEGER
+-w INTEGER, --whitesp=INTEGER
 
     Set the width of horizontal whitespace either side of the barcode, where
     INTEGER is in integral multiples of the X-dimension.
@@ -5987,13 +6032,18 @@ CONFORMING TO
 Zint is designed to be compliant with a number of international standards,
 including:
 
-ISO/IEC 24778:2024, ANSI/AIM BC12-1998, EN 798:1996, AIM ISS-X-24 (1995),
-ISO/IEC 15417:2007, EN 12323:2005, ISO/IEC 16388:2023, ANSI/AIM BC6-2000,
-ANSI/AIM BC5-1995, AIM USS Code One (1994), ISO/IEC 16022:2024, ISO/IEC
-21471:2019, ISO/IEC 15420:2009, AIMD014 (v 1.63) (2008), ISO/IEC 24723:2010,
-ISO/IEC 24724:2011, ISO/IEC 20830:2021, ISO/IEC 16390:2007, ISO/IEC 16023:2000,
-ISO/IEC 24728:2006, ISO/IEC 15438:2015, ISO/IEC 18004:2024, ISO/IEC 23941:2022,
-AIM ITS/04-023 (2022)
+ISO/IEC 24778:2024 (Aztec Code), SEMI T1-95 (1996) (BC412), ANSI/AIM BC12-1998
+(Channel Code), EN 798:1996 (Codabar), AIM ISS-X-24 (1995) (Codablock F),
+ISO/IEC 15417:2007 (Code 128), EN 12323:2005 (Code 16K), ISO/IEC 16388:2023
+(Code 39), ANSI/AIM BC6-2000 (Code 49), ANSI/AIM BC5-1995 (Code 93), AIM USS
+Code One (1994), ISO/IEC 16022:2024 (Data Matrix), ISO/IEC 21471:2025 (DMRE),
+AIM TSC1705001 (2019) (DotCode), ISO/IEC 15420:2025 (EAN/UPC), AIMD014 (v 1.63)
+(2008) (Grid Matrix), ISO/IEC 24723:2010 (GS1 Composite), ISO/IEC 24724:2011
+(GS1 DataBar), ISO/IEC 20830:2021 (Han Xin Code), ISO/IEC 16390:2007
+(Interleaved 2 of 5), ISO/IEC 16023:2000 (MaxiCode), ISO/IEC 24728:2006
+(MicroPDF417), ISO/IEC 15438:2015 (PDF417), ISO/IEC 18004:2024 (QR Code),
+ISO/IEC 23941:2022 (rMQR), AIM Europe X-25 (1991) (Telepen), AIMD/TSC15032-43
+(2015) (Ultracode)
 
 COPYRIGHT
 

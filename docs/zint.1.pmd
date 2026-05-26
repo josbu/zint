@@ -1,6 +1,6 @@
 % ZINT(1) Version 2.16.0.9
 %
-% April 2026
+% May 2026
 
 [//]: # ( vim: set ts=4 sw=4 et : )
 
@@ -10,8 +10,8 @@
 
 # SYNOPSIS
 
-| `zint` [`-h` | `--help`]
-| `zint` [*options*]
+| **`zint`** [`-h` | `--help`]
+| **`zint`** [*options*]
 
 # DESCRIPTION
 
@@ -28,138 +28,140 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 
 # OPTIONS
 
-`-h`, `--help`
+**`-h`**, **`--help`**
 
 :   Print usage information summarizing command line options.
 
-`-b TYPE`, `--barcode=TYPE`
+**`-b`** *`TYPE`*, **`--barcode=`***`TYPE`*
 
-:   Set the barcode symbology that will be used to encode the data. *TYPE* is the number or name of the barcode
+:   Set the barcode symbology that will be used to encode the data. *`TYPE`* is the number or name of the barcode
     symbology. If not given, the symbology defaults to 20 (Code 128). To see what types are available, use the `-t` |
     `--types` option. Type names are case-insensitive, and non-alphanumerics are ignored.
 
-`--addongap=INTEGER`
+**`--addongap=`***`INTEGER`*
 
-:   For EAN/UPC symbologies, set the gap between the main data and the add-on. *INTEGER* is in integral multiples of
+:   For EAN/UPC symbologies, set the gap between the main data and the add-on. *`INTEGER`* is in integral multiples of
     the X-dimension. The maximum gap that can be set is 12. The minimum is 7, except for UPC-A, when the minimum is 9.
 
-`--azfull`
+**`--azfull`**
 
 :   For Aztec Code symbols, exclude Compact versions when considering automatic sizes (i.e. consider Full versions
     only).
 
-`--batch`
+**`--batch`**
 
 :   Treat each line of an input file specified with `-i` | `--input` as a separate data set and produce a barcode
     image for each one. The barcode images are outputted by default to numbered filenames starting with "00001.png",
     "00002.png" etc., which can be changed by using the `-o` | `--output` option.
 
-`--bg=COLOUR`
+**`--bg=`***`COLOUR`*
 
-:   Specify a background (paper) colour where *COLOUR* is in hexadecimal `RRGGBB` or `RRGGBBAA` format or in decimal
+:   Specify a background (paper) colour where *`COLOUR`* is in hexadecimal `RRGGBB` or `RRGGBBAA` format or in decimal
     `C,M,Y,K` percentages format.
 
-`--binary`
+**`--binary`**
 
 :   Treat input data as raw 8-bit binary data instead of the default UTF-8. Automatic code page translation to an ECI
     page is disabled, and no validation of the data's character encoding takes place.
 
-`--bind`
+**`--bind`**
 
 :   Add horizontal boundary bars (also known as bearer bars) to the symbol. The width of the boundary bars is
     specified by the `--border` option.  `--bind` can also be used to add row separator bars to symbols stacked with
     multiple `-d` | `--data` inputs, in which case the width of the separator bars is specified with the `--separator`
     option.
 
-`--bindtop`
+**`--bindtop`**
 
 :   Add a horizontal boundary bar to the top of the symbol. The width of the boundary bar is specified by the
     `--border` option.
 
-`--bold`
+**`--bold`**
 
 :   Use a bold font for the Human Readable Text (HRT).
 
-`--border=INTEGER`
+**`--border=`***`INTEGER`*
 
-:   Set the width of boundary bars (`--bind` or `--bindtop`) or box borders (`--box`), where *INTEGER* is in integral
-    multiples of the X-dimension. The default is zero.
+:   Set the width of boundary bars (`--bind` or `--bindtop`) or box borders (`--box`), where *`INTEGER`* is in
+    integral multiples of the X-dimension. The default is zero.
 
-`--box`
+**`--box`**
 
 :   Add a box around the symbol. The width of the borders is specified by the `--border` option.
 
-`--cmyk`
+**`--cmyk`**
 
 :   Use the CMYK colour space when outputting to Encapsulated PostScript (EPS) or TIF files.
 
-`--cols=INTEGER`
+**`--cols=`***`INTEGER`*
 
-:   Set the number of data columns in the symbol to *INTEGER*. Affects Codablock F, DotCode, GS1 DataBar Expanded
+:   Set the number of data columns in the symbol to *`INTEGER`*. Affects Codablock F, DotCode, GS1 DataBar Expanded
     Stacked (DBAR_EXPSTK), MicroPDF417 and PDF417 symbols.
 
-`--compliantheight`
+**`--compliantheight`**
 
 :   Warn if the height specified by the `--height` option is not compliant with the barcode's specification, or if
     `--height` is not given, default to the height specified by the specification (if any).
 
-`-d`, `--data=DATA`
+**`-d`** *`DATA`*, **`--data=`***`DATA`*
 
-:   Specify the input *DATA* to encode. The `--esc` option may be used to enter non-printing characters using escape
-    sequences. The *DATA* should be UTF-8, unless the `--binary` option is given, in which case it can be anything.
+:   Specify the input *`DATA`* to encode. The `--esc` option may be used to enter non-printing characters using escape
+    sequences. The *`DATA`* should be UTF-8, unless the `--binary` option is given, in which case it can be anything.
 
-`--direct`
+**`--direct`**
 
 :   Send output to stdout, which in most cases should be re-directed to a pipe or a file. Use `--filetype` to specify
     output format.
 
-`--dmb256=INTEGER`
+**`--dmb256[=`***`INTEGER`*`]`
 
-:   For Data Matrix symbols, encode the first *INTEGER* input characters in Base 256 mode. 0 means all input.
+:   For Data Matrix symbols, encode the first *`INTEGER`* (optional, 0 if not given) input characters in Base 256
+    mode. 0 means all input.
 
-`--dmc40=INTEGER`
+**`--dmc40[=`***`INTEGER`*`]`
 
-:   For Data Matrix symbols, encode the first *INTEGER* input characters in C40 mode. 0 means all input.
+:   For Data Matrix symbols, encode the first *`INTEGER`* (optional, 0 if not given) input characters in C40 mode. 0
+    means all input.
 
-`--dmiso144`
+**`--dmiso144`**
 
 :   For Data Matrix symbols, use the standard ISO/IEC codeword placement for 144 x 144 (`--vers=24`) sized symbols,
     instead of the default "de facto" placement (which rotates the placement of ECC codewords).
 
-`--dmre`
+**`--dmre`**
 
 :   For Data Matrix symbols, allow Data Matrix Rectangular Extended (DMRE) sizes when considering automatic sizes. See
     also `--square`.
 
-`--dotsize=NUMBER`
+**`--dotsize=`***`NUMBER`*
 
-:   Set the radius of the dots in dotty mode (`--dotty`). *NUMBER* is in X-dimensions, and may be floating-point. The
-    default is 0.8.
+:   Set the radius of the dots in dotty mode (`--dotty`). *`NUMBER`* is in X-dimensions, and may be floating-point.
+    The default is 0.8.
 
-`--dotty`
+**`--dotty`**
 
 :   Use dots instead of squares for matrix symbols. DotCode is always in dotty mode.
 
-`--dump`
+**`--dump`**
 
 :   Dump a hexadecimal representation of the symbol's encodation to stdout. The same representation may be outputted
     to a file by using a `.txt` extension with `-o` | `--output` or by specifying `--filetype=txt`.
 
-`-e`, `--ecinos`
+**`-e`**, **`--ecinos`**
 
 :   Display the table of ECIs (Extended Channel Interpretations).
 
-`--eci=INTEGER`
+**`--eci=`***`INTEGER`*
 
-:   Set the ECI code for the input data to *INTEGER*. See `-e` | `--ecinos` for a list of the ECIs available. ECIs are
-    supported by Aztec Code, Code One, Data Matrix, DotCode, Grid Matrix, Han Xin Code, MaxiCode, MicroPDF417, PDF417,
-    QR Code, rMQR and Ultracode.
+:   Set the ECI code for the input data to *`INTEGER`*. See `-e` | `--ecinos` for a list of the ECIs available. ECIs
+    are supported by Aztec Code, Code One, Data Matrix, DotCode, Grid Matrix, Han Xin Code, MaxiCode, MicroPDF417,
+    PDF417, QR Code, rMQR and Ultracode.
 
-`--embedfont`
+**`--embedfont`**
 
 :   For vector output, embed the font in the file for portability. Currently only available for SVG output.
 
-`--esc`
+**`--esc`**
 
 :   Process escape characters in the input data. The escape sequences are:
 
@@ -172,9 +174,12 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
         \v       (0x0B)    VT   Vertical Tab
         \f       (0x0C)    FF   Form Feed
         \r       (0x0D)    CR   Carriage Return
+        \L       (0x10)    DLE  Data Link Escape
         \e       (0x1B)    ESC  Escape
+        \F       (0x1C)    FS   File Separator
         \G       (0x1D)    GS   Group Separator
         \R       (0x1E)    RS   Record Separator
+        \N       (0x1F)    US   Unit Separator
         \(       (0x28)    (    Opening parenthesis (only with
                                 --gs1parens)
         \)       (0x29)    )    Closing parenthesis (only with
@@ -191,100 +196,101 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
         \UNNNNNN (U+NNNNNN)     Any 21-bit Unicode character
                                 where NNNNNN is hexadecimal
 
-`--extraesc`
+**`--extraesc`**
 
 :   As well as processing the normal escape sequences above, process the special escape sequences beginning with `\^`.
     For Aztec Code, Code 128 and Data Matrix, process the escape sequence `\^1` that inserts an `FNC1` character, and
     the escaping sequence `\^^` that encodes a literal `\^`. For Code 128 only, process the escape sequences `\^A`,
     `\^B`, `\^C` and `\^@` that allow manual switching of Code Sets. The sequence `\^@` turns off manual switching.
 
-`--fast`
+**`--fast`**
 
-:   Use faster if less optimal encodation or other shortcuts (affects Data Matrix, MicroPDF417, PDF417, QRCODE & UPNQR
-    only).
+:   Use faster if less optimal encodation or other shortcuts (affects Aztec Code, Data Matrix, MicroPDF417, PDF417, QR
+    Code & UPNQR only).
 
-`--fg=COLOUR`
+**`--fg=`***`COLOUR`*
 
-:   Specify a foreground (ink) colour where *COLOUR* is in hexadecimal `RRGGBB` or `RRGGBBAA` format or in decimal
+:   Specify a foreground (ink) colour where *`COLOUR`* is in hexadecimal `RRGGBB` or `RRGGBBAA` format or in decimal
     `C,M,Y,K` percentages format.
 
-`--filetype=TYPE`
+**`--filetype=`***`TYPE`*
 
-:   Set the output file type to *TYPE*, which is one of `BMP`, `EMF`, `EPS`, `GIF`, `PCX`, `PNG`, `SVG`, `TIF`, `TXT`.
+:   Set the output file type to *`TYPE`*, which is one of `BMP`, `EMF`, `EPS`, `GIF`, `PCX`, `PNG`, `SVG`, `TIF`,
+    `TXT`.
 
-`--fullmultibyte`
+**`--fullmultibyte`**
 
 :   Use the multibyte modes of Grid Matrix, Han Xin and QR Code for non-ASCII data.
 
-`--gs1`
+**`--gs1`**
 
 :   Treat input as GS1 compatible data. A number of input formats are available. Application Identifiers (AIs) may be
     placed in square brackets `"[]"`. Alternatively the GS1 Syntax Engine "Unbracketed AI" format may be used, which
     starts with a caret (`^`) and uses carets to indicate required `FNC1`s. For matrix symbologies, GS1 Digital Link
     URIs (unverified) may be given. Further input options are available with `--gs1parens` and `--gs1raw`.
 
-`--gs1nocheck`
+**`--gs1nocheck`**
 
 :   Treat input as GS1 compatible data (as `--gs1`) but do not check the validity of the data.
 
-`--gs1parens`
+**`--gs1parens`**
 
 :   Treat input as GS1 compatible data (as `--gs1`) but process parentheses `"()"` as GS1 AI delimiters, rather than
     square brackets `"[]"`. If the AI data contains opening parentheses, they must be backslashed (`"\("`).
 
-`--gs1raw`
+**`--gs1raw`**
 
 :   Treat input as GS1 compatible data (as `--gs1`), but process literally, with any required `FNC1`s represented by
     `GS` (0x1D). AIs are not delimited by brackets (`"[]"` or `"()"`). (Similar to the GS1 Syntax Engine "Unbracketed
     AI" entry mode except using `GS`s instead of carets, and without any initial `GS`.)
 
-`--gs1strict`
+**`--gs1strict`**
 
 :   Treat input as GS1 compatible data (as `--gs1`) and use the GS1 Syntax Engine (if available) to strictly verify
     the GS1 data, including GS1 Digital Link URIs. Ignored if `--gs1nocheck` also given.
 
-`--gssep`
+**`--gssep`**
 
 :   For Data Matrix in GS1 mode, use `GS` (0x1D) as the GS1 data separator instead of `FNC1`.
 
-`--guarddescent=NUMBER`
+**`--guarddescent=`***`NUMBER`*
 
-:   For EAN/UPC symbols, set the height the guard bars descend below the main bars, where *NUMBER* is in X-dimensions.
-    *NUMBER* may be floating-point.
+:   For EAN/UPC symbols, set the height the guard bars descend below the main bars, where *`NUMBER`* is in
+    X-dimensions. *`NUMBER`* may be floating-point.
 
-`--guardwhitespace`
+**`--guardwhitespace`**
 
 :   For EAN/UPC symbols, add quiet zone indicators `"<"` and/or `">"` to HRT where applicable.
 
-`--height=NUMBER`
+**`--height=`***`NUMBER`*
 
-:   Set the height of the symbol in X-dimensions. *NUMBER* may be floating-point.
+:   Set the height of the symbol in X-dimensions. *`NUMBER`* may be floating-point.
 
-`--heightperrow`
+**`--heightperrow`**
 
 :   Treat height as per-row. Affects Codablock F, Code 16K, Code 49, GS1 DataBar Expanded Stacked (DBAR_EXPSTK),
     MicroPDF417 and PDF417.
 
-`-i`, `--input=FILE`
+**`-i`** *`FILE`*, **`--input=`***`FILE`*
 
-:   Read the input data from *FILE*. Specify a single hyphen (`-`) for *FILE* to read from stdin.
+:   Read the input data from *`FILE`*. Specify a single hyphen (`-`) for *`FILE`* to read from stdin.
 
-`--init`
+**`--init`**
 
 :   Create a Reader Initialisation (Programming) symbol.
 
-`--mask=INTEGER`
+**`--mask=`***`INTEGER`*
 
-:   Set the masking pattern to use for DotCode, Han Xin or QR Code to *INTEGER*, overriding the automatic selection.
+:   Set the masking pattern to use for DotCode, Han Xin or QR Code to *`INTEGER`*, overriding the automatic selection.
 
-`--mirror`
+**`--mirror`**
 
 :   Use the batch data to determine the filename in batch mode (`--batch`). The `-o` | `--output` option can be used
     to specify an output directory (any filename will be ignored).
 
-`--mode=INTEGER`
+**`--mode=`***`INTEGER`*
 
-:   For MaxiCode and GS1 Composite symbols, set the encoding mode to *INTEGER*.
+:   For MaxiCode and GS1 Composite symbols, set the encoding mode to *`INTEGER`*.
 
     For MaxiCode (SCM is Structured Carrier Message, with 3 fields: postcode, 3-digit ISO 3166-1 country code, 3-digit
     service code):
@@ -301,21 +307,21 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
         2   CC-B
         3   CC-C (GS1_128_CC only)
 
-`--nobackground`
+**`--nobackground`**
 
 :   Remove the background colour (EMF, EPS, GIF, PNG, SVG and TIF only).
 
-`--noquietzones`
+**`--noquietzones`**
 
 :   Disable any quiet zones for symbols that define them by default.
 
-`--notext`
+**`--notext`**
 
 :   Remove the Human Readable Text (HRT).
 
-`-o`, `--output=FILE`
+**`-o`** *`FILE`*, **`--output=`***`FILE`*
 
-:   Send the output to *FILE*. When not in batch mode, the default is "out.png" (or "out.gif" if zint built without
+:   Send the output to *`FILE`*. When not in batch mode, the default is "out.png" (or "out.gif" if zint built without
     PNG support). When in batch mode (`--batch`), special characters can be used to format the output filenames:
 
         ~           Insert a number or 0
@@ -323,33 +329,33 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
         @           Insert a number or * (+ on Windows)
         Any other   Insert literally
 
-`--primary=STRING`
+**`--primary=`***STRING*
 
 :   For MaxiCode, set the content of the primary message. For GS1 Composite symbols, set the content of the linear
     symbol.
 
-`--quietzones`
+**`--quietzones`**
 
 :   Add compliant quiet zones for symbols that specify them. This is in addition to any whitespace specified by `-w` |
     `--whitesp` or `--vwhitesp`.
 
-`-r`, `--reverse`
+**`-r`**, **`--reverse`**
 
 :   Reverse the foreground and background colours (white on black). Known as "reflectance reversal" or "reversed
     reflectance".
 
-`--rotate=INTEGER`
+**`--rotate=`***`INTEGER`*
 
-:   Rotate the symbol by *INTEGER* degrees, where *INTEGER* can be 0, 90, 270 or 360.
+:   Rotate the symbol by *`INTEGER`* degrees, where *`INTEGER`* can be 0, 90, 270 or 360.
 
-`--rows=INTEGER`
+**`--rows=`***`INTEGER`*
 
-:   Set the number of rows for Codablock F or PDF417 to *INTEGER*. It will also set the minimum number of rows for
+:   Set the number of rows for Codablock F or PDF417 to *`INTEGER`*. It will also set the minimum number of rows for
     Code 16K or Code 49, and the maximum number of rows for GS1 DataBar Expanded Stacked (DBAR_EXPSTK).
 
-`--scale=NUMBER`
+**`--scale=`***`NUMBER`*
 
-:   Adjust the size of the X-dimension. *NUMBER* may be floating-point, and is multiplied by 2 (except for MaxiCode)
+:   Adjust the size of the X-dimension. *`NUMBER`* may be floating-point, and is multiplied by 2 (except for MaxiCode)
     before being applied. The default scale is 1.
 
     For MaxiCode, the scale is multiplied by 10 for raster output, by 40 for EMF output, and by 2 otherwise.
@@ -359,23 +365,24 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
 
     See also `--scalexdimdp` below.
 
-`--scalexdimdp=X[,R]`
+**`--scalexdimdp[=`***`X`*`[,`*`R`*`]]`
 
-:   Scale the image according to X-dimension *X* and resolution *R*, where *X* is in mm and *R* is in dpmm (dots per
-    mm). *X* and *R* may be floating-point. *R* is optional and defaults to 12 dpmm (approximately 300 dpi). *X* may
-    be zero in which case a symbology-specific default is used.
+:   Scale the image according to X-dimension *`X`* and resolution *`R`*, where *`X`* is in mm and *`R`* is in dpmm
+    (dots per mm). *`X`* and *`R`* may be floating-point. *`R`* is optional and defaults to 12 dpmm (approximately 300
+    dpi). *`X`* is optional or may be zero in which case a symbology-specific default is used.
 
-    The scaling takes into account the output filetype, and deals with all the details mentioned above. Units may be
-    specified for *X* by appending "in" (inch) or "mm", and for *R* by appending "dpi" (dots per inch) or "dpmm" -
-    e.g. `--scalexdimdp=0.013in,300dpi`.
+    The scaling takes into account the output filetype, and deals with all the details mentioned above in `--scale`.
+    Units may be specified for *X* by appending "in" (inch) or "mm", and for *R* by appending "dpi" (dots per inch) or
+    "dpmm" - e.g. `--scalexdimdp=0.013in,300dpi`.
 
-`--scmvv=INTEGER`
+**`--scmvv[=`***`INTEGER`*`]`
 
-:   For MaxiCode, prefix the Structured Carrier Message (SCM) with `"[)>\R01\Gvv"`, where `vv` is a 2-digit *INTEGER*.
+:   For MaxiCode, prefix the Structured Carrier Message (SCM) with `"[)>\R01\Gvv"`, where `vv` is an optional 2-digit
+    *`INTEGER`*. If *`INTEGER`* is omitted it defaults to 96 (ASC MH10/SC 8).
 
-`--secure=INTEGER`
+**`--secure=`***`INTEGER`*
 
-:   Set the error correction level (ECC) to *INTEGER*. The meaning is specific to the following matrix symbols (all
+:   Set the error correction level (ECC) to *`INTEGER`*. The meaning is specific to the following matrix symbols (all
     except PDF417 are approximate):
 
         Aztec Code  1 to 4 (10%, 23%, 36%, 50%)
@@ -387,47 +394,47 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
         rMQR        2 or 4 (15% or 30%) (M or H)
         Ultracode   1 to 6 (0%, 5%, 9%, 17%, 25%, 33%)
 
-`--segN=ECI,DATA`
+**`--segN=`***`ECI`*`,`*`DATA`*
 
-:   Set the *ECI* & *DATA* content for segment N, where N is 1 to 9. `-d` | `--data` must still be given, and counts
-    as segment 0, its ECI given by `--eci`. Segments must be consecutive.
+:   Set the *`ECI`* & *`DATA`* content for segment N, where N is 1 to 9. `-d` | `--data` must still be given, and
+    counts as segment 0, its ECI given by `--eci`. Segments must be consecutive.
 
-`--separator=INTEGER`
+**`--separator=`***`INTEGER`*
 
-:   Set the height of row separator bars for stacked symbologies, where *INTEGER* is in integral multiples of the
+:   Set the height of row separator bars for stacked symbologies, where *`INTEGER`* is in integral multiples of the
     X-dimension. The default is zero.
 
-`--small`
+**`--small`**
 
 :   Use a smaller font for Human Readable Text (HRT).
 
-`--square`
+**`--square`**
 
 :   For Data Matrix symbols, exclude rectangular sizes when considering automatic sizes. See also `--dmre`.
 
-`--structapp=I,C[,ID]`
+**`--structapp=`***`I`*`,`*`C`*`[,`*`ID`*`]`
 
-:   Set Structured Append info, where *I* is the 1-based index, *C* is the total number of symbols in the sequence,
-    and *ID*, which is optional, is the identifier that all symbols in the sequence share. Structured Append is
-    supported by Aztec Code, Code One, Data Matrix, DotCode, Grid Matrix, MaxiCode, MicroPDF417, PDF417, QR Code and
-    Ultracode.
+:   Set Structured Append info, where *`I`* is the 1-based index, *`C`* is the total number of symbols in the
+    sequence, and *`ID`*, which is optional, is the identifier that all symbols in the sequence share. Structured
+    Append is supported by Aztec Code, Code One, Data Matrix, DotCode, Grid Matrix, MaxiCode, MicroPDF417, PDF417, QR
+    Code and Ultracode. Code One, DotCode and MaxiCode do not support an *`ID`*.
 
-`-t`, `--types`
+**`-t`**, **`--types`**
 
 :   Display the table of barcode types (symbologies). The numbers or names can be used with `-b` | `--barcode`.
 
-`--textgap=NUMBER`
+**`--textgap=`***`NUMBER`*
 
-:   Adjust the gap between the barcode and the Human Readable Text (HRT). *NUMBER* is in X-dimensions, and may be
+:   Adjust the gap between the barcode and the Human Readable Text (HRT). *`NUMBER`* is in X-dimensions, and may be
     floating-point. Maximum is 10 and minimum is -5. The default is 1.
 
-`--verbose`
+**`--verbose`**
 
 :   Output debug information to stdout.
 
-`--vers=INTEGER`
+**`--vers=`***`INTEGER`*
 
-:   Set the symbol version (size, check digits, other options) to *INTEGER*. The meaning is symbol-specific.
+:   Set the symbol version (size, check digits, other options) to *`INTEGER`*. The meaning is symbol-specific.
 
     For most matrix symbols, it specifies size:
 
@@ -566,30 +573,32 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
                         5, 6   (mod-11 NCR, mod-11 NCR + mod-10)
                         +10    (hide)
 
-    For a few other symbologies, it specifies other characteristics:
+    For some other symbologies, it specifies other characteristics:
 
         Channel Code    3 to 8    (no. of channels)
         DAFT            50 to 900 (permille tracker ratio)
         DPD             1         (relabel)
         PZN             1         (PZN7 instead of default PZN8)
+        Telepen         1         (use AIM-defined Start/Stop)
+        Telepen Numeric 1         (use AIM-defined Start/Stop)
         Ultracode       2         (revision 2)
         VIN             1         (add international prefix)
 
-`-v`, `--version`
+**`-v`**, **`--version`**
 
 :   Display zint version.
 
-`--vwhitesp=INTEGER`
+**`--vwhitesp=`***`INTEGER`*
 
-:   Set the height of vertical whitespace above and below the barcode, where *INTEGER* is in integral multiples of the
-    X-dimension.
+:   Set the height of vertical whitespace above and below the barcode, where *`INTEGER`* is in integral multiples of
+    the X-dimension.
 
-`-w`, `--whitesp=INTEGER`
+**`-w`** *`INTEGER`*, **`--whitesp=`***`INTEGER`*
 
-:   Set the width of horizontal whitespace either side of the barcode, where *INTEGER* is in integral multiples of the
-    X-dimension.
+:   Set the width of horizontal whitespace either side of the barcode, where *`INTEGER`* is in integral multiples of
+    the X-dimension.
 
-`--werror`
+**`--werror`**
 
 :   Convert all warnings into errors.
 
@@ -684,14 +693,15 @@ and at
 
 Zint is designed to be compliant with a number of international standards, including:
 
-ISO/IEC 24778:2024, ANSI/AIM BC12-1998, EN 798:1996,
-AIM ISS-X-24 (1995), ISO/IEC 15417:2007, EN 12323:2005,
-ISO/IEC 16388:2023, ANSI/AIM BC6-2000, ANSI/AIM BC5-1995,
-AIM USS Code One (1994), ISO/IEC 16022:2024, ISO/IEC 21471:2019,
-ISO/IEC 15420:2009, AIMD014 (v 1.63) (2008), ISO/IEC 24723:2010,
-ISO/IEC 24724:2011, ISO/IEC 20830:2021, ISO/IEC 16390:2007,
-ISO/IEC 16023:2000, ISO/IEC 24728:2006, ISO/IEC 15438:2015,
-ISO/IEC 18004:2024, ISO/IEC 23941:2022, AIM ITS/04-023 (2022)
+ISO/IEC 24778:2024 (Aztec Code), SEMI T1-95 (1996) (BC412), ANSI/AIM BC12-1998 (Channel Code),
+EN 798:1996 (Codabar), AIM ISS-X-24 (1995) (Codablock F), ISO/IEC 15417:2007 (Code 128),
+EN 12323:2005 (Code 16K), ISO/IEC 16388:2023 (Code 39), ANSI/AIM BC6-2000 (Code 49),
+ANSI/AIM BC5-1995 (Code 93), AIM USS Code One (1994), ISO/IEC 16022:2024 (Data Matrix),
+ISO/IEC 21471:2025 (DMRE), AIM TSC1705001 (2019) (DotCode), ISO/IEC 15420:2025 (EAN/UPC),
+AIMD014 (v 1.63) (2008) (Grid Matrix), ISO/IEC 24723:2010 (GS1 Composite), ISO/IEC 24724:2011 (GS1 DataBar),
+ISO/IEC 20830:2021 (Han Xin Code), ISO/IEC 16390:2007 (Interleaved 2 of 5), ISO/IEC 16023:2000 (MaxiCode),
+ISO/IEC 24728:2006 (MicroPDF417), ISO/IEC 15438:2015 (PDF417), ISO/IEC 18004:2024 (QR Code),
+ISO/IEC 23941:2022 (rMQR), AIM Europe X-25 USS Telepen (1991), AIMD/TSC15032-43 (2015) (Ultracode)
 
 # COPYRIGHT
 

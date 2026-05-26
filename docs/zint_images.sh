@@ -62,8 +62,11 @@ zint -b EAN_2ADDON --compliantheight -d "12" --scale=$SCALE_UPCEAN -o images/ean
 zint -b EAN_5ADDON --compliantheight -d "54321" --guardwhitespace --scale=$SCALE_UPCEAN -o images/ean_5addon_gws.svg
 zint -b PLESSEY -d "C64" --scale=$SCALE_LINEAR -o images/plessey.svg
 zint -b MSI_PLESSEY -d "6502" --vers=2 --scale=$SCALE_LINEAR -o images/msi_plessey.svg
-zint -b TELEPEN --compliantheight -d "Z80" --scale=$SCALE_LINEAR -o images/telepen.svg
+zint -b TELEPEN --compliantheight -d "Z8000" --scale=$SCALE_LINEAR -o images/telepen.svg
+zint -b TELEPEN --compliantheight -d "Z\L8000" --esc --vers=1 --scale=$SCALE_LINEAR -o images/telepen_aim.svg
 zint -b TELEPEN_NUM --compliantheight -d "466X33" --scale=$SCALE_LINEAR -o images/telepen_num.svg
+zint -b TELEPEN_NUM --compliantheight -d "12\LAB" --esc --scale=$SCALE_LINEAR -o images/telepen_num_asc.svg
+zint -b TELEPEN_NUM --compliantheight -d "12\L3" --esc --scale=$SCALE_LINEAR -o images/telepen_num_odd.svg
 zint -b CODE39 --compliantheight -d "1A" --vers=1 --scale=$SCALE_LINEAR -o images/code39.svg
 zint -b EXCODE39 --compliantheight -d "123.45#@fd" --scale=$SCALE_LINEAR -o images/excode39.svg
 zint -b CODE93 --compliantheight -d "C93" --scale=$SCALE_LINEAR -o images/code93.svg

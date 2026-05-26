@@ -1,6 +1,6 @@
 % Zint Barcode Generator and Zint Barcode Studio User Manual
 % Version 2.16.0.9
-% April 2026
+% May 2026
 
 [//]: # ( vim: set ts=4 sw=4 et : )
 
@@ -560,11 +560,17 @@ Sequence    Equivalent
 
 `\r`        0x0D        `CR`    Carriage Return
 
+`\L`        0x10        `DLE`   Data Link Escape
+
 `\e`        0x1B        `ESC`   Escape
+
+`\F`        0x1C        `FS`    File Separator
 
 `\G`        0x1D        `GS`    Group Separator
 
 `\R`        0x1E        `RS`    Record Separator
+
+`\N`        0x1F        `US`    Unit Separator
 
 `\(`        0x28        `(`     Opening parenthesis (only with `--gs1parens`)
 
@@ -619,7 +625,7 @@ Sequence
 
 Table: Extra Escape Sequences {#tbl:extra_escapes}
 
-Currently the only special character recognized is the Function Code 1 character
+Currently the only special character recognised is the Function Code 1 character
 `FNC1`. If your data contains the sequence "`\^`" then it must be escaped using
 the extra escape sequence "`\^^`", i.e. by doubling the caret.
 
@@ -1176,21 +1182,21 @@ account, is to specify measurable units using the `--scalexdimdp` option, which
 has the format
 
 ```
---scalexdimdp=X[,R]
+--scalexdimdp[=X[,R]]
 ```
 
 where `X` is the X-dimension (in mm by default) and `R` is the resolution (in
 dpmm, dots per mm, by default). `R` is optional, and defaults to 12 dpmm, and
-`X` may be zero, in which case it uses a symbology-specific default. The units
-may be given in inches for `X` by appending `"in"`, and in dpi (dots per inch)
-for `R` by appending `"dpi"`. For example
+`X` is optional or may be zero, in which case it uses a symbology-specific
+default. The units may be given in inches for `X` by appending `"in"`, and in
+dpi (dots per inch) for `R` by appending `"dpi"`. For example
 
 ```bash
 zint -d "1234" --scalexdimdp=0.013in,300dpi
 ```
 
-Explicit metric units may also be given by appending `"mm"` and `"dpmm"` as
-appropriate, and may be mixed with U.S. units:
+Explicit metric units may also be given (for clarity) by appending `"mm"` and
+`"dpmm"` as appropriate, and may be mixed with U.S. units:
 
 ```bash
 zint -d "1234" --scalexdimdp=0.33mm,300dpi
@@ -1212,7 +1218,7 @@ This will result in output of 37.29mm x 25.56mm (WxH) at 12 dpmm. The same
 result can be achieved using the `--scalexdimdp` option with
 
 ```bash
-zint -b EAN13 -d "501234567890" --compliantheight --scalexdimdp=0
+zint -b EAN13 -d "501234567890" --compliantheight --scalexdimdp
 ```
 
 as 0.33mm is the default X-dimension for EAN, and 12 dpmm the default
@@ -3325,19 +3331,46 @@ Telepen Alpha was developed in 1972 by SB Electronic Systems Limited and can
 encode ASCII text input, up to a maximum of 69 characters. Telepen includes a
 hidden modulo-127 check digit, added by Zint.
 
-![`zint -b TELEPEN --compliantheight -d "Z80"`](images/telepen.svg){.lin}
+![`zint -b TELEPEN --compliantheight -d "Z8000"`](images/telepen.svg){.lin}
+
+Full ASCII + Compressed Numeric Mode, which uses different AIM-defined
+Start/Stop characters, may be enabled by setting `--vers=1` (API
+`option_2 = 1`). In this mode control character `DLE` (ASCII 16, escape sequence
+`\L`) indicates a switch from Full ASCII to Compressed Numeric, where each
+symbol character encodes a digit pair:
+
+![`zint -b TELEPEN --compliantheight -d
+"Z\L8000" -esc --vers=1`](images/telepen_aim.svg){.lin}
+
+However not all barcode readers recognise this mode so check before using.
 
 #### 6.1.6.2 Telepen Numeric
 
 Telepen Numeric allows compression of numeric data into a Telepen symbol. Data
 can consist of pairs of numbers or pairs consisting of a numerical digit
 followed an X character. For example: 466333 and 466X33 are valid codes whereas
-46X333 is not (the digit pair `"X3"` is not valid). Up to 136 digits can be
+46X333 is not (the digit pair `"X3"` is not valid). Up to 138 digits can be
 encoded. Telepen Numeric includes a hidden modulo-127 check digit which is added
 by Zint.
 
 ![`zint -b TELEPEN_NUM --compliantheight -d
 "466X33"`](images/telepen_num.svg){.lin}
+
+Trailing ASCII characters may also be encoded by prefixing them with a `DLE`
+control character (ASCII 16, escape sequence `\L`) and appending them to the
+numeric data:
+
+![`zint -b TELEPEN_NUM --compliantheight -d
+"12\LAB"` --esc](images/telepen_num_asc.svg){.lin}
+
+This method allows odd numbers to be encoded without a leading zero:
+
+![`zint -b TELEPEN_NUM --compliantheight -d
+"123\L4"` --esc](images/telepen_num_odd.svg){.lin}
+
+AIM-defined Start/Stop characters may be enabled by setting `--vers=1` (API
+`option_2 = 1`). This allows barcode readers that recognise them to detect
+Compressed Numeric data automatically.
 
 ### 6.1.7 Code 39
 
@@ -5286,13 +5319,13 @@ international standards:
 - AIM Uniform Symbology Specification Code One (1994)
 - ISO/IEC 16022:2024 Information technology - Automatic identification and data
      capture techniques - Data Matrix bar code symbology specification
-- ISO/IEC 21471:2020 Information technology - Automatic identification and data
+- ISO/IEC 21471:2025 Information technology - Automatic identification and data
      capture techniques - Extended rectangular data matrix (DMRE) bar code
      symbology specification
 - AIM TSC1705001 (v 4.0 Draft 0.15) - Information technology - Automatic
      identification and data capture techniques - Bar code symbology
      specification - DotCode (Revised 28th May 2019)
-- ISO/IEC 15420:2009 Information technology - Automatic identification and data
+- ISO/IEC 15420:2025 Information technology - Automatic identification and data
      capture techniques - EAN/UPC bar code symbology specification
 - AIMD014 (v 1.63) - Information technology, Automatic identification and data
      capture techniques - Bar code symbology specification - Grid Matrix
@@ -5316,6 +5349,7 @@ international standards:
 - ISO/IEC 23941:2022 Information technology - Automatic identification and data
      capture techniques - Rectangular Micro QR Code (rMQR) bar code symbology
      specification
+- AIM Europe X-25 - Uniform Symbology Specification Telepen (1991)
 - AIMD/TSC15032-43 (v 0.99c) - International Technical Specification - Ultracode
      Symbology (Draft) (Released 4th Nov 2015)
 
@@ -5334,6 +5368,13 @@ company references in particular.
 - GS1 General Specifications Release 26.0 (Jan 2026)
 - ANSI/HIBC 2.6-2016 - The Health Industry Bar Code (HIBC) Supplier Labeling
      Standard
+- ANSI/HIBC 1.3-2010 - The Health Industry Bar Code (HIBC) Provider Applications
+     Standard
+- ISO/IEC 15424:2025 Information technology - Automatic identification and data
+     capture techniques - Data carrier identifiers (including symbology
+     identifiers)
+- ISO/IEC 15434:2019 Information technology — Automatic identification and data
+     capture techniques — Syntax for high-capacity ADC media
 
 
 # Annex A. Character Encoding

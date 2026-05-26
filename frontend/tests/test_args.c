@@ -361,6 +361,8 @@ static void test_dump_args(const testCtx *const p_ctx) {
         /* 46*/ { BARCODE_HANXIN, "é", NULL, NULL, NULL,  DATA_MODE, -1, 0, -1, -1, -1, 0, -1, 1, -1, -1, NULL, -1, -1, 0, -1, "FE 8A FE\n80 28 02\nBE E8 FA\nA0 94 0A\nAE 3E EA\nAE D2 EA\nAE 74 EA\n00 AA 00\n15 B4 80\n0B 48 74\nA2 4A A4\nB5 56 2C\nA8 5A A8\n9F 18 50\n02 07 50\n00 A6 00\nFE 20 EA\n02 C2 EA\nFA C4 EA\n0A 42 0A\nEA 52 FA\nEA 24 02\nEA AA FE" },
         /* 47*/ { BARCODE_HANXIN, "é", NULL, NULL, NULL,  DATA_MODE, -1, 0, -1, -1, -1, 0, -1, 1, 3, -1, NULL, -1, -1, 0, -1, "FE 16 FE\n80 E2 02\nBE C2 FA\nA0 A0 0A\nAE F6 EA\nAE 98 EA\nAE BA EA\n00 E0 00\n15 83 80\n44 7E AE\n92 9C 78\n25 BF 08\n47 4B 8C\n0D F9 74\n03 E7 50\n00 3A 00\nFE C2 EA\n02 22 EA\nFA DA EA\n0A 22 0A\nEA B2 FA\nEA 9A 02\nEA E8 FE" },
         /* 48*/ { BARCODE_HANXIN, "é", NULL, NULL, NULL,  DATA_MODE, -1, 0, -1, -1, -1, 0, -1, 1, 4, -1, NULL, -1, -1, 0, -1, "FE 8A FE\n80 28 02\nBE E8 FA\nA0 94 0A\nAE 3E EA\nAE D2 EA\nAE 74 EA\n00 AA 00\n15 B4 80\n0B 48 74\nA2 4A A4\nB5 56 2C\nA8 5A A8\n9F 18 50\n02 07 50\n00 A6 00\nFE 20 EA\n02 C2 EA\nFA C4 EA\n0A 42 0A\nEA 52 FA\nEA 24 02\nEA AA FE" },
+        /* 49*/ { BARCODE_TELEPEN, "ABC\020123", NULL, NULL, NULL,  DATA_MODE, -1, 0, -1, -1, -1, 0, -1, -1, -1, -1, NULL, -1, -1, 0, 1, "AB A8 BB B8 E3 B8 AE EA EE BA EA BA E2 22 BA B8 EA 2A" },
+        /* 50*/ { BARCODE_TELEPEN_NUM, "123\020ABC", NULL, NULL, NULL,  DATA_MODE, -1, 0, -1, -1, -1, 0, -1, -1, -1, -1, NULL, -1, -1, 0, 1, "AA E8 EA BA E2 22 EE BA BB B8 E3 B8 AE EA BA B8 E8 AA" },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -1362,6 +1364,57 @@ static void test_too_many_args(const testCtx *const p_ctx) {
     testFinish();
 }
 
+static void test_optional_args(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int b;
+        const char *data;
+        const char *primary;
+        const char *opt;
+
+        const char *expected;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    struct item data[] = {
+        /*  0*/ { BARCODE_DATAMATRIX, "123", NULL, " --dmb256", "AA A\n88 F\nD0 C\nC7 F\nAF A\nFF 3\nF5 4\nA1 B\nB5 0\nE1 D\nE9 A\nFF F" },
+        /*  1*/ { BARCODE_DATAMATRIX, "123", NULL, " --dmc40", "AA 8\n80 4\nC0 8\n81 C\nB7 0\nAB C\nE1 0\nE5 4\nBC 0\nFF C" },
+        /*  2*/ { BARCODE_EAN13, "123", NULL, " --scalexdimdp", "A3 46 8D 1A 34 6A B9 72 CD B2 15 0A" },
+        /*  3*/ { BARCODE_MAXICODE, "123", "1234567", " --scmvv", "D7 6F BF FC\n55 70 D8 08\nDB 12 A6 78\n55 55 55 50\n00 00 00 08\nAA AA AA A8\n55 55 55 54\n00 00 00 00\nAA AA AA AC\n55 B1 35 58\n00 90 08 0C\nAA C0 52 A8\n54 40 05 50\n01 00 08 00\nAA C0 0A AC\n55 00 01 58\n02 80 08 0C\nAB 80 1E A0\n54 00 05 5C\n03 80 0C 08\nA8 00 02 A4\n55 40 25 58\n00 60 40 08\nAA 60 66 A0\n55 55 5B FC\n00 00 02 30\nAA AA A1 E0\n5E CF C1 E8\nD0 62 E5 84\n20 1B 10 D8\nDB 8E B6 80\n21 96 26 C0\nC3 C9 89 F8" },
+    };
+    int data_size = ARRAY_SIZE(data);
+    int i;
+
+    char cmd[4096];
+    char buf[8192];
+
+    testStart("test_optional_args");
+
+    for (i = 0; i < data_size; i++) {
+
+        if (testContinue(p_ctx, i)) continue;
+
+        strcpy(cmd, "zint --dump");
+        if (debug & ZINT_DEBUG_PRINT) {
+            strcat(cmd, " --verbose");
+        }
+
+        arg_int(cmd, "-b ", data[i].b);
+        if (data[i].primary) {
+            arg_data(cmd, "--primary=", data[i].primary);
+        }
+        arg_data(cmd, "-d ", data[i].data);
+        strcat(cmd, data[i].opt);
+
+        strcat(cmd, " 2>&1");
+
+        assert_nonnull(exec(cmd, buf, sizeof(buf) - 1, debug, i, NULL), "i:%d exec(%s) NULL\n", i, cmd);
+        assert_zero(strcmp(buf, data[i].expected), "i:%d buf (%s) != expected (%s) (%s)\n", i, buf, data[i].expected, cmd);
+    }
+
+    testFinish();
+}
+
 int main(int argc, char *argv[]) {
 
     testFunction funcs[] = { /* name, func */
@@ -1378,6 +1431,7 @@ int main(int argc, char *argv[]) {
         { "test_exit_status", test_exit_status },
         { "test_bad_args", test_bad_args },
         { "test_too_many_args", test_too_many_args },
+        { "test_optional_args", test_optional_args },
     };
 
     testRun(argc, argv, funcs, ARRAY_SIZE(funcs));

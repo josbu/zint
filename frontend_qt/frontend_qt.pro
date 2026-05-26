@@ -57,6 +57,8 @@ FORMS += extCLI.ui \
          grpPZN.ui \
          grpQR.ui \
          grpRMQR.ui \
+         grpTelepen.ui \
+         grpTelepenNum.ui \
          grpUltra.ui \
          grpUPCA.ui \
          grpUPCEAN.ui \

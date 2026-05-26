@@ -3985,7 +3985,7 @@ static const char *testUtilZXingCPPName(int index, const struct zint_symbol *sym
         { "DataBar", BARCODE_DBAR_OMN, 29, },
         { "DataBarLimited", BARCODE_DBAR_LTD, 30, },
         { "DataBarExpanded", BARCODE_DBAR_EXP, 31, },
-        { "", BARCODE_TELEPEN, 32, },
+        { "TelepenAlpha", BARCODE_TELEPEN, 32, },
         { "", -1, 33, },
         { "UPC-A", BARCODE_UPCA, 34, },
         { "UPC-A", BARCODE_UPCA_CHK, 35, },
@@ -4040,7 +4040,7 @@ static const char *testUtilZXingCPPName(int index, const struct zint_symbol *sym
         { "MicroPDF417", BARCODE_MICROPDF417, 84, },
         { "", BARCODE_USPS_IMAIL, 85, },
         { "", BARCODE_PLESSEY, 86, },
-        { "", BARCODE_TELEPEN_NUM, 87, },
+        { "TelepenNumeric", BARCODE_TELEPEN_NUM, 87, },
         { "", -1, 88, },
         { "ITF", BARCODE_ITF14, 89, },
         { "", BARCODE_KIX, 90, },
@@ -4400,6 +4400,8 @@ int testUtilZXingCPPCmp(struct zint_symbol *symbol, char *msg, char *cmp_buf, in
     char *pzn = symbology == BARCODE_PZN ? (char *) z_alloca(expected_len + 1 + 1) : NULL;
     char *dxfe = symbology == BARCODE_DXFILMEDGE ? (char *) z_alloca(expected_len * 2 + 1) : NULL;
     char azrune[4];
+    char *telepen = symbology == BARCODE_TELEPEN || symbology == BARCODE_TELEPEN_NUM
+                        ? (char *) z_alloca(expected_len + 1 + 1 + 1) : NULL;
 
     int ret;
     int ret_memcmp;
@@ -4740,6 +4742,54 @@ int testUtilZXingCPPCmp(struct zint_symbol *symbol, char *msg, char *cmp_buf, in
     } else if ((symbology == BARCODE_CODE39 || symbology == BARCODE_EXCODE39 || symbology == BARCODE_LOGMARS)
                 && have_ccheckdigit) {
         cmp_len--; /* Too tedious to calculate so ignore */
+
+    } else if (symbology == BARCODE_TELEPEN_NUM) {
+        const int dle_posn = z_posn(expected, '\x10');
+        if (dle_posn != -1) {
+            if (dle_posn & 1) {
+                telepen[0] = '0';
+                memcpy(telepen + 1, expected, dle_posn);
+                z_to_upper(ZUCP(telepen + 1), dle_posn);
+                memcpy(telepen + dle_posn + 1, expected + dle_posn + 1, expected_len - (dle_posn + 1));
+                expected = telepen;
+            } else {
+                memcpy(telepen, expected, dle_posn);
+                z_to_upper(ZUCP(telepen), dle_posn);
+                memcpy(telepen + dle_posn, expected + dle_posn + 1, expected_len - (dle_posn + 1));
+                expected = telepen;
+                expected_len--;
+            }
+        } else if (expected_len & 1) {
+            telepen[0] = '0';
+            memcpy(telepen + 1, expected, expected_len);
+            z_to_upper(ZUCP(telepen + 1), expected_len);
+            expected = telepen;
+            expected_len++;
+        } else {
+            memcpy(telepen, expected, expected_len);
+            z_to_upper(ZUCP(telepen), expected_len);
+            expected = telepen;
+        }
+
+    } else if (symbology == BARCODE_TELEPEN && symbol->option_2 == 1) {
+        const int dle_posn = z_posn(expected, '\x10');
+        if (dle_posn != -1) {
+            memcpy(telepen, expected, dle_posn);
+            if (dle_posn + 1 < expected_len) {
+                if ((expected_len - (dle_posn + 1)) & 1) {
+                    telepen[dle_posn] = '0';
+                    memcpy(telepen + dle_posn + 1, expected + dle_posn + 1, expected_len - (dle_posn + 1));
+                    z_to_upper(ZUCP(telepen + dle_posn + 1), expected_len - (dle_posn + 1));
+                } else {
+                    memcpy(telepen + dle_posn, expected + dle_posn + 1, expected_len - (dle_posn + 1));
+                    z_to_upper(ZUCP(telepen + dle_posn), expected_len - (dle_posn + 1));
+                    expected_len--;
+                }
+            } else {
+                expected_len--;
+            }
+            expected = telepen;
+        }
     }
 
     if (ret_buf) {

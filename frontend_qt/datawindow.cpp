@@ -63,8 +63,8 @@ DataWindow::DataWindow(const QString &input, bool isEscaped, int seg_no) : Valid
         QString out;
         out.reserve(input.length());
         QZINT_SIZETYPE lastPosn = 0;
-        QRegularExpression escRE(QSL("\\\\(?:[0EabtnvfreGR\\\\]|d[0-9]{3}|o[0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}"
-                                        "|U[0-9A-Fa-f]{6})"));
+        QRegularExpression escRE(QSL("\\\\(?:[0EabtnvfrLeFGRN\\\\]|d[0-9]{3}|o[0-7]{3}|x[0-9A-Fa-f]{2}"
+                                        "|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6})"));
         QRegularExpressionMatchIterator matchI = escRE.globalMatch(input);
         while (matchI.hasNext()) {
             QRegularExpressionMatch match = matchI.next();

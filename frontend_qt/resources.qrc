@@ -31,6 +31,8 @@
         <file>grpPZN.ui</file>
         <file>grpQR.ui</file>
         <file>grpRMQR.ui</file>
+		<file>grpTelepen.ui</file>
+        <file>grpTelepenNum.ui</file>
         <file>grpUltra.ui</file>
         <file>grpUPCA.ui</file>
         <file>grpUPCEAN.ui</file>

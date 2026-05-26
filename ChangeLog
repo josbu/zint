@@ -1,9 +1,9 @@
-Version 2.16.0.9 (dev) not released yet (2026-04-27)
+Version 2.16.0.9 (dev) not released yet (2026-05-26)
 ====================================================
 
 **Incompatible changes**
 ------------------------
-- Code 128 now errors on unrecognized extra escape sequences
+- Code 128 now errors on unrecognised extra escape sequences
   (previously just passed them through)
 - Aztec error codeword percentages adjusted to be at least advertised values
   (may cause symbol size change, and generation failure if specified)
@@ -13,6 +13,7 @@ Version 2.16.0.9 (dev) not released yet (2026-04-27)
   option for processing GS1 input
 - CLI now warns if both "--dmre" and "--square" are given
   (previously silently ignored "--dmre")
+- New escape sequences `\L` (DLE), `\F` (FS), `\N` (US)
 
 Changes
 -------
@@ -20,6 +21,7 @@ Changes
   `BARCODE_MEMORY_FILE` and use in GUI for pasting to clipboard instead of
   creating temporary file
 - CLI: allow "tiff" as filetype (saved as ".tif");
+  make args for "--scalexdimdp" and "--scmvv" optional;
   add `ZINT_TEST`-only "--test" option to do various internal tests
 - GS1SE: exclude GS1_128 from requisite AIs check as may be spread across more
   than one barcode (ticket #348, props Harald Oehlmann and Terry Burton)
@@ -31,12 +33,17 @@ Changes
 - GS1: new `GS1RAW_MODE` (CLI "--gs1raw") and GS1 Syntax Engine "Unbracketed AI
   element strings" (caret) options for specifying GS1 input (ticket #350, props
   Mario Verbruggen)
-- DATAMATRIX: new options "--dmb256=" (`option_3 = DM_B256_START`) & "--dmc40="
+- DATAMATRIX: new options "--dmb256" (`option_3 = DM_B256_START`) & "--dmc40"
   (`option_3 = DM_C40_START`) to allow forcing of initial encodation for given
   no. (`option_1`) of initial characters, with 0 meaning all
 - AZTEC/DATAMATRIX: add manual FNC1 support
 - AUSPOST: support FCC 00 Null (DPID all zeroes) and allow variable length data
   input
+- general: new escape sequences `\L` (DLE), `\F` (FS), `\N` (US)
+- TELEPEN/TELEPEN_NUM: support AIM-defined Start/Stop characters with option
+  "--vers=1" (API `option_2 = 1`)
+- TELEPEN_NUM: support switching to Full ASCII mode with DLE
+- TELEPEN: support switching to Compressed Numeric Mode with DLE if AIM enabled
 
 Bugs
 ----

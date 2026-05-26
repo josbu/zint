@@ -1353,6 +1353,22 @@ private slots:
             << "zint.exe -b 145 --eci=20 -d \"テ\" --rotate=180 --vers=8"
             << "" << "" << "" << "";
 
+        QTest::newRow("BARCODE_TELEPEN") << false << 0.0f << ""
+            << BARCODE_TELEPEN << (DATA_MODE | ESCAPE_MODE) // symbology-inputMode
+            << "ABCDE\\L123" << "" // text-primary
+            << 0.0f << -1 << 1 << 0 << 1.0f // height-scale
+            << 0.0f << false << 0.8f << 1.0f // dpmm-textGap
+            << 5.0f << 0 << 0 << "" // guardDescent-structAppID
+            << "" << "" << QColor(Qt::black) << QColor(Qt::white) << false // fgStr-cmyk
+            << 0 << 0 << 0 << 0 << 0 // borderTypeIndex-fontSetting
+            << true << false << false << false << true << 0 // showText-rotateAngle
+            << 0 << false << false << false << false // eci-gs1SyntaxEngine
+            << false << false << false << WARN_DEFAULT << false // readerInit-debug
+            << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
+            << "zint -b 32 --binary --compliantheight -d 'ABCDE\\L123' --esc --vers=1"
+            << "zint.exe -b 32 --binary --compliantheight -d \"ABCDE\\L123\" --esc --vers=1"
+            << "" << "" << "" << "";
+
         QTest::newRow("BARCODE_ULTRA") << false << 0.0f << ""
             << BARCODE_ULTRA << (GS1_MODE | GS1PARENS_MODE | GS1NOCHECK_MODE) // symbology-inputMode
             << "(01)1" << "" // text-primary

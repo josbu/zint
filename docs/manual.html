@@ -334,7 +334,7 @@
 <h1 class="title">Zint Barcode Generator and Zint Barcode Studio User
 Manual</h1>
 <p class="author">Version 2.16.0.9</p>
-<p class="date">April 2026</p>
+<p class="date">May 2026</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -1416,10 +1416,22 @@ Sequences</caption>
 <td style="text-align: left;">Carriage Return</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>\L</code></td>
+<td style="text-align: left;">0x10</td>
+<td style="text-align: left;"><code>DLE</code></td>
+<td style="text-align: left;">Data Link Escape</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>\e</code></td>
 <td style="text-align: left;">0x1B</td>
 <td style="text-align: left;"><code>ESC</code></td>
 <td style="text-align: left;">Escape</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>\F</code></td>
+<td style="text-align: left;">0x1C</td>
+<td style="text-align: left;"><code>FS</code></td>
+<td style="text-align: left;">File Separator</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>\G</code></td>
@@ -1432,6 +1444,12 @@ Sequences</caption>
 <td style="text-align: left;">0x1E</td>
 <td style="text-align: left;"><code>RS</code></td>
 <td style="text-align: left;">Record Separator</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>\N</code></td>
+<td style="text-align: left;">0x1F</td>
+<td style="text-align: left;"><code>US</code></td>
+<td style="text-align: left;">Unit Separator</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>\(</code></td>
@@ -1537,7 +1555,7 @@ automatic Code Set selection</td>
 </tr>
 </tbody>
 </table>
-<p>Currently the only special character recognized is the Function Code
+<p>Currently the only special character recognised is the Function Code
 1 character <code>FNC1</code>. If your data contains the sequence
 “<code>\^</code>” then it must be escaped using the extra escape
 sequence “<code>\^^</code>”, i.e. by doubling the caret.</p>
@@ -2443,17 +2461,17 @@ X-dimension and Resolution</h3>
 <p>An alternative way to specify the scale, which takes the above
 details into account, is to specify measurable units using the
 <code>--scalexdimdp</code> option, which has the format</p>
-<pre><code>--scalexdimdp=X[,R]</code></pre>
+<pre><code>--scalexdimdp[=X[,R]]</code></pre>
 <p>where <code>X</code> is the X-dimension (in mm by default) and
 <code>R</code> is the resolution (in dpmm, dots per mm, by default).
 <code>R</code> is optional, and defaults to 12 dpmm, and <code>X</code>
-may be zero, in which case it uses a symbology-specific default. The
-units may be given in inches for <code>X</code> by appending
-<code>"in"</code>, and in dpi (dots per inch) for <code>R</code> by
-appending <code>"dpi"</code>. For example</p>
+is optional or may be zero, in which case it uses a symbology-specific
+default. The units may be given in inches for <code>X</code> by
+appending <code>"in"</code>, and in dpi (dots per inch) for
+<code>R</code> by appending <code>"dpi"</code>. For example</p>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-d</span> <span class="st">&quot;1234&quot;</span> <span class="at">--scalexdimdp</span><span class="op">=</span>0.013in,300dpi</span></code></pre></div>
-<p>Explicit metric units may also be given by appending
+<p>Explicit metric units may also be given (for clarity) by appending
 <code>"mm"</code> and <code>"dpmm"</code> as appropriate, and may be
 mixed with U.S. units:</p>
 <div class="sourceCode" id="cb37"><pre
@@ -2471,7 +2489,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href=
 same result can be achieved using the <code>--scalexdimdp</code> option
 with</p>
 <div class="sourceCode" id="cb39"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> EAN13 <span class="at">-d</span> <span class="st">&quot;501234567890&quot;</span> <span class="at">--compliantheight</span> <span class="at">--scalexdimdp</span><span class="op">=</span>0</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> EAN13 <span class="at">-d</span> <span class="st">&quot;501234567890&quot;</span> <span class="at">--compliantheight</span> <span class="at">--scalexdimdp</span></span></code></pre></div>
 <p>as 0.33mm is the default X-dimension for EAN, and 12 dpmm the default
 resolution.</p>
 <h3 id="maxicode-raster-scaling">4.9.3 MaxiCode Raster Scaling</h3>
@@ -5102,23 +5120,60 @@ and can encode ASCII text input, up to a maximum of 69 characters.
 Telepen includes a hidden modulo-127 check digit, added by Zint.</p>
 <figure>
 <img src="images/telepen.svg" class="lin"
-alt="zint -b TELEPEN --compliantheight -d &quot;Z80&quot;" />
+alt="zint -b TELEPEN --compliantheight -d &quot;Z8000&quot;" />
 <figcaption><span class="figure-label">Figure 55:</span>
-<code>zint -b TELEPEN --compliantheight -d "Z80"</code></figcaption>
+<code>zint -b TELEPEN --compliantheight -d "Z8000"</code></figcaption>
 </figure>
+<p>Full ASCII + Compressed Numeric Mode, which uses different
+AIM-defined Start/Stop characters, may be enabled by setting
+<code>--vers=1</code> (API <code>option_2 = 1</code>). In this mode
+control character <code>DLE</code> (ASCII 16, escape sequence
+<code>\L</code>) indicates a switch from Full ASCII to Compressed
+Numeric, where each symbol character encodes a digit pair:</p>
+<figure>
+<img src="images/telepen_aim.svg" class="lin"
+alt="zint -b TELEPEN --compliantheight -d &quot;Z\L8000&quot; -esc --vers=1" />
+<figcaption><span class="figure-label">Figure 56:</span>
+<code>zint -b TELEPEN --compliantheight -d "Z\L8000" -esc --vers=1</code></figcaption>
+</figure>
+<p>However not all barcode readers recognise this mode so check before
+using.</p>
 <h4 id="telepen-numeric">6.1.6.2 Telepen Numeric</h4>
 <p>Telepen Numeric allows compression of numeric data into a Telepen
 symbol. Data can consist of pairs of numbers or pairs consisting of a
 numerical digit followed an X character. For example: 466333 and 466X33
 are valid codes whereas 46X333 is not (the digit pair <code>"X3"</code>
-is not valid). Up to 136 digits can be encoded. Telepen Numeric includes
+is not valid). Up to 138 digits can be encoded. Telepen Numeric includes
 a hidden modulo-127 check digit which is added by Zint.</p>
 <figure>
 <img src="images/telepen_num.svg" class="lin"
 alt="zint -b TELEPEN_NUM --compliantheight -d &quot;466X33&quot;" />
-<figcaption><span class="figure-label">Figure 56:</span>
+<figcaption><span class="figure-label">Figure 57:</span>
 <code>zint -b TELEPEN_NUM --compliantheight -d "466X33"</code></figcaption>
 </figure>
+<p>Trailing ASCII characters may also be encoded by prefixing them with
+a <code>DLE</code> control character (ASCII 16, escape sequence
+<code>\L</code>) and appending them to the numeric data:</p>
+<figure>
+<img src="images/telepen_num_asc.svg" class="lin"
+alt="zint -b TELEPEN_NUM --compliantheight -d &quot;12\LAB&quot; –esc" />
+<figcaption><span class="figure-label">Figure 58:</span>
+<code>zint -b TELEPEN_NUM --compliantheight -d "12\LAB"</code>
+–esc</figcaption>
+</figure>
+<p>This method allows odd numbers to be encoded without a leading
+zero:</p>
+<figure>
+<img src="images/telepen_num_odd.svg" class="lin"
+alt="zint -b TELEPEN_NUM --compliantheight -d &quot;123\L4&quot; –esc" />
+<figcaption><span class="figure-label">Figure 59:</span>
+<code>zint -b TELEPEN_NUM --compliantheight -d "123\L4"</code>
+–esc</figcaption>
+</figure>
+<p>AIM-defined Start/Stop characters may be enabled by setting
+<code>--vers=1</code> (API <code>option_2 = 1</code>). This allows
+barcode readers that recognise them to detect Compressed Numeric data
+automatically.</p>
 <h3 id="code-39">6.1.7 Code 39</h3>
 <h4 id="standard-code-39-iso-16388">6.1.7.1 Standard Code 39 (ISO
 16388)</h4>
@@ -5130,7 +5185,7 @@ A-Z, dash (<code>-</code>), full stop (<code>.</code>), space, asterisk
 <figure>
 <img src="images/code39.svg" class="lin"
 alt="zint -b CODE39 --compliantheight -d &quot;1A&quot; --vers=1" />
-<figcaption><span class="figure-label">Figure 57:</span>
+<figcaption><span class="figure-label">Figure 60:</span>
 <code>zint -b CODE39 --compliantheight -d "1A" --vers=1</code></figcaption>
 </figure>
 <p>The standard does not require a check digit but a modulo-43 check
@@ -5145,7 +5200,7 @@ set.</p>
 <figure>
 <img src="images/excode39.svg" class="lin"
 alt="zint -b EXCODE39 --compliantheight -d &quot;123.45#@fd&quot;" />
-<figcaption><span class="figure-label">Figure 58:</span>
+<figcaption><span class="figure-label">Figure 61:</span>
 <code>zint -b EXCODE39 --compliantheight -d "123.45#@fd"</code></figcaption>
 </figure>
 <p>The check digit options are the same as for <a
@@ -5160,7 +5215,7 @@ Readable Text, but may be shown by setting <code>--vers=1</code> (API
 <figure>
 <img src="images/code93.svg" class="lin"
 alt="zint -b CODE93 --compliantheight -d &quot;C93&quot;" />
-<figcaption><span class="figure-label">Figure 59:</span>
+<figcaption><span class="figure-label">Figure 62:</span>
 <code>zint -b CODE93 --compliantheight -d "C93"</code></figcaption>
 </figure>
 <h4 id="pzn-pharmazentralnummer">6.1.7.4 PZN (Pharmazentralnummer)</h4>
@@ -5172,7 +5227,7 @@ validate the check digit.</p>
 <figure>
 <img src="images/pzn.svg" class="lin"
 alt="zint -b PZN --compliantheight -d &quot;2758089&quot;" />
-<figcaption><span class="figure-label">Figure 60:</span>
+<figcaption><span class="figure-label">Figure 63:</span>
 <code>zint -b PZN --compliantheight -d "2758089"</code></figcaption>
 </figure>
 <p>To encode a PZN7 (obsolete since 2013) instead set
@@ -5189,7 +5244,7 @@ restricted to a maximum of 30 characters.</p>
 <figure>
 <img src="images/logmars.svg" class="lin"
 alt="zint -b LOGMARS --compliantheight -d &quot;12345/ABCDE&quot; --vers=1" />
-<figcaption><span class="figure-label">Figure 61:</span>
+<figcaption><span class="figure-label">Figure 64:</span>
 <code>zint -b LOGMARS --compliantheight -d "12345/ABCDE" --vers=1</code></figcaption>
 </figure>
 <h4 id="code-32">6.1.7.6 Code 32</h4>
@@ -5200,7 +5255,7 @@ length. A check digit is added by Zint.</p>
 <figure>
 <img src="images/code32.svg" class="lin"
 alt="zint -b CODE32 --compliantheight -d &quot;14352312&quot;" />
-<figcaption><span class="figure-label">Figure 62:</span>
+<figcaption><span class="figure-label">Figure 65:</span>
 <code>zint -b CODE32 --compliantheight -d "14352312"</code></figcaption>
 </figure>
 <h4 id="hibc-code-39">6.1.7.7 HIBC Code 39</h4>
@@ -5210,7 +5265,7 @@ Health Industry Barcode standards.</p>
 <figure>
 <img src="images/hibc_39.svg" class="lin"
 alt="zint -b HIBC_39 --compliantheight -d &quot;14352312&quot;" />
-<figcaption><span class="figure-label">Figure 63:</span>
+<figcaption><span class="figure-label">Figure 66:</span>
 <code>zint -b HIBC_39 --compliantheight -d "14352312"</code></figcaption>
 </figure>
 <h4 id="vehicle-identification-number-vin">6.1.7.8 Vehicle
@@ -5223,7 +5278,7 @@ is required.</p>
 <figure>
 <img src="images/vin.svg" class="lin"
 alt="zint -b VIN -d &quot;2FTPX28L0XCA15511&quot; --vers=1" />
-<figcaption><span class="figure-label">Figure 64:</span>
+<figcaption><span class="figure-label">Figure 67:</span>
 <code>zint -b VIN -d "2FTPX28L0XCA15511" --vers=1</code></figcaption>
 </figure>
 <p>An invisible Import character prefix <code>'I'</code> can be added by
@@ -5237,7 +5292,7 @@ barcode for blood products.</p>
 <figure>
 <img src="images/codabar.svg" class="lin"
 alt="zint -b CODABAR --compliantheight -d &quot;A37859B&quot;" />
-<figcaption><span class="figure-label">Figure 65:</span>
+<figcaption><span class="figure-label">Figure 68:</span>
 <code>zint -b CODABAR --compliantheight -d "A37859B"</code></figcaption>
 </figure>
 <p>Codabar can encode up to 103 characters starting and ending with the
@@ -5257,7 +5312,7 @@ numbers between 3 and 131070.</p>
 <figure>
 <img src="images/pharma.svg" class="lin"
 alt="zint -b PHARMA --compliantheight -d &quot;130170&quot;" />
-<figcaption><span class="figure-label">Figure 66:</span>
+<figcaption><span class="figure-label">Figure 69:</span>
 <code>zint -b PHARMA --compliantheight -d "130170"</code></figcaption>
 </figure>
 <h3 id="code-128">6.1.10 Code 128</h3>
@@ -5271,7 +5326,7 @@ B and C (but see below) and adds a hidden modulo-103 check digit.</p>
 <figure>
 <img src="images/code128.svg" class="lin"
 alt="zint -b CODE128 --bind -d &quot;130170X178&quot;" />
-<figcaption><span class="figure-label">Figure 67:</span>
+<figcaption><span class="figure-label">Figure 70:</span>
 <code>zint -b CODE128 --bind -d "130170X178"</code></figcaption>
 </figure>
 <p>Code 128 is the default barcode symbology used by Zint. In addition
@@ -5320,7 +5375,7 @@ Code Set C in favour of Code Sets A and B.</p>
 <figure>
 <img src="images/code128ab.svg" class="lin"
 alt="zint -b CODE128AB -d &quot;130170X178&quot;" />
-<figcaption><span class="figure-label">Figure 68:</span>
+<figcaption><span class="figure-label">Figure 71:</span>
 <code>zint -b CODE128AB -d "130170X178"</code></figcaption>
 </figure>
 <p>Note that the special extra escapes mentioned above are not available
@@ -5333,7 +5388,7 @@ GS1 Data Entry</a>. Here we will use the square bracket format.</p>
 <figure>
 <img src="images/gs1_128.svg" class="lin"
 alt="zint -b GS1_128 --compliantheight -d &quot;[01]98898765432106[3202]012345[15]991231&quot;" />
-<figcaption><span class="figure-label">Figure 69:</span>
+<figcaption><span class="figure-label">Figure 72:</span>
 <code>zint -b GS1_128 --compliantheight -d "[01]98898765432106[3202]012345[15]991231"</code></figcaption>
 </figure>
 <p>Fixed length data should be entered at the appropriate length for
@@ -5353,7 +5408,7 @@ are added by Zint.</p>
 <figure>
 <img src="images/ean14.svg" class="lin"
 alt="zint -b EAN14 --compliantheight -d &quot;9889876543210&quot;" />
-<figcaption><span class="figure-label">Figure 70:</span>
+<figcaption><span class="figure-label">Figure 73:</span>
 <code>zint -b EAN14 --compliantheight -d "9889876543210"</code></figcaption>
 </figure>
 <h4 id="nve-18-sscc-18">6.1.10.5 NVE-18 (SSCC-18)</h4>
@@ -5367,7 +5422,7 @@ digit(s) and HRT-only AI <code>"(00)"</code> are added by Zint.</p>
 <figure>
 <img src="images/nve18.svg" class="lin"
 alt="zint -b NVE18 --compliantheight -d &quot;37612345000001003&quot;" />
-<figcaption><span class="figure-label">Figure 71:</span>
+<figcaption><span class="figure-label">Figure 74:</span>
 <code>zint -b NVE18 --compliantheight -d "37612345000001003"</code></figcaption>
 </figure>
 <h4 id="hibc-code-128">6.1.10.6 HIBC Code 128</h4>
@@ -5377,7 +5432,7 @@ by the Health Industry Barcode standards.</p>
 <figure>
 <img src="images/hibc_128.svg" class="lin"
 alt="zint -b HIBC_128 -d &quot;A123BJC5D6E71&quot;" />
-<figcaption><span class="figure-label">Figure 72:</span>
+<figcaption><span class="figure-label">Figure 75:</span>
 <code>zint -b HIBC_128 -d "A123BJC5D6E71"</code></figcaption>
 </figure>
 <h4 id="dpd-code">6.1.10.7 DPD Code</h4>
@@ -5386,7 +5441,7 @@ Paketdienst).</p>
 <figure>
 <img src="images/dpd.svg" class="lin"
 alt="zint -b DPD --compliantheight -d &quot;000393206219912345678101040&quot;" />
-<figcaption><span class="figure-label">Figure 73:</span>
+<figcaption><span class="figure-label">Figure 76:</span>
 <code>zint -b DPD --compliantheight -d "000393206219912345678101040"</code></figcaption>
 </figure>
 <p>DPD Code requires a 27 or 28 character input. For 28 character input,
@@ -5447,7 +5502,7 @@ a modulo-11 check digit, and <code>"CC"</code> is a two-character ISO
 <figure>
 <img src="images/upu_s10.svg" class="lin"
 alt="zint -b UPU_S10 --compliantheight -d &quot;EE876543216CA&quot;" />
-<figcaption><span class="figure-label">Figure 74:</span>
+<figcaption><span class="figure-label">Figure 77:</span>
 <code>zint -b UPU_S10 --compliantheight -d "EE876543216CA"</code></figcaption>
 </figure>
 <p>The check digit may be omitted in which case Zint will add it.
@@ -5472,7 +5527,7 @@ will be verified.) Input less than 13 digits will be zero-filled.</p>
 <figure>
 <img src="images/dbar_omn.svg" class="lin"
 alt="zint -b DBAR_OMN --compliantheight -d &quot;0950110153001&quot;" />
-<figcaption><span class="figure-label">Figure 75:</span>
+<figcaption><span class="figure-label">Figure 78:</span>
 <code>zint -b DBAR_OMN --compliantheight -d "0950110153001"</code></figcaption>
 </figure>
 <p>GS1 DataBar Omnidirectional symbols should have a height of 33 or
@@ -5482,7 +5537,7 @@ omnidirectional scanners.</p>
 <figure>
 <img src="images/dbar_truncated.svg" class="lin"
 alt="zint -b DBAR_OMN -d &quot;0950110153001&quot; --height=13" />
-<figcaption><span class="figure-label">Figure 76:</span>
+<figcaption><span class="figure-label">Figure 79:</span>
 <code>zint -b DBAR_OMN -d "0950110153001" --height=13</code></figcaption>
 </figure>
 <h4 id="gs1-databar-limited">6.1.11.2 GS1 DataBar Limited</h4>
@@ -5497,7 +5552,7 @@ than 13 digits will be zero-filled.</p>
 <figure>
 <img src="images/dbar_ltd.svg" class="lin"
 alt="zint -b DBAR_LTD --compliantheight -d &quot;0950110153001&quot;" />
-<figcaption><span class="figure-label">Figure 77:</span>
+<figcaption><span class="figure-label">Figure 80:</span>
 <code>zint -b DBAR_LTD --compliantheight -d "0950110153001"</code></figcaption>
 </figure>
 <h4 id="gs1-databar-expanded">6.1.11.3 GS1 DataBar Expanded</h4>
@@ -5509,7 +5564,7 @@ in the Human Readable Text.</p>
 <figure>
 <img src="images/dbar_exp.svg" class="lin"
 alt="zint -b DBAR_EXP --compliantheight -d &quot;[01]98898765432106[3202]012345[15]991231&quot;" />
-<figcaption><span class="figure-label">Figure 78:</span>
+<figcaption><span class="figure-label">Figure 81:</span>
 <code>zint -b DBAR_EXP --compliantheight -d "[01]98898765432106[3202]012345[15]991231"</code></figcaption>
 </figure>
 <p>The GTIN-14 data for AI (01) must include the standard GS1 check
@@ -5525,7 +5580,7 @@ includes one check digit.</p>
 <figure>
 <img src="images/koreapost.svg" class="lin"
 alt="zint -b KOREAPOST -d &quot;923457&quot;" />
-<figcaption><span class="figure-label">Figure 79:</span>
+<figcaption><span class="figure-label">Figure 82:</span>
 <code>zint -b KOREAPOST -d "923457"</code></figcaption>
 </figure>
 <h3 id="channel-code">6.1.13 Channel Code</h3>
@@ -5538,7 +5593,7 @@ code by default.</p>
 <figure>
 <img src="images/channel.svg" class="lin"
 alt="zint -b CHANNEL -d &quot;453678&quot; --compliantheight" />
-<figcaption><span class="figure-label">Figure 80:</span>
+<figcaption><span class="figure-label">Figure 83:</span>
 <code>zint -b CHANNEL -d "453678" --compliantheight</code></figcaption>
 </figure>
 <p>The maximum values permitted depend on the number of channels used as
@@ -5597,7 +5652,7 @@ position. Lowercase input is automatically made uppercase.</p>
 <figure>
 <img src="images/bc412.svg" class="lin"
 alt="zint -b BC412 -d &quot;AQ45670&quot; --compliantheight" />
-<figcaption><span class="figure-label">Figure 81:</span>
+<figcaption><span class="figure-label">Figure 84:</span>
 <code>zint -b BC412 -d "AQ45670" --compliantheight</code></figcaption>
 </figure>
 <h2 id="stacked-symbologies">6.2 Stacked Symbologies</h2>
@@ -5620,7 +5675,7 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb112-1"><a href="#cb1
 <figure>
 <img src="images/code128_stacked.svg" class="lin"
 alt="zint -d &quot;This&quot; -d &quot;That&quot;" />
-<figcaption><span class="figure-label">Figure 82:</span>
+<figcaption><span class="figure-label">Figure 85:</span>
 <code>zint -d "This" -d "That"</code></figcaption>
 </figure>
 <p>Note that the Human Readable Text will be that of the last data, so
@@ -5637,7 +5692,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb113-1"><a href
 <figure>
 <img src="images/code128_stacked_sep2.svg" class="lin"
 alt="zint --notext --bind --separator=2 -d &quot;This&quot; -d &quot;That&quot;" />
-<figcaption><span class="figure-label">Figure 83:</span>
+<figcaption><span class="figure-label">Figure 86:</span>
 <code>zint --notext --bind --separator=2 -d "This" -d "That"</code></figcaption>
 </figure>
 <p>A more sophisticated method is to use some type of line indexing
@@ -5651,7 +5706,7 @@ to 1363 all extended ASCII (ISO/IEC 8859-1).</p>
 <figure>
 <img src="images/codablockf.svg" class="lin"
 alt="zint -b CODABLOCKF -d &quot;CODABLOCK F Symbology&quot; --rows=3" />
-<figcaption><span class="figure-label">Figure 84:</span>
+<figcaption><span class="figure-label">Figure 87:</span>
 <code>zint -b CODABLOCKF -d "CODABLOCK F Symbology" --rows=3</code></figcaption>
 </figure>
 <p>The width of the Codablock F symbol can be set using the
@@ -5676,7 +5731,7 @@ use can be set using the <code>--rows</code> option (API
 <figure>
 <img src="images/code16k.svg" class="lin"
 alt="zint -b CODE16K --compliantheight -d &quot;ab0123456789&quot;" />
-<figcaption><span class="figure-label">Figure 85:</span>
+<figcaption><span class="figure-label">Figure 88:</span>
 <code>zint -b CODE16K --compliantheight -d "ab0123456789"</code></figcaption>
 </figure>
 <h3 id="pdf417-iso-15438">6.2.4 PDF417 (ISO 15438)</h3>
@@ -5688,7 +5743,7 @@ or 2710 digits.</p>
 <figure>
 <img src="images/pdf417.svg" class="lin"
 alt="zint -b PDF417 -d &quot;PDF417&quot;" />
-<figcaption><span class="figure-label">Figure 86:</span>
+<figcaption><span class="figure-label">Figure 89:</span>
 <code>zint -b PDF417 -d "PDF417"</code></figcaption>
 </figure>
 <p>The width of the generated PDF417 symbol can be specified at the
@@ -5725,7 +5780,7 @@ are the same as for PDF417 above.</p>
 <figure>
 <img src="images/pdf417comp.svg" class="lin"
 alt="zint -b PDF417COMP -d &quot;PDF417&quot;" />
-<figcaption><span class="figure-label">Figure 87:</span>
+<figcaption><span class="figure-label">Figure 90:</span>
 <code>zint -b PDF417COMP -d "PDF417"</code></figcaption>
 </figure>
 <h3 id="micropdf417-iso-24728">6.2.6 MicroPDF417 (ISO 24728)</h3>
@@ -5740,7 +5795,7 @@ The amount of data determines the number of rows.</p>
 <figure>
 <img src="images/micropdf417.svg" class="lin"
 alt="zint -b MICROPDF417 -d &quot;12345678&quot;" />
-<figcaption><span class="figure-label">Figure 88:</span>
+<figcaption><span class="figure-label">Figure 91:</span>
 <code>zint -b MICROPDF417 -d "12345678"</code></figcaption>
 </figure>
 <p>MicroPDF417 uses Latin-1 character encoding by default but also
@@ -5769,7 +5824,7 @@ not required.</p>
 <figure>
 <img src="images/dbar_stk.svg" class="lin"
 alt="zint -b DBAR_STK --compliantheight -d &quot;9889876543210&quot;" />
-<figcaption><span class="figure-label">Figure 89:</span>
+<figcaption><span class="figure-label">Figure 92:</span>
 <code>zint -b DBAR_STK --compliantheight -d "9889876543210"</code></figcaption>
 </figure>
 <h4 id="gs1-databar-stacked-omnidirectional">6.2.7.2 GS1 DataBar Stacked
@@ -5782,7 +5837,7 @@ encoded in two rows of bars with a central 3-row separator.</p>
 <figure>
 <img src="images/dbar_omnstk.svg" class="lin"
 alt="zint -b DBAR_OMNSTK --compliantheight -d &quot;9889876543210&quot;" />
-<figcaption><span class="figure-label">Figure 90:</span>
+<figcaption><span class="figure-label">Figure 93:</span>
 <code>zint -b DBAR_OMNSTK --compliantheight -d "9889876543210"</code></figcaption>
 </figure>
 <h4 id="gs1-databar-expanded-stacked">6.2.7.3 GS1 DataBar Expanded
@@ -5794,7 +5849,7 @@ the same maximum capacity.</p>
 <figure>
 <img src="images/dbar_expstk.svg" class="lin"
 alt="zint -b DBAR_EXPSTK --compliantheight -d &quot;[01]98898765432106[3202]012345[15]991231&quot;" />
-<figcaption><span class="figure-label">Figure 91:</span>
+<figcaption><span class="figure-label">Figure 94:</span>
 <code>zint -b DBAR_EXPSTK --compliantheight -d "[01]98898765432106[3202]012345[15]991231"</code></figcaption>
 </figure>
 <p>The width of the symbol can be altered using the <code>--cols</code>
@@ -5818,7 +5873,7 @@ with values from 2 to 8.</p>
 <figure>
 <img src="images/code49.svg" class="lin"
 alt="zint -b CODE49 --compliantheight -d &quot;MULTIPLE ROWS IN CODE 49&quot;" />
-<figcaption><span class="figure-label">Figure 92:</span>
+<figcaption><span class="figure-label">Figure 95:</span>
 <code>zint -b CODE49 --compliantheight -d "MULTIPLE ROWS IN CODE 49"</code></figcaption>
 </figure>
 <h2 id="gs1-composite-symbols-iso-24723">6.3 GS1 Composite Symbols (ISO
@@ -5957,7 +6012,7 @@ use <code>--mode=1</code> (API <code>option_1 = 1</code>).</p>
 <figure>
 <img src="images/ean13_cc_a.svg" class="upcean"
 alt="zint -b EAN13_CC --compliantheight -d &quot;[99]1234-abcd&quot; --mode=1 --primary=331234567890" />
-<figcaption><span class="figure-label">Figure 93:</span>
+<figcaption><span class="figure-label">Figure 96:</span>
 <code>zint -b EAN13_CC --compliantheight -d "[99]1234-abcd" --mode=1 --primary=331234567890</code></figcaption>
 </figure>
 <h3 id="cc-b">6.3.2 CC-B</h3>
@@ -5970,7 +6025,7 @@ string of shorter length. To select CC-B use <code>--mode=2</code> (API
 <figure>
 <img src="images/ean13_cc_b.svg" class="upcean"
 alt="zint -b EAN13_CC --compliantheight -d &quot;[99]1234-abcd&quot; --mode=2 --primary=331234567890" />
-<figcaption><span class="figure-label">Figure 94:</span>
+<figcaption><span class="figure-label">Figure 97:</span>
 <code>zint -b EAN13_CC --compliantheight -d "[99]1234-abcd" --mode=2 --primary=331234567890</code></figcaption>
 </figure>
 <h3 id="cc-c">6.3.3 CC-C</h3>
@@ -5981,7 +6036,7 @@ an alphanumeric string of shorter length. To select CC-C use
 <figure>
 <img src="images/gs1_128_cc_c.svg" class="upcean"
 alt="zint -b GS1_128_CC --compliantheight -d &quot;[99]1234-abcd&quot; --mode=3 --primary=&quot;[01]03312345678903&quot;" />
-<figcaption><span class="figure-label">Figure 95:</span>
+<figcaption><span class="figure-label">Figure 98:</span>
 <code>zint -b GS1_128_CC --compliantheight -d "[99]1234-abcd" --mode=3 --primary="[01]03312345678903"</code></figcaption>
 </figure>
 <h2 id="two-track-symbols">6.4 Two-Track Symbols</h2>
@@ -5994,7 +6049,7 @@ and 64570080.</p>
 <figure>
 <img src="images/pharma_two.svg" class="trk"
 alt="zint -b PHARMA_TWO --compliantheight -d &quot;29876543&quot;" />
-<figcaption><span class="figure-label">Figure 96:</span>
+<figcaption><span class="figure-label">Figure 99:</span>
 <code>zint -b PHARMA_TWO --compliantheight -d "29876543"</code></figcaption>
 </figure>
 <h3 id="postnet">6.4.2 POSTNET</h3>
@@ -6009,7 +6064,7 @@ will be issued if the input length is not one of these.</p>
 <figure>
 <img src="images/postnet.svg" class="trk"
 alt="zint -b POSTNET --compliantheight -d &quot;12345678901&quot;" />
-<figcaption><span class="figure-label">Figure 97:</span>
+<figcaption><span class="figure-label">Figure 100:</span>
 <code>zint -b POSTNET --compliantheight -d "12345678901"</code></figcaption>
 </figure>
 <h3 id="planet">6.4.3 PLANET</h3>
@@ -6024,7 +6079,7 @@ length is not one of these.</p>
 <figure>
 <img src="images/planet.svg" class="trk"
 alt="zint -b PLANET --compliantheight -d &quot;4012345235636&quot;" />
-<figcaption><span class="figure-label">Figure 98:</span>
+<figcaption><span class="figure-label">Figure 101:</span>
 <code>zint -b PLANET --compliantheight -d "4012345235636"</code></figcaption>
 </figure>
 <h3 id="brazilian-cepnet">6.4.4 Brazilian CEPNet</h3>
@@ -6035,7 +6090,7 @@ check digit being automatically added by Zint.</p>
 <figure>
 <img src="images/cepnet.svg" class="trk"
 alt="zint -b CEPNET --compliantheight -d &quot;12345678&quot;" />
-<figcaption><span class="figure-label">Figure 99:</span>
+<figcaption><span class="figure-label">Figure 102:</span>
 <code>zint -b CEPNET --compliantheight -d "12345678"</code></figcaption>
 </figure>
 <h3 id="dx-film-edge-barcode">6.4.5 DX Film Edge Barcode</h3>
@@ -6045,7 +6100,7 @@ post-processing of prints.</p>
 <figure>
 <img src="images/dxfilmedge.svg" class="trk"
 alt="zint -b DXFILMEDGE --compliantheight -d &quot;112-1/10A&quot;" />
-<figcaption><span class="figure-label">Figure 100:</span>
+<figcaption><span class="figure-label">Figure 103:</span>
 <code>zint -b DXFILMEDGE --compliantheight -d "112-1/10A"</code></figcaption>
 </figure>
 <p>The data can be in two parts. The first part (required) is the “DX
@@ -6080,7 +6135,7 @@ respectively, developed by Australia Post for printing Delivery Point ID
 <figure>
 <img src="images/auspost.svg" class="trk"
 alt="zint -b AUSPOST --compliantheight -d &quot;96184209&quot;" />
-<figcaption><span class="figure-label">Figure 101:</span>
+<figcaption><span class="figure-label">Figure 104:</span>
 <code>zint -b AUSPOST --compliantheight -d "96184209"</code></figcaption>
 </figure>
 <p>Valid data characters are 0-9, A-Z, a-z, space and hash (#). A Format
@@ -6161,7 +6216,7 @@ which requires an 8-digit DPID input.</p>
 <figure>
 <img src="images/ausreply.svg" class="trk"
 alt="zint -b AUSREPLY --compliantheight -d &quot;12345678&quot;" />
-<figcaption><span class="figure-label">Figure 102:</span>
+<figcaption><span class="figure-label">Figure 105:</span>
 <code>zint -b AUSREPLY --compliantheight -d "12345678"</code></figcaption>
 </figure>
 <h4 id="routing-barcode">6.5.1.3 Routing Barcode</h4>
@@ -6170,7 +6225,7 @@ which requires an 8-digit DPID input.</p>
 <figure>
 <img src="images/ausroute.svg" class="trk"
 alt="zint -b AUSROUTE --compliantheight -d &quot;34567890&quot;" />
-<figcaption><span class="figure-label">Figure 103:</span>
+<figcaption><span class="figure-label">Figure 106:</span>
 <code>zint -b AUSROUTE --compliantheight -d "34567890"</code></figcaption>
 </figure>
 <h4 id="redirect-barcode">6.5.1.4 Redirect Barcode</h4>
@@ -6179,7 +6234,7 @@ which requires an 8-digit DPID input.</p>
 <figure>
 <img src="images/ausredirect.svg" class="trk"
 alt="zint -b AUSREDIRECT --compliantheight -d &quot;98765432&quot;" />
-<figcaption><span class="figure-label">Figure 104:</span>
+<figcaption><span class="figure-label">Figure 107:</span>
 <code>zint -b AUSREDIRECT --compliantheight -d "98765432"</code></figcaption>
 </figure>
 <h3 id="dutch-post-kix-code">6.5.2 Dutch Post KIX Code</h3>
@@ -6190,7 +6245,7 @@ check digit is included.</p>
 <figure>
 <img src="images/kix.svg" class="trk"
 alt="zint -b KIX --compliantheight -d &quot;2500GG30250&quot;" />
-<figcaption><span class="figure-label">Figure 105:</span>
+<figcaption><span class="figure-label">Figure 108:</span>
 <code>zint -b KIX --compliantheight -d "2500GG30250"</code></figcaption>
 </figure>
 <h3 id="royal-mail-4-state-customer-code-rm4scc">6.5.3 Royal Mail
@@ -6203,7 +6258,7 @@ Piccadilly Circus in London. Check digit data is generated by Zint.</p>
 <figure>
 <img src="images/rm4scc.svg" class="trk"
 alt="zint -b RM4SCC --compliantheight -d &quot;W1J0TR01&quot;" />
-<figcaption><span class="figure-label">Figure 106:</span>
+<figcaption><span class="figure-label">Figure 109:</span>
 <code>zint -b RM4SCC --compliantheight -d "W1J0TR01"</code></figcaption>
 </figure>
 <h3 id="royal-mail-4-state-mailmark">6.5.4 Royal Mail 4-State
@@ -6213,7 +6268,7 @@ includes Reed- Solomon error correction.</p>
 <figure>
 <img src="images/mailmark_4s.svg" class="trk"
 alt="zint -b MAILMARK_4S --compliantheight -d &quot;21B2254800659JW5O9QA6Y&quot;" />
-<figcaption><span class="figure-label">Figure 107:</span>
+<figcaption><span class="figure-label">Figure 110:</span>
 <code>zint -b MAILMARK_4S --compliantheight -d "21B2254800659JW5O9QA6Y"</code></figcaption>
 </figure>
 <p>Input is a pre-formatted alphanumeric string of 22 (for Barcode C) or
@@ -6286,7 +6341,7 @@ POSTNET and PLANET symbologies in 2009.</p>
 <figure>
 <img src="images/usps_imail.svg" class="trk"
 alt="zint -b USPS_IMAIL --compliantheight -d &quot;01234567094987654321-01234&quot;" />
-<figcaption><span class="figure-label">Figure 108:</span>
+<figcaption><span class="figure-label">Figure 111:</span>
 <code>zint -b USPS_IMAIL --compliantheight -d "01234567094987654321-01234"</code></figcaption>
 </figure>
 <p>Intelligent Mail is a fixed length 65-bar symbol which combines
@@ -6308,7 +6363,7 @@ by Zint.</p>
 <figure>
 <img src="images/japanpost.svg" class="trk"
 alt="zint -b JAPANPOST --compliantheight -d &quot;15400233-16-4-205&quot;" />
-<figcaption><span class="figure-label">Figure 109:</span>
+<figcaption><span class="figure-label">Figure 112:</span>
 <code>zint -b JAPANPOST --compliantheight -d "15400233-16-4-205"</code></figcaption>
 </figure>
 <h3 id="daft-code">6.5.7 DAFT Code</h3>
@@ -6321,7 +6376,7 @@ respectively. All other characters are invalid.</p>
 <figure>
 <img src="images/daft_rm4scc.svg" class="trk"
 alt="zint -b DAFT -d &quot;AAFDTTDAFADTFTTFFFDATFTADTTFFTDAFAFDTF&quot; --height=8.494 --vers=256" />
-<figcaption><span class="figure-label">Figure 110:</span>
+<figcaption><span class="figure-label">Figure 113:</span>
 <code>zint -b DAFT -d "AAFDTTDAFADTFTTFFFDATFTADTTFFTDAFAFDTF" --height=8.494 --vers=256</code></figcaption>
 </figure>
 <p>The ratio of the tracker size to full height can be given in
@@ -6343,7 +6398,7 @@ encode a large amount of data in a small area.</p>
 <figure>
 <img src="images/hibc_dm.svg" class="i2dbig"
 alt="zint -b HIBC_DM -d &quot;/ACMRN123456/V200912190833&quot; --fast --square" />
-<figcaption><span class="figure-label">Figure 111:</span>
+<figcaption><span class="figure-label">Figure 114:</span>
 <code>zint -b HIBC_DM -d "/ACMRN123456/V200912190833" --fast --square</code></figcaption>
 </figure>
 <p>Data Matrix encodes characters in the Latin-1 set by default but also
@@ -6607,7 +6662,7 @@ Mailmark (CMDM) (Data Matrix)</h3>
 <figure>
 <img src="images/mailmark_2d.svg" class="i2dbig"
 alt="zint -b MAILMARK_2D -d &quot;JGB 01Z999999900000001EC1A1AA1A0SN35TQ&quot; --vers=30" />
-<figcaption><span class="figure-label">Figure 112:</span>
+<figcaption><span class="figure-label">Figure 115:</span>
 <code>zint -b MAILMARK_2D -d "JGB 01Z999999900000001EC1A1AA1A0SN35TQ" --vers=30</code></figcaption>
 </figure>
 <p>This variant of Data Matrix, also known as “Complex Mail Data Mark”
@@ -6780,7 +6835,7 @@ Denso.</p>
 <figure>
 <img src="images/qrcode.svg" class="i2dbig"
 alt="zint -b QRCODE -d &quot;QR Code Symbol&quot; --mask=5" />
-<figcaption><span class="figure-label">Figure 113:</span>
+<figcaption><span class="figure-label">Figure 116:</span>
 <code>zint -b QRCODE -d "QR Code Symbol" --mask=5</code></figcaption>
 </figure>
 <p>Four levels of error correction are available using the
@@ -7027,7 +7082,7 @@ Latin-1 or Shift JIS being carried out automatically by Zint.</p>
 <figure>
 <img src="images/microqr.svg" class="i2dbig"
 alt="zint -b MICROQR -d &quot;01234567&quot;" />
-<figcaption><span class="figure-label">Figure 114:</span>
+<figcaption><span class="figure-label">Figure 117:</span>
 <code>zint -b MICROQR -d "01234567"</code></figcaption>
 </figure>
 <p>A preferred symbol size can be selected by using the
@@ -7150,7 +7205,7 @@ be entered as UTF-8 with conversion being handled by Zint.</p>
 <figure>
 <img src="images/rmqr.svg" class="i2dbig"
 alt="zint -b RMQR -d &quot;0123456&quot;" />
-<figcaption><span class="figure-label">Figure 115:</span>
+<figcaption><span class="figure-label">Figure 118:</span>
 <code>zint -b RMQR -d "0123456"</code></figcaption>
 </figure>
 <p>The amount of ECC codewords can be adjusted using the
@@ -7395,7 +7450,7 @@ set by Zint and do not need to be specified.</p>
 <figure>
 <img src="images/upnqr.svg" class="i2d"
 alt="zint -b UPNQR -i upn_utf8.txt --quietzones" />
-<figcaption><span class="figure-label">Figure 116:</span>
+<figcaption><span class="figure-label">Figure 119:</span>
 <code>zint -b UPNQR -i upn_utf8.txt --quietzones</code></figcaption>
 </figure>
 <p>UPNQR is unusual in that it uses Latin-2 (ISO/IEC 8859-2 plus ASCII)
@@ -7417,7 +7472,7 @@ the identification of parcels.</p>
 <figure>
 <img src="images/maxicode.svg" class="i2d"
 alt="zint -b MAXICODE -d &quot;1Z00004951\GUPSN\G06X610\G159\G1234567\G1/1\G\GY\G1 MAIN ST\GNY\GNY\R\E&quot; --esc --primary=&quot;152382802000000&quot; --scmvv=96" />
-<figcaption><span class="figure-label">Figure 117:</span>
+<figcaption><span class="figure-label">Figure 120:</span>
 <code>zint -b MAXICODE -d "1Z00004951\GUPSN\G06X610\G159\G1234567\G1/1\G\GY\G1 MAIN ST\GNY\GNY\R\E" --esc --primary="152382802000000" --scmvv=96</code></figcaption>
 </figure>
 <p>MaxiCode symbols can be encoded in one of five modes. In modes 2 and
@@ -7567,7 +7622,7 @@ pattern.</p>
 <figure>
 <img src="images/aztec.svg" class="i2d"
 alt="zint -b AZTEC -d &quot;123456789012&quot;" />
-<figcaption><span class="figure-label">Figure 118:</span>
+<figcaption><span class="figure-label">Figure 121:</span>
 <code>zint -b AZTEC -d "123456789012"</code></figcaption>
 </figure>
 <p>Zint can generate Compact Aztec Code (sometimes called Small Aztec
@@ -7795,7 +7850,7 @@ Append.</p>
 <figure>
 <img src="images/azrune.svg" class="i2d"
 alt="zint -b AZRUNE -d &quot;125&quot;" />
-<figcaption><span class="figure-label">Figure 119:</span>
+<figcaption><span class="figure-label">Figure 122:</span>
 <code>zint -b AZRUNE -d "125"</code></figcaption>
 </figure>
 <h3 id="code-one">6.6.10 Code One</h3>
@@ -7806,7 +7861,7 @@ mechanism.</p>
 <figure>
 <img src="images/codeone.svg" class="i2d"
 alt="zint -b CODEONE -d &quot;1234567890123456789012&quot;" />
-<figcaption><span class="figure-label">Figure 120:</span>
+<figcaption><span class="figure-label">Figure 123:</span>
 <code>zint -b CODEONE -d "1234567890123456789012"</code></figcaption>
 </figure>
 <p>There are two types of Code One symbol - fixed-ratio symbols which
@@ -7925,7 +7980,7 @@ data has not yet been implemented.</p>
 <figure>
 <img src="images/gridmatrix.svg" class="i2d"
 alt="zint -b GRIDMATRIX --eci=29 -d &quot;AAT2556 电池充电器+降压转换器  200mA至2A tel:86 019 82512738&quot;" />
-<figcaption><span class="figure-label">Figure 121:</span>
+<figcaption><span class="figure-label">Figure 124:</span>
 <code>zint -b GRIDMATRIX --eci=29 -d "AAT2556 电池充电器+降压转换器  200mA至2A tel:86 019 82512738"</code></figcaption>
 </figure>
 <p>The size of the symbol and the error correction capacity can be
@@ -8055,7 +8110,7 @@ correction codewords.</p>
 <figure>
 <img src="images/dotcode.svg" class="i2d"
 alt="zint -b DOTCODE -d &quot;[01]00012345678905[17]201231[10]ABC123456&quot; --gs1" />
-<figcaption><span class="figure-label">Figure 122:</span>
+<figcaption><span class="figure-label">Figure 125:</span>
 <code>zint -b DOTCODE -d "[01]00012345678905[17]201231[10]ABC123456" --gs1</code></figcaption>
 </figure>
 <p>DotCode has two sets of 4 masks, designated 0-3 and 0’-3’, the second
@@ -8077,7 +8132,7 @@ Support for the encoding of GS1 data has not yet been implemented.</p>
 <figure>
 <img src="images/hanxin.svg" class="i2d"
 alt="zint -b HANXIN -d &quot;Hanxin Code symbol&quot;" />
-<figcaption><span class="figure-label">Figure 123:</span>
+<figcaption><span class="figure-label">Figure 126:</span>
 <code>zint -b HANXIN -d "Hanxin Code symbol"</code></figcaption>
 </figure>
 <p>The size of the symbol can be specified using the <code>--vers</code>
@@ -8433,7 +8488,7 @@ and GS1 modes are supported.</p>
 <figure>
 <img src="images/ultra.svg" class="ultra"
 alt="zint -b ULTRA -d &quot;HEIMASÍÐA KENNARAHÁSKÓLA ÍSLANDS&quot;" />
-<figcaption><span class="figure-label">Figure 124:</span>
+<figcaption><span class="figure-label">Figure 127:</span>
 <code>zint -b ULTRA -d "HEIMASÍÐA KENNARAHÁSKÓLA ÍSLANDS"</code></figcaption>
 </figure>
 <p>The amount of error correction can be set using the
@@ -8508,7 +8563,7 @@ used to assist automated mail processing.</p>
 <figure>
 <img src="images/fim.svg" class="trk"
 alt="zint -b FIM --compliantheight -d &quot;C&quot;" />
-<figcaption><span class="figure-label">Figure 125:</span>
+<figcaption><span class="figure-label">Figure 128:</span>
 <code>zint -b FIM --compliantheight -d "C"</code></figcaption>
 </figure>
 <p>There are only 5 valid symbols which can be generated using the
@@ -8563,7 +8618,7 @@ not include a check digit.</p>
 <figure>
 <img src="images/flat.svg" class="lin"
 alt="zint -b FLAT -d &quot;1304056&quot;" />
-<figcaption><span class="figure-label">Figure 126:</span>
+<figcaption><span class="figure-label">Figure 129:</span>
 <code>zint -b FLAT -d "1304056"</code></figcaption>
 </figure>
 <h1 id="legal-and-version-information">7. Legal and Version
@@ -8661,13 +8716,13 @@ specification</li>
 <li>ISO/IEC 16022:2024 Information technology - Automatic identification
 and data capture techniques - Data Matrix bar code symbology
 specification</li>
-<li>ISO/IEC 21471:2020 Information technology - Automatic identification
+<li>ISO/IEC 21471:2025 Information technology - Automatic identification
 and data capture techniques - Extended rectangular data matrix (DMRE)
 bar code symbology specification</li>
 <li>AIM TSC1705001 (v 4.0 Draft 0.15) - Information technology -
 Automatic identification and data capture techniques - Bar code
 symbology specification - DotCode (Revised 28th May 2019)</li>
-<li>ISO/IEC 15420:2009 Information technology - Automatic identification
+<li>ISO/IEC 15420:2025 Information technology - Automatic identification
 and data capture techniques - EAN/UPC bar code symbology
 specification</li>
 <li>AIMD014 (v 1.63) - Information technology, Automatic identification
@@ -8699,6 +8754,8 @@ specification</li>
 <li>ISO/IEC 23941:2022 Information technology - Automatic identification
 and data capture techniques - Rectangular Micro QR Code (rMQR) bar code
 symbology specification</li>
+<li>AIM Europe X-25 - Uniform Symbology Specification Telepen
+(1991)</li>
 <li>AIMD/TSC15032-43 (v 0.99c) - International Technical Specification -
 Ultracode Symbology (Draft) (Released 4th Nov 2015)</li>
 </ul>
@@ -8716,6 +8773,13 @@ Interpretations Part 3: Register (Version 2, February 2022)</li>
 <li>GS1 General Specifications Release 26.0 (Jan 2026)</li>
 <li>ANSI/HIBC 2.6-2016 - The Health Industry Bar Code (HIBC) Supplier
 Labeling Standard</li>
+<li>ANSI/HIBC 1.3-2010 - The Health Industry Bar Code (HIBC) Provider
+Applications Standard</li>
+<li>ISO/IEC 15424:2025 Information technology - Automatic identification
+and data capture techniques - Data carrier identifiers (including
+symbology identifiers)</li>
+<li>ISO/IEC 15434:2019 Information technology — Automatic identification
+and data capture techniques — Syntax for high-capacity ADC media</li>
 </ul>
 <h1 id="annex-a.-character-encoding">Annex A. Character Encoding</h1>
 <p>This section is intended as a quick reference to the character sets
@@ -9207,7 +9271,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb133-1"><a href
 <figure>
 <img src="images/tcl_demo.png" class="pop"
 alt="Tcl/Tk demonstration program window" />
-<figcaption><span class="figure-label">Figure 127:</span> Tcl/Tk
+<figcaption><span class="figure-label">Figure 130:</span> Tcl/Tk
 demonstration program window</figcaption>
 </figure>
 <p>You can select the symbology, enter the data to encode, and set
@@ -9219,9 +9283,9 @@ raster preview of the configured barcode is updated when the
 <h2 id="name">NAME</h2>
 <p><code>zint</code> - encode data as a barcode image</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<div class="line-block"><code>zint</code> [<code>-h</code> |
-<code>--help</code>]<br />
-<code>zint</code> [<em>options</em>]</div>
+<div class="line-block"><strong><code>zint</code></strong>
+[<code>-h</code> | <code>--help</code>]<br />
+<strong><code>zint</code></strong> [<em>options</em>]</div>
 <h2 id="description">DESCRIPTION</h2>
 <p>zint takes input data from the command line or a file to encode in a
 barcode which is then output to an image file.</p>
@@ -9237,31 +9301,34 @@ Network Format (<code>PNG</code>), Scalable Vector Graphic
 (<code>SVG</code>), or Tagged Image File Format (<code>TIF</code>).</p>
 <h2 id="options">OPTIONS</h2>
 <dl>
-<dt><code>-h</code>, <code>--help</code></dt>
+<dt><strong><code>-h</code></strong>,
+<strong><code>--help</code></strong></dt>
 <dd>
 <p>Print usage information summarizing command line options.</p>
 </dd>
-<dt><code>-b TYPE</code>, <code>--barcode=TYPE</code></dt>
+<dt><strong><code>-b</code></strong> <em><code>TYPE</code></em>,
+<strong><code>--barcode=</code></strong><em><code>TYPE</code></em></dt>
 <dd>
 <p>Set the barcode symbology that will be used to encode the data.
-<em>TYPE</em> is the number or name of the barcode symbology. If not
-given, the symbology defaults to 20 (Code 128). To see what types are
-available, use the <code>-t</code> | <code>--types</code> option. Type
-names are case-insensitive, and non-alphanumerics are ignored.</p>
+<em><code>TYPE</code></em> is the number or name of the barcode
+symbology. If not given, the symbology defaults to 20 (Code 128). To see
+what types are available, use the <code>-t</code> | <code>--types</code>
+option. Type names are case-insensitive, and non-alphanumerics are
+ignored.</p>
 </dd>
-<dt><code>--addongap=INTEGER</code></dt>
+<dt><strong><code>--addongap=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>For EAN/UPC symbologies, set the gap between the main data and the
-add-on. <em>INTEGER</em> is in integral multiples of the X-dimension.
-The maximum gap that can be set is 12. The minimum is 7, except for
-UPC-A, when the minimum is 9.</p>
+add-on. <em><code>INTEGER</code></em> is in integral multiples of the
+X-dimension. The maximum gap that can be set is 12. The minimum is 7,
+except for UPC-A, when the minimum is 9.</p>
 </dd>
-<dt><code>--azfull</code></dt>
+<dt><strong><code>--azfull</code></strong></dt>
 <dd>
 <p>For Aztec Code symbols, exclude Compact versions when considering
 automatic sizes (i.e. consider Full versions only).</p>
 </dd>
-<dt><code>--batch</code></dt>
+<dt><strong><code>--batch</code></strong></dt>
 <dd>
 <p>Treat each line of an input file specified with <code>-i</code> |
 <code>--input</code> as a separate data set and produce a barcode image
@@ -9269,19 +9336,20 @@ for each one. The barcode images are outputted by default to numbered
 filenames starting with “00001.png”, “00002.png” etc., which can be
 changed by using the <code>-o</code> | <code>--output</code> option.</p>
 </dd>
-<dt><code>--bg=COLOUR</code></dt>
+<dt><strong><code>--bg=</code></strong><em><code>COLOUR</code></em></dt>
 <dd>
-<p>Specify a background (paper) colour where <em>COLOUR</em> is in
-hexadecimal <code>RRGGBB</code> or <code>RRGGBBAA</code> format or in
-decimal <code>C,M,Y,K</code> percentages format.</p>
+<p>Specify a background (paper) colour where
+<em><code>COLOUR</code></em> is in hexadecimal <code>RRGGBB</code> or
+<code>RRGGBBAA</code> format or in decimal <code>C,M,Y,K</code>
+percentages format.</p>
 </dd>
-<dt><code>--binary</code></dt>
+<dt><strong><code>--binary</code></strong></dt>
 <dd>
 <p>Treat input data as raw 8-bit binary data instead of the default
 UTF-8. Automatic code page translation to an ECI page is disabled, and
 no validation of the data’s character encoding takes place.</p>
 </dd>
-<dt><code>--bind</code></dt>
+<dt><strong><code>--bind</code></strong></dt>
 <dd>
 <p>Add horizontal boundary bars (also known as bearer bars) to the
 symbol. The width of the boundary bars is specified by the
@@ -9290,118 +9358,122 @@ add row separator bars to symbols stacked with multiple <code>-d</code>
 | <code>--data</code> inputs, in which case the width of the separator
 bars is specified with the <code>--separator</code> option.</p>
 </dd>
-<dt><code>--bindtop</code></dt>
+<dt><strong><code>--bindtop</code></strong></dt>
 <dd>
 <p>Add a horizontal boundary bar to the top of the symbol. The width of
 the boundary bar is specified by the <code>--border</code> option.</p>
 </dd>
-<dt><code>--bold</code></dt>
+<dt><strong><code>--bold</code></strong></dt>
 <dd>
 <p>Use a bold font for the Human Readable Text (HRT).</p>
 </dd>
-<dt><code>--border=INTEGER</code></dt>
+<dt><strong><code>--border=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>Set the width of boundary bars (<code>--bind</code> or
 <code>--bindtop</code>) or box borders (<code>--box</code>), where
-<em>INTEGER</em> is in integral multiples of the X-dimension. The
-default is zero.</p>
+<em><code>INTEGER</code></em> is in integral multiples of the
+X-dimension. The default is zero.</p>
 </dd>
-<dt><code>--box</code></dt>
+<dt><strong><code>--box</code></strong></dt>
 <dd>
 <p>Add a box around the symbol. The width of the borders is specified by
 the <code>--border</code> option.</p>
 </dd>
-<dt><code>--cmyk</code></dt>
+<dt><strong><code>--cmyk</code></strong></dt>
 <dd>
 <p>Use the CMYK colour space when outputting to Encapsulated PostScript
 (EPS) or TIF files.</p>
 </dd>
-<dt><code>--cols=INTEGER</code></dt>
+<dt><strong><code>--cols=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
-<p>Set the number of data columns in the symbol to <em>INTEGER</em>.
-Affects Codablock F, DotCode, GS1 DataBar Expanded Stacked
-(DBAR_EXPSTK), MicroPDF417 and PDF417 symbols.</p>
+<p>Set the number of data columns in the symbol to
+<em><code>INTEGER</code></em>. Affects Codablock F, DotCode, GS1 DataBar
+Expanded Stacked (DBAR_EXPSTK), MicroPDF417 and PDF417 symbols.</p>
 </dd>
-<dt><code>--compliantheight</code></dt>
+<dt><strong><code>--compliantheight</code></strong></dt>
 <dd>
 <p>Warn if the height specified by the <code>--height</code> option is
 not compliant with the barcode’s specification, or if
 <code>--height</code> is not given, default to the height specified by
 the specification (if any).</p>
 </dd>
-<dt><code>-d</code>, <code>--data=DATA</code></dt>
+<dt><strong><code>-d</code></strong> <em><code>DATA</code></em>,
+<strong><code>--data=</code></strong><em><code>DATA</code></em></dt>
 <dd>
-<p>Specify the input <em>DATA</em> to encode. The <code>--esc</code>
-option may be used to enter non-printing characters using escape
-sequences. The <em>DATA</em> should be UTF-8, unless the
-<code>--binary</code> option is given, in which case it can be
-anything.</p>
+<p>Specify the input <em><code>DATA</code></em> to encode. The
+<code>--esc</code> option may be used to enter non-printing characters
+using escape sequences. The <em><code>DATA</code></em> should be UTF-8,
+unless the <code>--binary</code> option is given, in which case it can
+be anything.</p>
 </dd>
-<dt><code>--direct</code></dt>
+<dt><strong><code>--direct</code></strong></dt>
 <dd>
 <p>Send output to stdout, which in most cases should be re-directed to a
 pipe or a file. Use <code>--filetype</code> to specify output
 format.</p>
 </dd>
-<dt><code>--dmb256=INTEGER</code></dt>
+<dt><strong><code>--dmb256[=</code></strong><em><code>INTEGER</code></em><code>]</code></dt>
 <dd>
-<p>For Data Matrix symbols, encode the first <em>INTEGER</em> input
+<p>For Data Matrix symbols, encode the first
+<em><code>INTEGER</code></em> (optional, 0 if not given) input
 characters in Base 256 mode. 0 means all input.</p>
 </dd>
-<dt><code>--dmc40=INTEGER</code></dt>
+<dt><strong><code>--dmc40[=</code></strong><em><code>INTEGER</code></em><code>]</code></dt>
 <dd>
-<p>For Data Matrix symbols, encode the first <em>INTEGER</em> input
+<p>For Data Matrix symbols, encode the first
+<em><code>INTEGER</code></em> (optional, 0 if not given) input
 characters in C40 mode. 0 means all input.</p>
 </dd>
-<dt><code>--dmiso144</code></dt>
+<dt><strong><code>--dmiso144</code></strong></dt>
 <dd>
 <p>For Data Matrix symbols, use the standard ISO/IEC codeword placement
 for 144 x 144 (<code>--vers=24</code>) sized symbols, instead of the
 default “de facto” placement (which rotates the placement of ECC
 codewords).</p>
 </dd>
-<dt><code>--dmre</code></dt>
+<dt><strong><code>--dmre</code></strong></dt>
 <dd>
 <p>For Data Matrix symbols, allow Data Matrix Rectangular Extended
 (DMRE) sizes when considering automatic sizes. See also
 <code>--square</code>.</p>
 </dd>
-<dt><code>--dotsize=NUMBER</code></dt>
+<dt><strong><code>--dotsize=</code></strong><em><code>NUMBER</code></em></dt>
 <dd>
 <p>Set the radius of the dots in dotty mode (<code>--dotty</code>).
-<em>NUMBER</em> is in X-dimensions, and may be floating-point. The
-default is 0.8.</p>
+<em><code>NUMBER</code></em> is in X-dimensions, and may be
+floating-point. The default is 0.8.</p>
 </dd>
-<dt><code>--dotty</code></dt>
+<dt><strong><code>--dotty</code></strong></dt>
 <dd>
 <p>Use dots instead of squares for matrix symbols. DotCode is always in
 dotty mode.</p>
 </dd>
-<dt><code>--dump</code></dt>
+<dt><strong><code>--dump</code></strong></dt>
 <dd>
 <p>Dump a hexadecimal representation of the symbol’s encodation to
 stdout. The same representation may be outputted to a file by using a
 <code>.txt</code> extension with <code>-o</code> | <code>--output</code>
 or by specifying <code>--filetype=txt</code>.</p>
 </dd>
-<dt><code>-e</code>, <code>--ecinos</code></dt>
+<dt><strong><code>-e</code></strong>,
+<strong><code>--ecinos</code></strong></dt>
 <dd>
 <p>Display the table of ECIs (Extended Channel Interpretations).</p>
 </dd>
-<dt><code>--eci=INTEGER</code></dt>
+<dt><strong><code>--eci=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
-<p>Set the ECI code for the input data to <em>INTEGER</em>. See
-<code>-e</code> | <code>--ecinos</code> for a list of the ECIs
+<p>Set the ECI code for the input data to <em><code>INTEGER</code></em>.
+See <code>-e</code> | <code>--ecinos</code> for a list of the ECIs
 available. ECIs are supported by Aztec Code, Code One, Data Matrix,
 DotCode, Grid Matrix, Han Xin Code, MaxiCode, MicroPDF417, PDF417, QR
 Code, rMQR and Ultracode.</p>
 </dd>
-<dt><code>--embedfont</code></dt>
+<dt><strong><code>--embedfont</code></strong></dt>
 <dd>
 <p>For vector output, embed the font in the file for portability.
 Currently only available for SVG output.</p>
 </dd>
-<dt><code>--esc</code></dt>
+<dt><strong><code>--esc</code></strong></dt>
 <dd>
 <p>Process escape characters in the input data. The escape sequences
 are:</p>
@@ -9414,9 +9486,12 @@ are:</p>
 \v       (0x0B)    VT   Vertical Tab
 \f       (0x0C)    FF   Form Feed
 \r       (0x0D)    CR   Carriage Return
+\L       (0x10)    DLE  Data Link Escape
 \e       (0x1B)    ESC  Escape
+\F       (0x1C)    FS   File Separator
 \G       (0x1D)    GS   Group Separator
 \R       (0x1E)    RS   Record Separator
+\N       (0x1F)    US   Unit Separator
 \(       (0x28)    (    Opening parenthesis (only with
                         --gs1parens)
 \)       (0x29)    )    Closing parenthesis (only with
@@ -9433,7 +9508,7 @@ are:</p>
 \UNNNNNN (U+NNNNNN)     Any 21-bit Unicode character
                         where NNNNNN is hexadecimal</code></pre>
 </dd>
-<dt><code>--extraesc</code></dt>
+<dt><strong><code>--extraesc</code></strong></dt>
 <dd>
 <p>As well as processing the normal escape sequences above, process the
 special escape sequences beginning with <code>\^</code>. For Aztec Code,
@@ -9444,30 +9519,31 @@ only, process the escape sequences <code>\^A</code>, <code>\^B</code>,
 <code>\^C</code> and <code>\^@</code> that allow manual switching of
 Code Sets. The sequence <code>\^@</code> turns off manual switching.</p>
 </dd>
-<dt><code>--fast</code></dt>
+<dt><strong><code>--fast</code></strong></dt>
 <dd>
 <p>Use faster if less optimal encodation or other shortcuts (affects
-Data Matrix, MicroPDF417, PDF417, QRCODE &amp; UPNQR only).</p>
+Aztec Code, Data Matrix, MicroPDF417, PDF417, QR Code &amp; UPNQR
+only).</p>
 </dd>
-<dt><code>--fg=COLOUR</code></dt>
+<dt><strong><code>--fg=</code></strong><em><code>COLOUR</code></em></dt>
 <dd>
-<p>Specify a foreground (ink) colour where <em>COLOUR</em> is in
-hexadecimal <code>RRGGBB</code> or <code>RRGGBBAA</code> format or in
-decimal <code>C,M,Y,K</code> percentages format.</p>
+<p>Specify a foreground (ink) colour where <em><code>COLOUR</code></em>
+is in hexadecimal <code>RRGGBB</code> or <code>RRGGBBAA</code> format or
+in decimal <code>C,M,Y,K</code> percentages format.</p>
 </dd>
-<dt><code>--filetype=TYPE</code></dt>
+<dt><strong><code>--filetype=</code></strong><em><code>TYPE</code></em></dt>
 <dd>
-<p>Set the output file type to <em>TYPE</em>, which is one of
-<code>BMP</code>, <code>EMF</code>, <code>EPS</code>, <code>GIF</code>,
-<code>PCX</code>, <code>PNG</code>, <code>SVG</code>, <code>TIF</code>,
-<code>TXT</code>.</p>
+<p>Set the output file type to <em><code>TYPE</code></em>, which is one
+of <code>BMP</code>, <code>EMF</code>, <code>EPS</code>,
+<code>GIF</code>, <code>PCX</code>, <code>PNG</code>, <code>SVG</code>,
+<code>TIF</code>, <code>TXT</code>.</p>
 </dd>
-<dt><code>--fullmultibyte</code></dt>
+<dt><strong><code>--fullmultibyte</code></strong></dt>
 <dd>
 <p>Use the multibyte modes of Grid Matrix, Han Xin and QR Code for
 non-ASCII data.</p>
 </dd>
-<dt><code>--gs1</code></dt>
+<dt><strong><code>--gs1</code></strong></dt>
 <dd>
 <p>Treat input as GS1 compatible data. A number of input formats are
 available. Application Identifiers (AIs) may be placed in square
@@ -9478,19 +9554,19 @@ brackets <code>"[]"</code>. Alternatively the GS1 Syntax Engine
 (unverified) may be given. Further input options are available with
 <code>--gs1parens</code> and <code>--gs1raw</code>.</p>
 </dd>
-<dt><code>--gs1nocheck</code></dt>
+<dt><strong><code>--gs1nocheck</code></strong></dt>
 <dd>
 <p>Treat input as GS1 compatible data (as <code>--gs1</code>) but do not
 check the validity of the data.</p>
 </dd>
-<dt><code>--gs1parens</code></dt>
+<dt><strong><code>--gs1parens</code></strong></dt>
 <dd>
 <p>Treat input as GS1 compatible data (as <code>--gs1</code>) but
 process parentheses <code>"()"</code> as GS1 AI delimiters, rather than
 square brackets <code>"[]"</code>. If the AI data contains opening
 parentheses, they must be backslashed (<code>"\("</code>).</p>
 </dd>
-<dt><code>--gs1raw</code></dt>
+<dt><strong><code>--gs1raw</code></strong></dt>
 <dd>
 <p>Treat input as GS1 compatible data (as <code>--gs1</code>), but
 process literally, with any required <code>FNC1</code>s represented by
@@ -9499,64 +9575,66 @@ process literally, with any required <code>FNC1</code>s represented by
 Engine “Unbracketed AI” entry mode except using <code>GS</code>s instead
 of carets, and without any initial <code>GS</code>.)</p>
 </dd>
-<dt><code>--gs1strict</code></dt>
+<dt><strong><code>--gs1strict</code></strong></dt>
 <dd>
 <p>Treat input as GS1 compatible data (as <code>--gs1</code>) and use
 the GS1 Syntax Engine (if available) to strictly verify the GS1 data,
 including GS1 Digital Link URIs. Ignored if <code>--gs1nocheck</code>
 also given.</p>
 </dd>
-<dt><code>--gssep</code></dt>
+<dt><strong><code>--gssep</code></strong></dt>
 <dd>
 <p>For Data Matrix in GS1 mode, use <code>GS</code> (0x1D) as the GS1
 data separator instead of <code>FNC1</code>.</p>
 </dd>
-<dt><code>--guarddescent=NUMBER</code></dt>
+<dt><strong><code>--guarddescent=</code></strong><em><code>NUMBER</code></em></dt>
 <dd>
 <p>For EAN/UPC symbols, set the height the guard bars descend below the
-main bars, where <em>NUMBER</em> is in X-dimensions. <em>NUMBER</em> may
-be floating-point.</p>
+main bars, where <em><code>NUMBER</code></em> is in X-dimensions.
+<em><code>NUMBER</code></em> may be floating-point.</p>
 </dd>
-<dt><code>--guardwhitespace</code></dt>
+<dt><strong><code>--guardwhitespace</code></strong></dt>
 <dd>
 <p>For EAN/UPC symbols, add quiet zone indicators <code>"&lt;"</code>
 and/or <code>"&gt;"</code> to HRT where applicable.</p>
 </dd>
-<dt><code>--height=NUMBER</code></dt>
+<dt><strong><code>--height=</code></strong><em><code>NUMBER</code></em></dt>
 <dd>
-<p>Set the height of the symbol in X-dimensions. <em>NUMBER</em> may be
-floating-point.</p>
+<p>Set the height of the symbol in X-dimensions.
+<em><code>NUMBER</code></em> may be floating-point.</p>
 </dd>
-<dt><code>--heightperrow</code></dt>
+<dt><strong><code>--heightperrow</code></strong></dt>
 <dd>
 <p>Treat height as per-row. Affects Codablock F, Code 16K, Code 49, GS1
 DataBar Expanded Stacked (DBAR_EXPSTK), MicroPDF417 and PDF417.</p>
 </dd>
-<dt><code>-i</code>, <code>--input=FILE</code></dt>
+<dt><strong><code>-i</code></strong> <em><code>FILE</code></em>,
+<strong><code>--input=</code></strong><em><code>FILE</code></em></dt>
 <dd>
-<p>Read the input data from <em>FILE</em>. Specify a single hyphen
-(<code>-</code>) for <em>FILE</em> to read from stdin.</p>
+<p>Read the input data from <em><code>FILE</code></em>. Specify a single
+hyphen (<code>-</code>) for <em><code>FILE</code></em> to read from
+stdin.</p>
 </dd>
-<dt><code>--init</code></dt>
+<dt><strong><code>--init</code></strong></dt>
 <dd>
 <p>Create a Reader Initialisation (Programming) symbol.</p>
 </dd>
-<dt><code>--mask=INTEGER</code></dt>
+<dt><strong><code>--mask=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>Set the masking pattern to use for DotCode, Han Xin or QR Code to
-<em>INTEGER</em>, overriding the automatic selection.</p>
+<em><code>INTEGER</code></em>, overriding the automatic selection.</p>
 </dd>
-<dt><code>--mirror</code></dt>
+<dt><strong><code>--mirror</code></strong></dt>
 <dd>
 <p>Use the batch data to determine the filename in batch mode
 (<code>--batch</code>). The <code>-o</code> | <code>--output</code>
 option can be used to specify an output directory (any filename will be
 ignored).</p>
 </dd>
-<dt><code>--mode=INTEGER</code></dt>
+<dt><strong><code>--mode=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>For MaxiCode and GS1 Composite symbols, set the encoding mode to
-<em>INTEGER</em>.</p>
+<em><code>INTEGER</code></em>.</p>
 <p>For MaxiCode (SCM is Structured Carrier Message, with 3 fields:
 postcode, 3-digit ISO 3166-1 country code, 3-digit service code):</p>
 <pre><code>2   SCM with 9-digit numeric postcode
@@ -9571,62 +9649,64 @@ i.e. <code>EAN8_CC</code>, <code>EAN13_CC</code>,
 2   CC-B
 3   CC-C (GS1_128_CC only)</code></pre>
 </dd>
-<dt><code>--nobackground</code></dt>
+<dt><strong><code>--nobackground</code></strong></dt>
 <dd>
 <p>Remove the background colour (EMF, EPS, GIF, PNG, SVG and TIF
 only).</p>
 </dd>
-<dt><code>--noquietzones</code></dt>
+<dt><strong><code>--noquietzones</code></strong></dt>
 <dd>
 <p>Disable any quiet zones for symbols that define them by default.</p>
 </dd>
-<dt><code>--notext</code></dt>
+<dt><strong><code>--notext</code></strong></dt>
 <dd>
 <p>Remove the Human Readable Text (HRT).</p>
 </dd>
-<dt><code>-o</code>, <code>--output=FILE</code></dt>
+<dt><strong><code>-o</code></strong> <em><code>FILE</code></em>,
+<strong><code>--output=</code></strong><em><code>FILE</code></em></dt>
 <dd>
-<p>Send the output to <em>FILE</em>. When not in batch mode, the default
-is “out.png” (or “out.gif” if zint built without PNG support). When in
-batch mode (<code>--batch</code>), special characters can be used to
-format the output filenames:</p>
+<p>Send the output to <em><code>FILE</code></em>. When not in batch
+mode, the default is “out.png” (or “out.gif” if zint built without PNG
+support). When in batch mode (<code>--batch</code>), special characters
+can be used to format the output filenames:</p>
 <pre><code>~           Insert a number or 0
 #           Insert a number or space
 @           Insert a number or * (+ on Windows)
 Any other   Insert literally</code></pre>
 </dd>
-<dt><code>--primary=STRING</code></dt>
+<dt><strong><code>--primary=</code></strong><em>STRING</em></dt>
 <dd>
 <p>For MaxiCode, set the content of the primary message. For GS1
 Composite symbols, set the content of the linear symbol.</p>
 </dd>
-<dt><code>--quietzones</code></dt>
+<dt><strong><code>--quietzones</code></strong></dt>
 <dd>
 <p>Add compliant quiet zones for symbols that specify them. This is in
 addition to any whitespace specified by <code>-w</code> |
 <code>--whitesp</code> or <code>--vwhitesp</code>.</p>
 </dd>
-<dt><code>-r</code>, <code>--reverse</code></dt>
+<dt><strong><code>-r</code></strong>,
+<strong><code>--reverse</code></strong></dt>
 <dd>
 <p>Reverse the foreground and background colours (white on black). Known
 as “reflectance reversal” or “reversed reflectance”.</p>
 </dd>
-<dt><code>--rotate=INTEGER</code></dt>
+<dt><strong><code>--rotate=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
-<p>Rotate the symbol by <em>INTEGER</em> degrees, where <em>INTEGER</em>
-can be 0, 90, 270 or 360.</p>
+<p>Rotate the symbol by <em><code>INTEGER</code></em> degrees, where
+<em><code>INTEGER</code></em> can be 0, 90, 270 or 360.</p>
 </dd>
-<dt><code>--rows=INTEGER</code></dt>
+<dt><strong><code>--rows=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
-<p>Set the number of rows for Codablock F or PDF417 to <em>INTEGER</em>.
-It will also set the minimum number of rows for Code 16K or Code 49, and
-the maximum number of rows for GS1 DataBar Expanded Stacked
-(DBAR_EXPSTK).</p>
+<p>Set the number of rows for Codablock F or PDF417 to
+<em><code>INTEGER</code></em>. It will also set the minimum number of
+rows for Code 16K or Code 49, and the maximum number of rows for GS1
+DataBar Expanded Stacked (DBAR_EXPSTK).</p>
 </dd>
-<dt><code>--scale=NUMBER</code></dt>
+<dt><strong><code>--scale=</code></strong><em><code>NUMBER</code></em></dt>
 <dd>
-<p>Adjust the size of the X-dimension. <em>NUMBER</em> may be
-floating-point, and is multiplied by 2 (except for MaxiCode) before
+<p>Adjust the size of the X-dimension. <em><code>NUMBER</code></em> may
+be floating-point, and is multiplied by 2 (except for MaxiCode) before
 being applied. The default scale is 1.</p>
 <p>For MaxiCode, the scale is multiplied by 10 for raster output, by 40
 for EMF output, and by 2 otherwise.</p>
@@ -9635,30 +9715,33 @@ raster output (BMP, GIF, PCX, PNG and TIF). Human Readable Text (HRT)
 for raster output will not be shown for scales less than 1.</p>
 <p>See also <code>--scalexdimdp</code> below.</p>
 </dd>
-<dt><code>--scalexdimdp=X[,R]</code></dt>
+<dt><strong><code>--scalexdimdp[=</code></strong><em><code>X</code></em><code>[,</code><em><code>R</code></em><code>]]</code></dt>
 <dd>
-<p>Scale the image according to X-dimension <em>X</em> and resolution
-<em>R</em>, where <em>X</em> is in mm and <em>R</em> is in dpmm (dots
-per mm). <em>X</em> and <em>R</em> may be floating-point. <em>R</em> is
-optional and defaults to 12 dpmm (approximately 300 dpi). <em>X</em> may
+<p>Scale the image according to X-dimension <em><code>X</code></em> and
+resolution <em><code>R</code></em>, where <em><code>X</code></em> is in
+mm and <em><code>R</code></em> is in dpmm (dots per mm).
+<em><code>X</code></em> and <em><code>R</code></em> may be
+floating-point. <em><code>R</code></em> is optional and defaults to 12
+dpmm (approximately 300 dpi). <em><code>X</code></em> is optional or may
 be zero in which case a symbology-specific default is used.</p>
 <p>The scaling takes into account the output filetype, and deals with
-all the details mentioned above. Units may be specified for <em>X</em>
-by appending “in” (inch) or “mm”, and for <em>R</em> by appending “dpi”
-(dots per inch) or “dpmm” -
+all the details mentioned above in <code>--scale</code>. Units may be
+specified for <em>X</em> by appending “in” (inch) or “mm”, and for
+<em>R</em> by appending “dpi” (dots per inch) or “dpmm” -
 e.g. <code>--scalexdimdp=0.013in,300dpi</code>.</p>
 </dd>
-<dt><code>--scmvv=INTEGER</code></dt>
+<dt><strong><code>--scmvv[=</code></strong><em><code>INTEGER</code></em><code>]</code></dt>
 <dd>
 <p>For MaxiCode, prefix the Structured Carrier Message (SCM) with
-<code>"[)&gt;\R01\Gvv"</code>, where <code>vv</code> is a 2-digit
-<em>INTEGER</em>.</p>
+<code>"[)&gt;\R01\Gvv"</code>, where <code>vv</code> is an optional
+2-digit <em><code>INTEGER</code></em>. If <em><code>INTEGER</code></em>
+is omitted it defaults to 96 (ASC MH10/SC 8).</p>
 </dd>
-<dt><code>--secure=INTEGER</code></dt>
+<dt><strong><code>--secure=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
-<p>Set the error correction level (ECC) to <em>INTEGER</em>. The meaning
-is specific to the following matrix symbols (all except PDF417 are
-approximate):</p>
+<p>Set the error correction level (ECC) to
+<em><code>INTEGER</code></em>. The meaning is specific to the following
+matrix symbols (all except PDF417 are approximate):</p>
 <pre><code>Aztec Code  1 to 4 (10%, 23%, 36%, 50%)
 Grid Matrix 1 to 5 (10% to 50%)
 Han Xin     1 to 4 (8%, 15%, 23%, 30%)
@@ -9668,56 +9751,58 @@ QR Code     1 to 4 (7%, 15%, 25%, 30%) (L, M, Q, H)
 rMQR        2 or 4 (15% or 30%) (M or H)
 Ultracode   1 to 6 (0%, 5%, 9%, 17%, 25%, 33%)</code></pre>
 </dd>
-<dt><code>--segN=ECI,DATA</code></dt>
+<dt><strong><code>--segN=</code></strong><em><code>ECI</code></em><code>,</code><em><code>DATA</code></em></dt>
 <dd>
-<p>Set the <em>ECI</em> &amp; <em>DATA</em> content for segment N, where
-N is 1 to 9. <code>-d</code> | <code>--data</code> must still be given,
-and counts as segment 0, its ECI given by <code>--eci</code>. Segments
-must be consecutive.</p>
+<p>Set the <em><code>ECI</code></em> &amp; <em><code>DATA</code></em>
+content for segment N, where N is 1 to 9. <code>-d</code> |
+<code>--data</code> must still be given, and counts as segment 0, its
+ECI given by <code>--eci</code>. Segments must be consecutive.</p>
 </dd>
-<dt><code>--separator=INTEGER</code></dt>
+<dt><strong><code>--separator=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>Set the height of row separator bars for stacked symbologies, where
-<em>INTEGER</em> is in integral multiples of the X-dimension. The
-default is zero.</p>
+<em><code>INTEGER</code></em> is in integral multiples of the
+X-dimension. The default is zero.</p>
 </dd>
-<dt><code>--small</code></dt>
+<dt><strong><code>--small</code></strong></dt>
 <dd>
 <p>Use a smaller font for Human Readable Text (HRT).</p>
 </dd>
-<dt><code>--square</code></dt>
+<dt><strong><code>--square</code></strong></dt>
 <dd>
 <p>For Data Matrix symbols, exclude rectangular sizes when considering
 automatic sizes. See also <code>--dmre</code>.</p>
 </dd>
-<dt><code>--structapp=I,C[,ID]</code></dt>
+<dt><strong><code>--structapp=</code></strong><em><code>I</code></em><code>,</code><em><code>C</code></em><code>[,</code><em><code>ID</code></em><code>]</code></dt>
 <dd>
-<p>Set Structured Append info, where <em>I</em> is the 1-based index,
-<em>C</em> is the total number of symbols in the sequence, and
-<em>ID</em>, which is optional, is the identifier that all symbols in
-the sequence share. Structured Append is supported by Aztec Code, Code
-One, Data Matrix, DotCode, Grid Matrix, MaxiCode, MicroPDF417, PDF417,
-QR Code and Ultracode.</p>
+<p>Set Structured Append info, where <em><code>I</code></em> is the
+1-based index, <em><code>C</code></em> is the total number of symbols in
+the sequence, and <em><code>ID</code></em>, which is optional, is the
+identifier that all symbols in the sequence share. Structured Append is
+supported by Aztec Code, Code One, Data Matrix, DotCode, Grid Matrix,
+MaxiCode, MicroPDF417, PDF417, QR Code and Ultracode. Code One, DotCode
+and MaxiCode do not support an <em><code>ID</code></em>.</p>
 </dd>
-<dt><code>-t</code>, <code>--types</code></dt>
+<dt><strong><code>-t</code></strong>,
+<strong><code>--types</code></strong></dt>
 <dd>
 <p>Display the table of barcode types (symbologies). The numbers or
 names can be used with <code>-b</code> | <code>--barcode</code>.</p>
 </dd>
-<dt><code>--textgap=NUMBER</code></dt>
+<dt><strong><code>--textgap=</code></strong><em><code>NUMBER</code></em></dt>
 <dd>
 <p>Adjust the gap between the barcode and the Human Readable Text (HRT).
-<em>NUMBER</em> is in X-dimensions, and may be floating-point. Maximum
-is 10 and minimum is -5. The default is 1.</p>
+<em><code>NUMBER</code></em> is in X-dimensions, and may be
+floating-point. Maximum is 10 and minimum is -5. The default is 1.</p>
 </dd>
-<dt><code>--verbose</code></dt>
+<dt><strong><code>--verbose</code></strong></dt>
 <dd>
 <p>Output debug information to stdout.</p>
 </dd>
-<dt><code>--vers=INTEGER</code></dt>
+<dt><strong><code>--vers=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>Set the symbol version (size, check digits, other options) to
-<em>INTEGER</em>. The meaning is symbol-specific.</p>
+<em><code>INTEGER</code></em>. The meaning is symbol-specific.</p>
 <p>For most matrix symbols, it specifies size:</p>
 <pre><code>Aztec Code      1 to 36 (1 to 4 compact)
         1   15x15     13  53x53     25  105x105
@@ -9852,29 +9937,35 @@ MSI Plessey     0 to 6 (none to various visible options)
                 3, 4   (mod-11 IBM, mod-11 IBM + mod-10)
                 5, 6   (mod-11 NCR, mod-11 NCR + mod-10)
                 +10    (hide)</code></pre>
-<p>For a few other symbologies, it specifies other characteristics:</p>
+<p>For some other symbologies, it specifies other characteristics:</p>
 <pre><code>Channel Code    3 to 8    (no. of channels)
 DAFT            50 to 900 (permille tracker ratio)
 DPD             1         (relabel)
 PZN             1         (PZN7 instead of default PZN8)
+Telepen         1         (use AIM-defined Start/Stop)
+Telepen Numeric 1         (use AIM-defined Start/Stop)
 Ultracode       2         (revision 2)
 VIN             1         (add international prefix)</code></pre>
 </dd>
-<dt><code>-v</code>, <code>--version</code></dt>
+<dt><strong><code>-v</code></strong>,
+<strong><code>--version</code></strong></dt>
 <dd>
 <p>Display zint version.</p>
 </dd>
-<dt><code>--vwhitesp=INTEGER</code></dt>
+<dt><strong><code>--vwhitesp=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>Set the height of vertical whitespace above and below the barcode,
-where <em>INTEGER</em> is in integral multiples of the X-dimension.</p>
+where <em><code>INTEGER</code></em> is in integral multiples of the
+X-dimension.</p>
 </dd>
-<dt><code>-w</code>, <code>--whitesp=INTEGER</code></dt>
+<dt><strong><code>-w</code></strong> <em><code>INTEGER</code></em>,
+<strong><code>--whitesp=</code></strong><em><code>INTEGER</code></em></dt>
 <dd>
 <p>Set the width of horizontal whitespace either side of the barcode,
-where <em>INTEGER</em> is in integral multiples of the X-dimension.</p>
+where <em><code>INTEGER</code></em> is in integral multiples of the
+X-dimension.</p>
 </dd>
-<dt><code>--werror</code></dt>
+<dt><strong><code>--werror</code></strong></dt>
 <dd>
 <p>Convert all warnings into errors.</p>
 </dd>
@@ -9983,14 +10074,19 @@ from</p>
 <h2 id="conforming-to">CONFORMING TO</h2>
 <p>Zint is designed to be compliant with a number of international
 standards, including:</p>
-<p>ISO/IEC 24778:2024, ANSI/AIM BC12-1998, EN 798:1996, AIM ISS-X-24
-(1995), ISO/IEC 15417:2007, EN 12323:2005, ISO/IEC 16388:2023, ANSI/AIM
-BC6-2000, ANSI/AIM BC5-1995, AIM USS Code One (1994), ISO/IEC
-16022:2024, ISO/IEC 21471:2019, ISO/IEC 15420:2009, AIMD014 (v 1.63)
-(2008), ISO/IEC 24723:2010, ISO/IEC 24724:2011, ISO/IEC 20830:2021,
-ISO/IEC 16390:2007, ISO/IEC 16023:2000, ISO/IEC 24728:2006, ISO/IEC
-15438:2015, ISO/IEC 18004:2024, ISO/IEC 23941:2022, AIM ITS/04-023
-(2022)</p>
+<p>ISO/IEC 24778:2024 (Aztec Code), SEMI T1-95 (1996) (BC412), ANSI/AIM
+BC12-1998 (Channel Code), EN 798:1996 (Codabar), AIM ISS-X-24 (1995)
+(Codablock F), ISO/IEC 15417:2007 (Code 128), EN 12323:2005 (Code 16K),
+ISO/IEC 16388:2023 (Code 39), ANSI/AIM BC6-2000 (Code 49), ANSI/AIM
+BC5-1995 (Code 93), AIM USS Code One (1994), ISO/IEC 16022:2024 (Data
+Matrix), ISO/IEC 21471:2025 (DMRE), AIM TSC1705001 (2019) (DotCode),
+ISO/IEC 15420:2025 (EAN/UPC), AIMD014 (v 1.63) (2008) (Grid Matrix),
+ISO/IEC 24723:2010 (GS1 Composite), ISO/IEC 24724:2011 (GS1 DataBar),
+ISO/IEC 20830:2021 (Han Xin Code), ISO/IEC 16390:2007 (Interleaved 2 of
+5), ISO/IEC 16023:2000 (MaxiCode), ISO/IEC 24728:2006 (MicroPDF417),
+ISO/IEC 15438:2015 (PDF417), ISO/IEC 18004:2024 (QR Code), ISO/IEC
+23941:2022 (rMQR), AIM Europe X-25 (1991) (Telepen), AIMD/TSC15032-43
+(2015) (Ultracode)</p>
 <h2 id="copyright">COPYRIGHT</h2>
 <p>Copyright © 2026 Robin Stuart. Released under GNU GPL 3.0 or
 later.</p>
