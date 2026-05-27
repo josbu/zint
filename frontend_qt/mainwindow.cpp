@@ -195,7 +195,7 @@ static const struct bstyle_item bstyle_items[] = {
     { QSL("Royal Mail 2D Mailmark (CMDM) (Data Matrix)"), BARCODE_MAILMARK_2D },
     { QSL("Royal Mail 4-state Customer Code (RM4SCC)"), BARCODE_RM4SCC },
     { QSL("Royal Mail 4-state Mailmark"), BARCODE_MAILMARK_4S },
-    { QSL("Telepen"), BARCODE_TELEPEN },
+    { QSL("Telepen Alpha"), BARCODE_TELEPEN },
     { QSL("Telepen Numeric"), BARCODE_TELEPEN_NUM },
     { QSL("UK Plessey"), BARCODE_PLESSEY },
     { QSL("Ultracode"), BARCODE_ULTRA },
