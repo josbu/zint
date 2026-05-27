@@ -579,7 +579,7 @@ Paintbrush (`PCX`), Portable Network Format (`PNG`), Scalable Vector Graphic (`S
         DAFT            50 to 900 (permille tracker ratio)
         DPD             1         (relabel)
         PZN             1         (PZN7 instead of default PZN8)
-        Telepen         1         (use AIM-defined Start/Stop)
+        Telepen Alpha   1         (use AIM-defined Start/Stop)
         Telepen Numeric 1         (use AIM-defined Start/Stop)
         Ultracode       2         (revision 2)
         VIN             1         (add international prefix)

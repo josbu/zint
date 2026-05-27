@@ -5124,12 +5124,12 @@ alt="zint -b TELEPEN --compliantheight -d &quot;Z8000&quot;" />
 <figcaption><span class="figure-label">Figure 55:</span>
 <code>zint -b TELEPEN --compliantheight -d "Z8000"</code></figcaption>
 </figure>
-<p>Full ASCII + Compressed Numeric Mode, which uses different
-AIM-defined Start/Stop characters, may be enabled by setting
+<p>AIM-defined Start/Stop characters may be enabled by setting
 <code>--vers=1</code> (API <code>option_2 = 1</code>). In this mode
 control character <code>DLE</code> (ASCII 16, escape sequence
 <code>\L</code>) indicates a switch from Full ASCII to Compressed
-Numeric, where each symbol character encodes a digit pair:</p>
+Numeric, where each symbol character encodes a digit pair (or a “digit
+X” pair - see Telepen Numeric below):</p>
 <figure>
 <img src="images/telepen_aim.svg" class="lin"
 alt="zint -b TELEPEN --compliantheight -d &quot;Z\L8000&quot; -esc --vers=1" />
@@ -5140,40 +5140,41 @@ alt="zint -b TELEPEN --compliantheight -d &quot;Z\L8000&quot; -esc --vers=1" />
 using.</p>
 <h4 id="telepen-numeric">6.1.6.2 Telepen Numeric</h4>
 <p>Telepen Numeric allows compression of numeric data into a Telepen
-symbol. Data can consist of pairs of numbers or pairs consisting of a
-numerical digit followed an X character. For example: 466333 and 466X33
-are valid codes whereas 46X333 is not (the digit pair <code>"X3"</code>
-is not valid). Up to 138 digits can be encoded. Telepen Numeric includes
-a hidden modulo-127 check digit which is added by Zint.</p>
+symbol. Data consists of pairs of digits or pairs of “digit X” - a digit
+followed an X character. For example: <code>"466333"</code> and
+<code>"466X33"</code> are valid codes whereas <code>"46X333"</code> is
+not (the pair <code>"X3"</code> is not valid). If an odd number of
+digits is supplied, Zint will add a leading zero. Up to 138 digits can
+be encoded. A hidden modulo-127 check digit is added by Zint.</p>
 <figure>
 <img src="images/telepen_num.svg" class="lin"
 alt="zint -b TELEPEN_NUM --compliantheight -d &quot;466X33&quot;" />
 <figcaption><span class="figure-label">Figure 57:</span>
 <code>zint -b TELEPEN_NUM --compliantheight -d "466X33"</code></figcaption>
 </figure>
-<p>Trailing ASCII characters may also be encoded by prefixing them with
-a <code>DLE</code> control character (ASCII 16, escape sequence
-<code>\L</code>) and appending them to the numeric data:</p>
+<p>Additionally trailing ASCII characters may be encoded by prefixing
+them with a <code>DLE</code> control character (ASCII 16, escape
+sequence <code>\L</code>) and appending them to the numeric data:</p>
 <figure>
 <img src="images/telepen_num_asc.svg" class="lin"
-alt="zint -b TELEPEN_NUM --compliantheight -d &quot;12\LAB&quot; –esc" />
+alt="zint -b TELEPEN_NUM --compliantheight -d &quot;12\LAB&quot; --esc" />
 <figcaption><span class="figure-label">Figure 58:</span>
-<code>zint -b TELEPEN_NUM --compliantheight -d "12\LAB"</code>
-–esc</figcaption>
+<code>zint -b TELEPEN_NUM --compliantheight -d "12\LAB" --esc</code></figcaption>
 </figure>
 <p>This method allows odd numbers to be encoded without a leading
 zero:</p>
 <figure>
 <img src="images/telepen_num_odd.svg" class="lin"
-alt="zint -b TELEPEN_NUM --compliantheight -d &quot;123\L4&quot; –esc" />
+alt="zint -b TELEPEN_NUM --compliantheight -d &quot;123\L4&quot; --esc" />
 <figcaption><span class="figure-label">Figure 59:</span>
-<code>zint -b TELEPEN_NUM --compliantheight -d "123\L4"</code>
-–esc</figcaption>
+<code>zint -b TELEPEN_NUM --compliantheight -d "123\L4" --esc</code></figcaption>
 </figure>
 <p>AIM-defined Start/Stop characters may be enabled by setting
 <code>--vers=1</code> (API <code>option_2 = 1</code>). This allows
-barcode readers that recognise them to detect Compressed Numeric data
-automatically.</p>
+barcode readers to detect Compressed Numeric data automatically, but
+check that your reader recognises them before using. Note that trailing
+ASCII can be used without enabling this mode, unlike in the Telepen
+Alpha case for trailing Compressed Numerics.</p>
 <h3 id="code-39">6.1.7 Code 39</h3>
 <h4 id="standard-code-39-iso-16388">6.1.7.1 Standard Code 39 (ISO
 16388)</h4>
@@ -9942,7 +9943,7 @@ MSI Plessey     0 to 6 (none to various visible options)
 DAFT            50 to 900 (permille tracker ratio)
 DPD             1         (relabel)
 PZN             1         (PZN7 instead of default PZN8)
-Telepen         1         (use AIM-defined Start/Stop)
+Telepen Alpha   1         (use AIM-defined Start/Stop)
 Telepen Numeric 1         (use AIM-defined Start/Stop)
 Ultracode       2         (revision 2)
 VIN             1         (add international prefix)</code></pre>
@@ -10085,7 +10086,7 @@ ISO/IEC 24723:2010 (GS1 Composite), ISO/IEC 24724:2011 (GS1 DataBar),
 ISO/IEC 20830:2021 (Han Xin Code), ISO/IEC 16390:2007 (Interleaved 2 of
 5), ISO/IEC 16023:2000 (MaxiCode), ISO/IEC 24728:2006 (MicroPDF417),
 ISO/IEC 15438:2015 (PDF417), ISO/IEC 18004:2024 (QR Code), ISO/IEC
-23941:2022 (rMQR), AIM Europe X-25 (1991) (Telepen), AIMD/TSC15032-43
+23941:2022 (rMQR), AIM Europe X-25 USS Telepen (1991), AIMD/TSC15032-43
 (2015) (Ultracode)</p>
 <h2 id="copyright">COPYRIGHT</h2>
 <p>Copyright © 2026 Robin Stuart. Released under GNU GPL 3.0 or

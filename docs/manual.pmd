@@ -3333,11 +3333,11 @@ hidden modulo-127 check digit, added by Zint.
 
 ![`zint -b TELEPEN --compliantheight -d "Z8000"`](images/telepen.svg){.lin}
 
-Full ASCII + Compressed Numeric Mode, which uses different AIM-defined
-Start/Stop characters, may be enabled by setting `--vers=1` (API
+AIM-defined Start/Stop characters may be enabled by setting `--vers=1` (API
 `option_2 = 1`). In this mode control character `DLE` (ASCII 16, escape sequence
 `\L`) indicates a switch from Full ASCII to Compressed Numeric, where each
-symbol character encodes a digit pair:
+symbol character encodes a digit pair (or a "digit X" pair - see Telepen Numeric
+below):
 
 ![`zint -b TELEPEN --compliantheight -d
 "Z\L8000" -esc --vers=1`](images/telepen_aim.svg){.lin}
@@ -3346,31 +3346,33 @@ However not all barcode readers recognise this mode so check before using.
 
 #### 6.1.6.2 Telepen Numeric
 
-Telepen Numeric allows compression of numeric data into a Telepen symbol. Data
-can consist of pairs of numbers or pairs consisting of a numerical digit
-followed an X character. For example: 466333 and 466X33 are valid codes whereas
-46X333 is not (the digit pair `"X3"` is not valid). Up to 138 digits can be
-encoded. Telepen Numeric includes a hidden modulo-127 check digit which is added
-by Zint.
+Telepen Numeric allows compression of numeric data into a Telepen symbol.
+Data consists of pairs of digits or pairs of "digit X" - a digit followed an X
+character. For example: `"466333"` and `"466X33"` are valid codes whereas
+`"46X333"` is not (the pair `"X3"` is not valid). If an odd number of digits is
+supplied, Zint will add a leading zero. Up to 138 digits can be encoded. A
+hidden modulo-127 check digit is added by Zint.
 
 ![`zint -b TELEPEN_NUM --compliantheight -d
 "466X33"`](images/telepen_num.svg){.lin}
 
-Trailing ASCII characters may also be encoded by prefixing them with a `DLE`
-control character (ASCII 16, escape sequence `\L`) and appending them to the
-numeric data:
+Additionally trailing ASCII characters may be encoded by prefixing them with a
+`DLE` control character (ASCII 16, escape sequence `\L`) and appending them to
+the numeric data:
 
 ![`zint -b TELEPEN_NUM --compliantheight -d
-"12\LAB"` --esc](images/telepen_num_asc.svg){.lin}
+"12\LAB" --esc`](images/telepen_num_asc.svg){.lin}
 
 This method allows odd numbers to be encoded without a leading zero:
 
 ![`zint -b TELEPEN_NUM --compliantheight -d
-"123\L4"` --esc](images/telepen_num_odd.svg){.lin}
+"123\L4" --esc`](images/telepen_num_odd.svg){.lin}
 
 AIM-defined Start/Stop characters may be enabled by setting `--vers=1` (API
-`option_2 = 1`). This allows barcode readers that recognise them to detect
-Compressed Numeric data automatically.
+`option_2 = 1`). This allows barcode readers to detect Compressed Numeric data
+automatically, but check that your reader recognises them before using. Note
+that trailing ASCII can be used without enabling this mode, unlike in the
+Telepen Alpha case for trailing Compressed Numerics.
 
 ### 6.1.7 Code 39
 
