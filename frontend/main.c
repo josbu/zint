@@ -627,7 +627,9 @@ static int get_barcode_name(const char *const barcode_name) {
         { BARCODE_DBAR_LTD_CC, "rssltdcc" }, /* Synonym */
         { BARCODE_C25STANDARD, "standardcode2of5" }, /* Synonym */
         { BARCODE_TELEPEN, "telepen" },
+        { BARCODE_TELEPEN, "telepenalpha" }, /* Synonym */
         { BARCODE_TELEPEN_NUM, "telepennum" },
+        { BARCODE_TELEPEN_NUM, "telepennumeric" }, /* Synonym */
         { BARCODE_ULTRA, "ultra" },
         { BARCODE_ULTRA, "ultracode" }, /* Synonym */
         { BARCODE_UPCA, "upca" },

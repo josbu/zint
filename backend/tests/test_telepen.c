@@ -457,6 +457,9 @@ static void test_encode(const testCtx *const p_ctx) {
         /* 13*/ { BARCODE_TELEPEN_NUM, -1, "3637", -1, 0, 1, 80, "Glyph count 127, check 0; verified manually against TEC-IT",
                     "10101010101110001010101010101110111011101110101011101110111011101110001010101010"
                 },
+        /* 14*/ { BARCODE_TELEPEN_NUM, -1, "12\0203", -1, 0, 1, 96, "",
+                    "101010101011100010101011101011101110111010111010101011101010111010111000101110101110001010101010"
+                },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;

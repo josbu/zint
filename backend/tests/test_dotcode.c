@@ -46,22 +46,22 @@ static void test_large(const testCtx *const p_ctx) {
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     static const struct item data[] = {
-        /*  0*/ { 200, '0', 2940, 0, "", 1, 1, "" }, /* 2940 largest Code Set C data that fits in 200x199 HxW */
+        /*  0*/ { 200, '0', 2940, 0, "", 0, 1, "2940 largest Code Set C data that fits in 200x199 HxW; BWIPP limit now 2000 TODO: suggest change to BWIPP" },
         /*  1*/ { 200, '0', 2941, ZINT_ERROR_INVALID_OPTION, "Error 735: Resulting symbol height '201' is too large (maximum 200)", 1, 1, "" },
-        /*  2*/ { 200, '9', 200, 0, "", 1, 1, "" }, /* Changes a number of mask scores re pre-Rev. 4 version, but best score still the same (7) */
-        /*  3*/ { 200, '0', 2974, ZINT_ERROR_INVALID_OPTION, "Error 735: Resulting symbol height '203' is too large (maximum 200)", 1, 1, "" }, /* Width > 200 also */
+        /*  2*/ { 200, '9', 200, 0, "", 1, 1, "Changes a number of mask scores re pre-Rev. 4 version, but best score still the same (7)" },
+        /*  3*/ { 200, '0', 2974, ZINT_ERROR_INVALID_OPTION, "Error 735: Resulting symbol height '203' is too large (maximum 200)", 1, 1, "Width > 200 also" },
         /*  4*/ { 200, 'A', 1470, 0, "", 1, 1, "" },
         /*  5*/ { 200, 'A', 1471, ZINT_ERROR_INVALID_OPTION, "Error 735: Resulting symbol height '201' is too large (maximum 200)", 1, 1, "" },
-        /*  6*/ { 200, '\240', 1225, 0, "", 0, 899, "BWIPP limit now 4000 (== 1000 with caret escaping) TODO: suggest change to BWIPP" },
+        /*  6*/ { 200, '\240', 1225, 0, "", 0, 899, "BWIPP limit now 2000 (== 500 with caret escaping) TODO: suggest change to BWIPP" },
         /*  7*/ { 200, '\240', 1226, ZINT_ERROR_INVALID_OPTION, "Error 735: Resulting symbol height '201' is too large (maximum 200)", 1, 899, "" },
-        /*  8*/ { 200, '0', 1, 0, "", 1, 1, "" }, /* Padding codewords 35 - probably max */
-        /*  9*/ { 200, '0', 2, 0, "", 1, 1, "" }, /* Padding codewords 35 */
-        /* 10*/ { 30, '\001', 71, 0, "", 1, 1, "" }, /* Codeword length 72, ECC length 39, for ND + 1 == 112 */
+        /*  8*/ { 200, '0', 1, 0, "", 1, 1, "Padding codewords 35 - probably max" },
+        /*  9*/ { 200, '0', 2, 0, "", 1, 1, "Padding codewords 35" },
+        /* 10*/ { 30, '\001', 71, 0, "", 1, 1, "Codeword length 72, ECC length 39, for ND + 1 == 112" },
         /* 11*/ { -1, '0', 1968, 0, "", 1, 1, "" },
         /* 12*/ { -1, '0', 1969, ZINT_ERROR_INVALID_OPTION, "Error 528: Resulting symbol width '201' is too large (maximum 200)", 1, 1, "" },
         /* 13*/ { -1, 'A', 984, 0, "", 1, 1, "" },
         /* 14*/ { -1, 'A', 985, ZINT_ERROR_INVALID_OPTION, "Error 528: Resulting symbol width '201' is too large (maximum 200)", 1, 1, "" },
-        /* 15*/ { -1, '\240', 820, 0, "", 1, 899, "" },
+        /* 15*/ { -1, '\240', 820, 0, "", 0, 899, "BWIPP limit now 2000 (== 500 with caret escaping) TODO: suggest change to BWIPP" },
         /* 16*/ { -1, '\240', 821, ZINT_ERROR_INVALID_OPTION, "Error 528: Resulting symbol width '201' is too large (maximum 200)", 1, 899, "" },
     };
     const int data_size = ARRAY_SIZE(data);
