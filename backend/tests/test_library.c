@@ -599,6 +599,45 @@ static void test_symbologies(const testCtx *const p_ctx) {
     testFinish();
 }
 
+static void test_legacy_symbologies(const testCtx *const p_ctx) {
+    struct item {
+        int symbology;
+        int legacy;
+    };
+    static const struct item data[] = {
+        { BARCODE_C25MATRIX,       BARCODE_C25STANDARD },
+        { BARCODE_EAN128,          BARCODE_GS1_128 },
+        { BARCODE_RSS14,           BARCODE_DBAR_OMN },
+        { BARCODE_RSS_LTD,         BARCODE_DBAR_LTD },
+        { BARCODE_RSS_EXP,         BARCODE_DBAR_EXP },
+        { BARCODE_PDF417TRUNC,     BARCODE_PDF417COMP },
+        { BARCODE_CODE128B,        BARCODE_CODE128AB },
+        { BARCODE_RSS14STACK,      BARCODE_DBAR_STK },
+        { BARCODE_RSS14STACK_OMNI, BARCODE_DBAR_OMNSTK },
+        { BARCODE_RSS_EXPSTACK,    BARCODE_DBAR_EXPSTK },
+        { BARCODE_ONECODE,         BARCODE_USPS_IMAIL },
+        { BARCODE_MAILMARK,        BARCODE_MAILMARK_4S },
+        { BARCODE_EAN128_CC,       BARCODE_GS1_128_CC },
+        { BARCODE_RSS14_CC,        BARCODE_DBAR_OMN_CC },
+        { BARCODE_RSS_LTD_CC,      BARCODE_DBAR_LTD_CC },
+        { BARCODE_RSS_EXP_CC,      BARCODE_DBAR_EXP_CC },
+        { BARCODE_RSS14STACK_CC,   BARCODE_DBAR_STK_CC },
+        { BARCODE_RSS14_OMNI_CC,   BARCODE_DBAR_OMNSTK_CC },
+        { BARCODE_RSS_EXPSTACK_CC, BARCODE_DBAR_EXPSTK_CC },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i;
+
+    testStart(p_ctx->func_name);
+
+    for (i = 0; i < data_size; i++) {
+        assert_equal(data[i].symbology, data[i].legacy, "i:%d symbology %d (%s) != legacy %d\n",
+                        i, data[i].symbology, testUtilBarcodeName(data[i].symbology), data[i].legacy);
+    }
+
+    testFinish();
+}
+
 static void test_input_mode(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
@@ -3103,6 +3142,7 @@ int main(int argc, char *argv[]) {
         { "test_checks_segs", test_checks_segs },
         { "test_input_data", test_input_data },
         { "test_symbologies", test_symbologies },
+        { "test_legacy_symbologies", test_legacy_symbologies },
         { "test_input_mode", test_input_mode },
         { "test_escape_char_process", test_escape_char_process },
         { "test_escape_char_process_test", test_escape_char_process_test },
