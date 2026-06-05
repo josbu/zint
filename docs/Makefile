@@ -163,7 +163,7 @@ PDF_OPTS = --pdf-engine=xelatex \
 			-V csquotes=true --dpi=300
 TEX_MAN_PAGE = zint.1.tex
 TXT_OPTS = --lua-filter=$(LUA_FILTER) \
-			--columns 80 --eol=lf -t plain
+			--columns 80 --eol=lf -t plain+four_space_rule
 MAN_PAGE_OPTS = -s -t man
 
 all : $(OUT_PDF) $(OUT_TXT) $(OUT_MAN_PAGE) $(OUT_QT_MAN_PAGE) $(OUT_HTML)

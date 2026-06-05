@@ -334,7 +334,7 @@
 <h1 class="title">Zint Barcode Generator and Zint Barcode Studio User
 Manual</h1>
 <p class="author">Version 2.16.0.9</p>
-<p class="date">May 2026</p>
+<p class="date">June 2026</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -2957,113 +2957,120 @@ alt="zint -b QRCODE --binary -d &quot;\xE2\x82\xAC\xE5\xB8\xB8&quot; --esc" />
 <h3 id="gs1-data-entry-and-options">4.11.3 GS1 Data Entry and
 Options</h3>
 <p>The following symbologies accept GS1 data:</p>
-<table>
+<table style="width:82%;">
 <caption><span class="table-label">Table 10:</span> GS1-Enabled
 Symbologies</caption>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 18%" />
+</colgroup>
 <thead>
 <tr>
 <th style="text-align: left;">Symbology</th>
-<th>Implicit AI?</th>
-<th>Assumed?</th>
-<th>Supports Composite?</th>
+<th style="text-align: left;">Implicit AI?</th>
+<th>GS1 Data Assumed?</th>
+<th style="text-align: left;">Supports GS1 Composite?</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: left;">Aztec Code</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">Code 16K</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">Code 49</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">Code One</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">Data Matrix</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">DotCode</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">EAN-13, EAN-8</td>
-<td>Yes (01)</td>
+<td style="text-align: left;">Yes (01)</td>
 <td>Yes</td>
-<td>Yes</td>
+<td style="text-align: left;">Yes</td>
 </tr>
 <tr>
 <td style="text-align: left;">EAN-14</td>
-<td>Yes (01)</td>
+<td style="text-align: left;">Yes (01)</td>
 <td>Yes</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">GS1-128</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 <td>Yes</td>
-<td>Yes</td>
+<td style="text-align: left;">Yes</td>
 </tr>
 <tr>
-<td style="text-align: left;">GS1 DataBar Expanded (Stacked)</td>
-<td>No</td>
+<td style="text-align: left;">GS1 DataBar Expanded (including
+Stacked)</td>
+<td style="text-align: left;">No</td>
 <td>Yes</td>
-<td>Yes</td>
+<td style="text-align: left;">Yes</td>
 </tr>
 <tr>
 <td style="text-align: left;">GS1 DataBar (all others)</td>
-<td>Yes (01)</td>
+<td style="text-align: left;">Yes (01)</td>
 <td>Yes</td>
-<td>Yes</td>
+<td style="text-align: left;">Yes</td>
 </tr>
 <tr>
 <td style="text-align: left;">NVE-18</td>
-<td>Yes (00)</td>
+<td style="text-align: left;">Yes (00)</td>
 <td>Yes</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">QR Code</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">rMQR</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">Ultracode</td>
+<td style="text-align: left;">No</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td style="text-align: left;">No</td>
 </tr>
 <tr>
 <td style="text-align: left;">UPC-A, UPC-E</td>
-<td>Yes (01)</td>
+<td style="text-align: left;">Yes (01)</td>
 <td>Yes</td>
-<td>Yes</td>
+<td style="text-align: left;">Yes</td>
 </tr>
 </tbody>
 </table>
@@ -3078,13 +3085,13 @@ distinguish AIs.</p>
 <p>The traditional way in Zint of specifying GS1 data for these cases is
 to delimit the GS1 AIs in square brackets:</p>
 <div class="sourceCode" id="cb48"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;[01]09520123456788[10]BATCH4[21]07&quot;</span> <span class="at">--gs1</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;[01]09520123456788[10]BCH4[21]07&quot;</span> <span class="at">--gs1</span></span></code></pre></div>
 <p>(Note that for the matrix symbologies the <code>--gs1</code> option
 must be given.)</p>
 <p>Parentheses (round brackets) may be used instead by giving the
 <code>--gs1parens</code> option:</p>
 <div class="sourceCode" id="cb49"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;(01)09520123456788(10)BATCH4(21)07&quot;</span> <span class="at">--gs1parens</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;(01)09520123456788(10)BCH4(21)07&quot;</span> <span class="at">--gs1parens</span></span></code></pre></div>
 <p>If the data includes opening parentheses when using the latter
 format, they must be escaped and the <code>--esc</code> option
 given:</p>
@@ -3093,7 +3100,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href=
 <p>Closing parentheses may also be escaped for clarity.</p>
 <p>For matrix symbologies, a GS1 Digital Link URI may be used:</p>
 <div class="sourceCode" id="cb51"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;https://example.com/01/09520123456788/10/BATCH4/21/07&quot;</span> <span class="at">--gs1</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;https://example.com/01/09520123456788/10/BCH4/21/07&quot;</span> <span class="at">--gs1</span></span></code></pre></div>
 <p>A further way to specify GS1 input is “Unbracketed AI”, a GS1 Syntax
 Engine format<a href="#fn10" class="footnote-ref" id="fnref10"
 role="doc-noteref"><sup>10</sup></a> that uses carets (<code>^</code>)
@@ -3101,13 +3108,13 @@ to indicate any required <code>FNC1</code>s.<a href="#fn11"
 class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>
 The data must start with a caret:</p>
 <div class="sourceCode" id="cb52"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;^010952012345678810BATCH4^2107&quot;</span> <span class="at">--gs1</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;^010952012345678810BCH4^2107&quot;</span> <span class="at">--gs1</span></span></code></pre></div>
 <p>The final way to specify input is the related “raw” mode using the
 <code>--gs1raw</code> option. Here <code>FNC1</code>s are indicated by
 Group Separators (<code>GS</code>, ASCII 29, escape sequence
 <code>\G</code>). It does not start with a <code>GS</code>:</p>
 <div class="sourceCode" id="cb53"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;010952012345678810BATCH4\G2107&quot;</span> <span class="at">--esc</span> <span class="at">--gs1raw</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zint</span> <span class="at">-b</span> AZTEC <span class="at">-d</span> <span class="st">&quot;010952012345678810BCH4\G2107&quot;</span> <span class="at">--esc</span> <span class="at">--gs1raw</span></span></code></pre></div>
 <h4 id="gs1-options">4.11.3.2 GS1 Options</h4>
 <p>Apart from <code>--gs1</code>, <code>--gs1parens</code> and
 <code>--gs1raw</code> discussed above, there are two other GS1

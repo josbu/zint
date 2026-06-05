@@ -1,6 +1,6 @@
 % Zint Barcode Generator and Zint Barcode Studio User Manual
 % Version 2.16.0.9
-% May 2026
+% June 2026
 
 [//]: # ( vim: set ts=4 sw=4 et : )
 
@@ -1508,24 +1508,43 @@ zint -b QRCODE --binary -d "UTF-8 data"
 
 The following symbologies accept GS1 data:
 
-Symbology                       Implicit AI?  Assumed?  Supports Composite?
--------------                   ------------  --------  -------------------
-Aztec Code                      No            No        No
-Code 16K                        No            No        No
-Code 49                         No            No        No
-Code One                        No            No        No
-Data Matrix                     No            No        No
-DotCode                         No            No        No
-EAN-13, EAN-8                   Yes (01)      Yes       Yes
-EAN-14                          Yes (01)      Yes       No
-GS1-128                         No            Yes       Yes
-GS1 DataBar Expanded (Stacked)  No            Yes       Yes
-GS1 DataBar (all others)        Yes (01)      Yes       Yes
-NVE-18                          Yes (00)      Yes       No
-QR Code                         No            No        No
-rMQR                            No            No        No
-Ultracode                       No            No        No
-UPC-A, UPC-E                    Yes (01)      Yes       Yes
+----------------------------------------------------------
+Symbology                 Implicit  GS1 Data  Supports GS1
+                          AI?       Assumed?  Composite?
+-------------             --------  --------  ------------
+Aztec Code                No        No        No
+
+Code 16K                  No        No        No
+
+Code 49                   No        No        No
+
+Code One                  No        No        No
+
+Data Matrix               No        No        No
+
+DotCode                   No        No        No
+
+EAN-13, EAN-8             Yes (01)  Yes       Yes
+
+EAN-14                    Yes (01)  Yes       No
+
+GS1-128                   No        Yes       Yes
+
+GS1 DataBar Expanded      No        Yes       Yes
+(including Stacked)
+
+GS1 DataBar (all others)  Yes (01)  Yes       Yes
+
+NVE-18                    Yes (00)  Yes       No
+
+QR Code                   No        No        No
+
+rMQR                      No        No        No
+
+Ultracode                 No        No        No
+
+UPC-A, UPC-E              Yes (01)  Yes       Yes
+----------------------------------------------------------
 
 Table: GS1-Enabled Symbologies
 
@@ -1542,7 +1561,7 @@ The traditional way in Zint of specifying GS1 data for these cases is to delimit
 the GS1 AIs in square brackets:
 
 ```bash
-zint -b AZTEC -d "[01]09520123456788[10]BATCH4[21]07" --gs1
+zint -b AZTEC -d "[01]09520123456788[10]BCH4[21]07" --gs1
 ```
 
 (Note that for the matrix symbologies the `--gs1` option must be given.)
@@ -1551,7 +1570,7 @@ Parentheses (round brackets) may be used instead by giving the `--gs1parens`
 option:
 
 ```bash
-zint -b AZTEC -d "(01)09520123456788(10)BATCH4(21)07" --gs1parens
+zint -b AZTEC -d "(01)09520123456788(10)BCH4(21)07" --gs1parens
 ```
 
 If the data includes opening parentheses when using the latter format, they must
@@ -1566,7 +1585,7 @@ Closing parentheses may also be escaped for clarity.
 For matrix symbologies, a GS1 Digital Link URI may be used:
 
 ```bash
-zint -b AZTEC -d "https://example.com/01/09520123456788/10/BATCH4/21/07" --gs1
+zint -b AZTEC -d "https://example.com/01/09520123456788/10/BCH4/21/07" --gs1
 ```
 
 A further way to specify GS1 input is "Unbracketed AI", a GS1 Syntax Engine
@@ -1574,7 +1593,7 @@ format[^10] that uses carets (`^`) to indicate any required `FNC1`s.[^11] The
 data must start with a caret:
 
 ```bash
-zint -b AZTEC -d "^010952012345678810BATCH4^2107" --gs1
+zint -b AZTEC -d "^010952012345678810BCH4^2107" --gs1
 ```
 
 [^10]: For more information on the "Unbracketed AI" format for GS1 data entry,
@@ -1594,7 +1613,7 @@ option. Here `FNC1`s are indicated by Group Separators (`GS`, ASCII 29, escape
 sequence `\G`). It does not start with a `GS`:
 
 ```bash
-zint -b AZTEC -d "010952012345678810BATCH4\G2107" --esc --gs1raw
+zint -b AZTEC -d "010952012345678810BCH4\G2107" --esc --gs1raw
 ```
 
 #### 4.11.3.2 GS1 Options
