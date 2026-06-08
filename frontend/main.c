@@ -411,6 +411,12 @@ static void to_lower(char source[]) {
     }
 }
 
+/* Whether `symbology` can have composite 2D component data (copy of `z_is_composite()` from "common.c") */
+static int is_composite(const int symbology) {
+    return (symbology >= BARCODE_EANX_CC && symbology <= BARCODE_DBAR_EXPSTK_CC)
+            || symbology == BARCODE_EAN8_CC || symbology == BARCODE_EAN13_CC;
+}
+
 /* Return symbology id if `barcode_name` a barcode name */
 #ifdef ZINT_TEST
 static int get_barcode_name(const char *const barcode_name, const int test) {
@@ -2341,6 +2347,12 @@ int main(int argc, char **argv) {
         if (output_given && (my_symbol->output_options & BARCODE_STDOUT)) {
             my_symbol->output_options &= ~BARCODE_STDOUT;
             fprintf(stderr, "Warning 193: Output file given, '--direct' option **IGNORED**\n");
+            fflush(stderr);
+            warn_number = ZINT_WARN_INVALID_OPTION;
+        }
+        if (my_symbol->primary[0] && symbology != BARCODE_MAXICODE && !is_composite(symbology)) {
+            fprintf(stderr, "Warning 162: Primary '%s' given but not MaxiCode or GS1 Composite, **IGNORED**\n",
+                    my_symbol->primary);
             fflush(stderr);
             warn_number = ZINT_WARN_INVALID_OPTION;
         }

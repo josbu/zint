@@ -631,7 +631,8 @@ INTERNAL int z_is_upcean(const int symbology) {
 
 /* Whether `symbology` can have composite 2D component data */
 INTERNAL int z_is_composite(const int symbology) {
-    /* Note if change this must change "backend_qt/qzint.cpp" `takesGS1AIData()` also */
+    /* Note if change this must change "frontend/main.c" `is_composite()` and
+       "backend_qt/qzint.cpp" `takesGS1AIData()` also */
     return (symbology >= BARCODE_EANX_CC && symbology <= BARCODE_DBAR_EXPSTK_CC)
             || symbology == BARCODE_EAN8_CC || symbology == BARCODE_EAN13_CC;
 }
