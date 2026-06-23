@@ -55,20 +55,37 @@ static void test_isXXX(const testCtx *const p_ctx) {
 
     struct item {
         char ch;
+        int ret_isxdigit;
+        int ret_isalpha;
         int ret_isascii;
         int ret_iscntrl;
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     static const struct item data[] = {
-        /*  0*/ { '\177', 1, 1 }, /* DEL */
-        /*  1*/ { '\200', 0, 0 },
-        /*  3*/ { '\0', 1, 1 },
-        /*  3*/ { '\001', 1, 1 }, /* SOH */
-        /*  2*/ { '\t', 1, 1 },
-        /*  4*/ { '\037', 1, 1 }, /* US */
-        /*  5*/ { ' ', 1, 0 },
-        /*  6*/ { '!', 1, 0 },
-        /*  7*/ { '~', 1, 0 },
+        /*  0*/ { '0', 1, 0, 1, 0 },
+        /*  1*/ { '9', 1, 0, 1, 0 },
+        /*  2*/ { 'A', 1, 1, 1, 0 },
+        /*  3*/ { 'F', 1, 1, 1, 0 },
+        /*  4*/ { 'a', 1, 1, 1, 0 },
+        /*  5*/ { 'f', 1, 1, 1, 0 },
+        /*  6*/ { '\177', 0, 0, 1, 1 }, /* DEL */
+        /*  7*/ { '\200', 0, 0, 0, 0 },
+        /*  8*/ { '\377', 0, 0, 0, 0 },
+        /*  9*/ { '\0', 0, 0, 1, 1 },
+        /* 10*/ { '\001', 0, 0, 1, 1 }, /* SOH */
+        /* 11*/ { '\t', 0, 0, 1, 1 },
+        /* 12*/ { '\037', 0, 0, 1, 1 }, /* US */
+        /* 13*/ { ' ', 0, 0, 1, 0 },
+        /* 14*/ { '!', 0, 0, 1, 0 },
+        /* 15*/ { '~', 0, 0, 1, 0 },
+        /* 16*/ { '@', 0, 0, 1, 0 },
+        /* 17*/ { 'G', 0, 1, 1, 0 },
+        /* 18*/ { 'Z', 0, 1, 1, 0 },
+        /* 19*/ { '[', 0, 0, 1, 0 },
+        /* 20*/ { '`', 0, 0, 1, 0 },
+        /* 21*/ { 'g', 0, 1, 1, 0 },
+        /* 22*/ { 'z', 0, 1, 1, 0 },
+        /* 23*/ { '{', 0, 0, 1, 0 },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, ret;
@@ -78,6 +95,9 @@ static void test_isXXX(const testCtx *const p_ctx) {
     for (i = 0; i < data_size; i++) {
 
         if (testContinue(p_ctx, i)) continue;
+
+        ret = z_isxdigit(data[i].ch);
+        assert_equal(ret, data[i].ret_isxdigit, "i:%d isxdigit ret %d != %d\n", i, ret, data[i].ret_isxdigit);
 
         ret = z_isascii(data[i].ch);
         assert_equal(ret, data[i].ret_isascii, "i:%d isascii ret %d != %d\n", i, ret, data[i].ret_isascii);
@@ -1196,6 +1216,35 @@ static void test_hrt_conv_gs1_brackets_nochk(const testCtx *const p_ctx) {
     testFinish();
 }
 
+static void test_ct_init_segs(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+    int ret;
+
+    struct zint_symbol s_symbol = {0};
+    struct zint_symbol *symbol = &s_symbol;
+
+    testStart(p_ctx->func_name);
+
+    symbol->debug = debug;
+
+    ret = z_ct_init_segs(symbol, 1);
+    assert_zero(ret, "z_ct_init_segs %d != 0\n", ret);
+    ZBarcode_Clear(symbol);
+
+    ret = z_ct_init_segs(symbol, 1);
+    assert_zero(ret, "z_ct_init_segs %d != 0\n", ret);
+    ret = z_ct_init_segs(symbol, 2);
+    assert_zero(ret, "z_ct_init_segs %d != 0\n", ret);
+    ZBarcode_Clear(symbol);
+
+    zint_test_ct_set_fail(Z_CT_FAIL_ID_INIT_SEGS, 1);
+    ret = z_ct_init_segs(symbol, 1);
+    assert_equal(ret, ZINT_ERROR_MEMORY, "z_ct_init_segs %d != 0, ZINT_ERROR_MEMORY\n", ret);
+    zint_test_ct_set_fail(0, 0);
+
+    testFinish();
+}
+
 static void test_ct_cpy_segs(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
@@ -1678,6 +1727,7 @@ int main(int argc, char *argv[]) {
         { "test_hrt_cpy_cat_nochk", test_hrt_cpy_cat_nochk },
         { "test_hrt_printf_nochk", test_hrt_printf_nochk },
         { "test_hrt_conv_gs1_brackets_nochk", test_hrt_conv_gs1_brackets_nochk },
+        { "test_ct_init_segs", test_ct_init_segs },
         { "test_ct_cpy_segs", test_ct_cpy_segs },
         { "test_ct_set_seg_extra_escapes_eci", test_ct_set_seg_extra_escapes_eci },
         { "test_ct_cpy", test_ct_cpy },

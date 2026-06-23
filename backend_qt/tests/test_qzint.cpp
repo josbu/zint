@@ -94,8 +94,7 @@ private slots:
 
         std::vector<Zint::QZintSeg> segs;
         for (int i = 0; i < (int) segTexts.size(); i++) {
-            segs.push_back(Zint::QZintSeg(segTexts[i]));
-            segs.back().m_eci = segECIs[i];
+            segs.push_back({segTexts[i], Zint::QZint::ECIValueToECIIndex(segECIs[i])});
         }
 
         bc.setSegs(segs);
@@ -191,11 +190,16 @@ private slots:
         for (int i = 0; i < ARRAY_SIZE(borderTypes); i++) {
             bc.setBorderType(i);
             QCOMPARE(bc.borderType(), borderTypes[i]);
+
+            bc.setBorderTypeValue(borderTypes[i]);
+            QCOMPARE(bc.borderType(), borderTypes[i]);
         }
 
         int borderWidth = 4;
         bc.setBorderWidth(borderWidth);
         QCOMPARE(bc.borderWidth(), borderWidth);
+        bc.setBorderWidth(-1);
+        QCOMPARE(bc.borderWidth(), 0);
 
         int whitespace = 5;
         bc.setWhitespace(whitespace);
@@ -328,6 +332,26 @@ private slots:
 
         QCOMPARE(bc.takesGS1AIData(BARCODE_CODE128), false);
         QCOMPARE(bc.takesGS1AIData(BARCODE_GS1_128), true);
+        QCOMPARE(bc.takesGS1AIData(BARCODE_EAN8_CC), true);
+        QCOMPARE(bc.takesGS1AIData(0), false);
+
+        QCOMPARE(symbology, BARCODE_CODE11);
+
+        float defaultXdim = 0.495f;
+        QCOMPARE(bc.defaultXdim(), defaultXdim);
+        QCOMPARE(bc.defaultXdim(symbology), defaultXdim);
+
+        scale = 3.0f;
+        QString fileType(Zint::QZint::noPng() ? "gif" : "png");
+        float x_dim_mm = 0.5f;
+        dpmm = 12.0f;
+        QCOMPARE(bc.getScaleFromXdimDp(x_dim_mm, dpmm, fileType, symbology), scale);
+
+        QCOMPARE(bc.getXdimDpFromScale(scale, x_dim_mm, fileType), dpmm);
+        QCOMPARE(bc.getXdimDpFromScale(scale, dpmm, fileType), x_dim_mm);
+
+        float width_x_dim, height_x_dim;
+        QCOMPARE(bc.getWidthHeightXdim(x_dim_mm, width_x_dim, height_x_dim), false);
     }
 
     void setGetECIValueTest_data()
@@ -452,10 +476,21 @@ private slots:
     void renderTest_data()
     {
         QTest::addColumn<int>("symbology");
+        QTest::addColumn<int>("inputMode");
         QTest::addColumn<QString>("text");
         QTest::addColumn<float>("scale");
+        QTest::addColumn<QString>("fgStr");
+        QTest::addColumn<QString>("bgStr");
+        QTest::addColumn<int>("borderType");
+        QTest::addColumn<int>("borderWidth");
+        QTest::addColumn<bool>("quietZones");
+        QTest::addColumn<int>("rotateAngle");
+
         QTest::addColumn<int>("getError");
         QTest::addColumn<QString>("error_message");
+
+        QTest::addColumn<int>("encodedInputMode");
+        QTest::addColumn<int>("encodedOutputOptions");
         QTest::addColumn<int>("encodedWidth");
         QTest::addColumn<int>("encodedRows");
         QTest::addColumn<float>("encodedHeight");
@@ -465,21 +500,54 @@ private slots:
         QTest::addColumn<float>("vectorWidth");
         QTest::addColumn<float>("vectorHeight");
 
-        QTest::newRow("BARCODE_CODE128") << BARCODE_CODE128 << "1234" << 0.0f << 0 << "" << 57 << 1 << 50.0f << -1 << 0 << 0 << 114.0f << 100.0f;
-        QTest::newRow("BARCODE_CODE128 Scale 2") << BARCODE_CODE128 << "1234" << 2.0f << 0 << "" << 57 << 1 << 50.0f << -1 << 0 << 0 << 228.0f << 200.0f;
-        QTest::newRow("BARCODE_QRCODE") << BARCODE_QRCODE << "1234" << 0.0f << 0 << "" << 21 << 21 << 21.0f << 4 << 1 << (7 << 8) << 42.0f << 42.0f;
-        QTest::newRow("BARCODE_QRCODE Scale 1.5") << BARCODE_QRCODE << "1234" << 1.5f << 0 << "" << 21 << 21 << 21.0f << 4 << 1 << (7 << 8) << 63.0f << 63.0f;
+        QTest::addColumn<bool>("getWidthHeightXdim");
+        QTest::addColumn<float>("xdimWidth");
+        QTest::addColumn<float>("xdimHeight");
+
+        QTest::newRow("BARCODE_CODE128") << BARCODE_CODE128 << UNICODE_MODE << "1234" << 0.0f
+            << "" << "" << 0 << 0 << false << 0 << 0 << ""
+            << UNICODE_MODE << 0 << 57 << 1 << 50.0f << -1 << 0 << 0 << 114.0f << 100.0f
+            << true << 28.215f << 24.75f;
+        QTest::newRow("BARCODE_CODE128 Scale 2") << BARCODE_CODE128 << UNICODE_MODE << "1234" << 2.0f
+            << "" << "" << 0 << 0 << false << 0 << 0 << ""
+            << UNICODE_MODE << 0 << 57 << 1 << 50.0f << -1 << 0 << 0 << 228.0f << 200.0f
+            << true << 28.215f << 24.75f;
+        QTest::newRow("BARCODE_QRCODE") << BARCODE_QRCODE << UNICODE_MODE << "1234" << 0.0f
+            << "" << "" << 0 << 0 << false << 0 << 0 << ""
+            << UNICODE_MODE << 0 << 21 << 21 << 21.0f << 4 << 1 << (7 << 8) << 42.0f << 42.0f
+            << true << 13.125f << 13.125f;
+        QTest::newRow("BARCODE_QRCODE Scale 1.5") << BARCODE_QRCODE << UNICODE_MODE << "1234" << 1.5f
+            << "" << "" << 0 << 0 << false << 0 << 0 << ""
+            << UNICODE_MODE << 0 << 21 << 21 << 21.0f << 4 << 1 << (7 << 8) << 63.0f << 63.0f
+            << true << 13.125f << 13.125f;
         if (!m_skipIfFontUsed) {
-            QTest::newRow("BARCODE_QRCODE no text") << BARCODE_QRCODE << "" << 0.0f << ZINT_ERROR_INVALID_DATA << "Error 228: No input data (segment 0 empty)" << 0 << 0 << 0.0f << -1 << 0 << 0 << 0.0f << 0.0f;
+            QTest::newRow("BARCODE_QRCODE no text") << BARCODE_QRCODE << UNICODE_MODE << "" << 0.0f
+                << "" << "" << 0 << 0 << false << 0 << ZINT_ERROR_INVALID_DATA
+                << "Error 228: No input data (segment 0 empty)"
+                << UNICODE_MODE << 0 << 0 << 0 << 0.0f << -1 << 0 << 0 << 0.0f << 0.0f
+                << false << 0.0f << 0.0f;
         }
-        QTest::newRow("BARCODE_MAXICODE") << BARCODE_MAXICODE << "1234" << 0.0f << 0 << "" << 30 << 33 << 28.578f << 4 << 0 << 0 << 60.0f << 57.7334f;
-        QTest::newRow("BARCODE_MAXICODE Scale 2") << BARCODE_MAXICODE << "1234" << 2.0f << 0 << "" << 30 << 33 << 28.578f << 4 << 0 << 0 << 120.0f << 115.467f;
+        QTest::newRow("BARCODE_MAXICODE") << BARCODE_MAXICODE << UNICODE_MODE << "1234" << 0.0f
+            << "808080" << "" << BARCODE_BOX << 1 << true << 0 << 0 << ""
+            << UNICODE_MODE << (BARCODE_BOX | BARCODE_QUIET_ZONES) << 30 << 33 << 28.578f
+            << 4 << 0 << 0 << 68.0f << 65.7334f
+            << true << 29.92f << 28.9227f;
+        QTest::newRow("BARCODE_MAXICODE Scale 2") << BARCODE_MAXICODE << UNICODE_MODE << "1234" << 2.0f
+            << "" << "808080" << 0 << 0 << false << 90 << 0 << ""
+            << UNICODE_MODE << 0 << 30 << 33 << 28.578f << 4 << 0 << 0 << 120.0f << 115.467f
+            << true << 25.4027f << 26.4f;
+        QTest::newRow("BARCODE_ULTRA") << BARCODE_ULTRA << UNICODE_MODE << "1234" << 0.0f
+            << "808080" << "" << BARCODE_BIND << 2 << true << 0 << 0 << ""
+            << UNICODE_MODE << (BARCODE_BIND | BARCODE_QUIET_ZONES) << 15 << 13 << 13.0f
+            << 3 << 0 << 0 << 34.0f << 38.0f
+            << true << 10.625f << 11.875f;
     }
 
     void renderTest()
     {
 #ifdef TESTQZINT_GUILESS
-        QSKIP("disabled on Linux for Qt5 > 5.15.13 & Qt6 > 6.4.2 due to memory leaks (ZINT_SANITIZE)", "" /*Dummy arg to suppress -Wc++20-extensions*/);
+        QSKIP("disabled on Linux for Qt5 > 5.15.13 & Qt6 > 6.4.2 due to memory leaks (ZINT_SANITIZE)",
+                "" /*Dummy arg to suppress -Wc++20-extensions*/);
 #endif
         Zint::QZint bc;
 
@@ -495,10 +563,19 @@ private slots:
         mode = Zint::QZint::AspectRatioMode::KeepAspectRatio; // Legacy - ignored
 
         QFETCH(int, symbology);
+        QFETCH(int, inputMode);
         QFETCH(QString, text);
         QFETCH(float, scale);
+        QFETCH(QString, fgStr);
+        QFETCH(QString, bgStr);
+        QFETCH(int, borderType);
+        QFETCH(int, borderWidth);
+        QFETCH(bool, quietZones);
+        QFETCH(int, rotateAngle);
         QFETCH(int, getError);
         QFETCH(QString, error_message);
+        QFETCH(int, encodedInputMode);
+        QFETCH(int, encodedOutputOptions);
         QFETCH(int, encodedWidth);
         QFETCH(int, encodedRows);
         QFETCH(float, encodedHeight);
@@ -507,13 +584,23 @@ private slots:
         QFETCH(int, encodedOption3);
         QFETCH(float, vectorWidth);
         QFETCH(float, vectorHeight);
+        QFETCH(bool, getWidthHeightXdim);
+        QFETCH(float, xdimWidth);
+        QFETCH(float, xdimHeight);
 
         bc.setSymbol(symbology);
+        bc.setInputMode(inputMode);
         bc.setText(text);
         bc.setShowText(false);
         if (scale) {
             bc.setScale(scale);
         }
+        bc.setFgStr(fgStr);
+        bc.setBgStr(bgStr);
+        bc.setBorderTypeValue(borderType);
+        bc.setBorderWidth(borderWidth);
+        bc.setQuietZones(quietZones);
+        bc.setRotateAngleValue(rotateAngle);
 
         bRet = painter.begin(&paintDevice);
         QCOMPARE(bRet, true);
@@ -527,6 +614,8 @@ private slots:
         QCOMPARE(bc.error_message(), error_message);
         QCOMPARE(bc.lastError(), error_message);
         QCOMPARE(bc.hasErrors(), getError != 0);
+        QCOMPARE(bc.encodedInputMode(), encodedInputMode);
+        QCOMPARE(bc.encodedOutputOptions(), encodedOutputOptions);
         QCOMPARE(bc.encodedWidth(), encodedWidth);
         QCOMPARE(bc.encodedRows(), encodedRows);
         QCOMPARE(bc.encodedHeight(), encodedHeight);
@@ -543,22 +632,36 @@ private slots:
             QCOMPARE(spyEncoded.count(), 1);
             QCOMPARE(spyErrored.count(), 0);
         }
+
+        float x_dim = bc.defaultXdim();
+        float width_x_dim, height_x_dim;
+        QCOMPARE(bc.getWidthHeightXdim(x_dim, width_x_dim, height_x_dim), getWidthHeightXdim);
+        QCOMPARE(width_x_dim, xdimWidth);
+        QCOMPARE(height_x_dim, xdimHeight);
     }
 
     void saveToFileTest_data()
     {
         QTest::addColumn<int>("symbology");
         QTest::addColumn<QString>("text");
+        QTest::addColumn<int>("eci");
+        QTest::addColumn<QString>("seg1");
+        QTest::addColumn<int>("seg1_eci");
         QTest::addColumn<QString>("fileName");
         QTest::addColumn<bool>("expected_bRet");
 
-        QTest::newRow("BARCODE_DATAMATRIX gif") << BARCODE_DATAMATRIX << "1234" << "test_save_to_file.gif" << true;
-        QTest::newRow("BARCODE_DATAMATRIX unknown format") << BARCODE_DATAMATRIX << "1234" << "test_save_to_file.ext" << false;
-        QTest::newRow("BARCODE_DATAMATRIX UTF8 gif") << BARCODE_DATAMATRIX << "1234" << "test_save_to_file_τ.gif" << true;
-        QTest::newRow("BARCODE_DATAMATRIX too long (unknown format)") << BARCODE_DATAMATRIX << "1234"
+        QTest::newRow("BARCODE_DATAMATRIX gif") << BARCODE_DATAMATRIX << "1234" << 0 << "" << 0
+            << "test_save_to_file.gif" << true;
+        QTest::newRow("BARCODE_DATAMATRIX segs gif") << BARCODE_DATAMATRIX << "1234" << 26 << "5678" << 3
+            << "test_save_to_file_segs.gif" << true;
+        QTest::newRow("BARCODE_DATAMATRIX unknown format") << BARCODE_DATAMATRIX << "1234" << 0 << "" << 0
+            << "test_save_to_file.ext" << false;
+        QTest::newRow("BARCODE_DATAMATRIX UTF8 gif") << BARCODE_DATAMATRIX << "1234" << 0 << "" << 0
+            << "test_save_to_file_τ.gif" << true;
+        QTest::newRow("BARCODE_DATAMATRIX too long (unknown format)") << BARCODE_DATAMATRIX << "1234" << 0 << "" << 0
             <<  "test_67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
                 "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-                "1234567890123456789012345678901234567890123456789012.gif" // 256 long so should be truncated to end in ".gi"
+                "1234567890123456789012345678901234567890123456789012.gif" // 256 long so truncates to end in ".gi"
             << false;
     }
 
@@ -570,11 +673,22 @@ private slots:
 
         QFETCH(int, symbology);
         QFETCH(QString, text);
+        QFETCH(int, eci);
+        QFETCH(QString, seg1);
+        QFETCH(int, seg1_eci);
         QFETCH(QString, fileName);
         QFETCH(bool, expected_bRet);
 
         bc.setSymbol(symbology);
-        bc.setText(text);
+        if (!seg1.isEmpty()) {
+            std::vector<Zint::QZintSeg> segs;
+            segs.push_back({text, Zint::QZint::ECIValueToECIIndex(eci)});
+            segs.push_back({seg1, Zint::QZint::ECIValueToECIIndex(seg1_eci)});
+            bc.setSegs(segs);
+        } else {
+            bc.setText(text);
+            bc.setECIValue(eci);
+        }
 
         bRet = bc.save_to_file(fileName);
         QCOMPARE(bRet, expected_bRet);
@@ -589,18 +703,24 @@ private slots:
     {
         QTest::addColumn<int>("symbology");
         QTest::addColumn<QString>("text");
+        QTest::addColumn<int>("eci");
+        QTest::addColumn<QString>("seg1");
+        QTest::addColumn<int>("seg1_eci");
         QTest::addColumn<QString>("fileName");
         QTest::addColumn<bool>("expected_bRet");
         QTest::addColumn<QString>("expected_strData");
 
-        QTest::newRow("BARCODE_DATAMATRIX gif") << BARCODE_DATAMATRIX << "1234" << "test_memfile.gif" << true
+        QTest::newRow("BARCODE_DATAMATRIX gif") << BARCODE_DATAMATRIX << "1234" << 0 << "" << 0
+            << "test_memfile.gif" << true
             <<  "47494638376114001400f00000ffffff0000002c00000000140014000002"
                 "3c4c00869ad7eb988c942168b2cef7eecf794e37594f776a285a862b8485"
                 "ea49caf66a4ef10ca7204e010a69a24f6ff7231a5f351db3580149a7d44c"
                 "01003b";
-        QTest::newRow("BARCODE_DATAMATRIX svg") << BARCODE_DATAMATRIX << "1234" << "test_memfile.svg" << true
+        QTest::newRow("BARCODE_DATAMATRIX svg") << BARCODE_DATAMATRIX << "1234" << 0 << "" << 0
+            << "test_memfile.svg" << true
             <<  "<?xml version=\"1.0\" standalone=\"no\"?>\n"
-                "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
+                "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\""
+                                                        " \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
                 "<svg width=\"20\" height=\"20\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n"
                 " <desc>Zint Generated Symbol</desc>\n"
                 " <g id=\"barcode\" fill=\"#000000\">\n"
@@ -611,6 +731,16 @@ private slots:
                     " 14h2v2h-2ZM16 14h4v2h-4ZM0 16h2v2h-2ZM14 16h4v2h-4ZM0 18h20v2h-20Z\"/>\n"
                 " </g>\n"
                 "</svg>\n";
+        QTest::newRow("BARCODE_AZTEC gif") << BARCODE_AZTEC << "1234" << 3 << "5678" << 4
+            << "test_memfile.gif" << true
+            <<  "47494638376126002600f00000ffffff0000002c00000000260026000002"
+                "b58411a97918b65a636e2e652196bacbfb3814a58d217980e519ae9ea972"
+                "622ba36b546f72b57fa09ecbf47e400eca96da1c81b85ed26459225d33a2"
+                "9565545eb79e1dd499a47ab1e0179346bda6b559d86ffdbd91854d9e94ed"
+                "13dbf1df3ed96d16b82788e3972528478836c803f7678538b3265738d718"
+                "76e9b4d4853915d4f948b905082a3a3a8969baa82ac49a4394985acae8b6"
+                "9947bb88747728cbc959f79b2b4cc7524ba37bfc681c5356e9c90ce6bc0a"
+                "5000003b";
     }
 
     void saveToMemfileTest()
@@ -621,23 +751,37 @@ private slots:
 
         QFETCH(int, symbology);
         QFETCH(QString, text);
+        QFETCH(int, eci);
+        QFETCH(QString, seg1);
+        QFETCH(int, seg1_eci);
         QFETCH(QString, fileName);
         QFETCH(bool, expected_bRet);
         QFETCH(QString, expected_strData);
 
         bc.setSymbol(symbology);
-        bc.setText(text);
+        if (!seg1.isEmpty()) {
+            std::vector<Zint::QZintSeg> segs;
+            segs.push_back({text, Zint::QZint::ECIValueToECIIndex(eci)});
+            segs.push_back({seg1, Zint::QZint::ECIValueToECIIndex(seg1_eci)});
+            bc.setSegs(segs);
+        } else {
+            bc.setText(text);
+            bc.setECIValue(eci);
+        }
 
         QByteArray data;
         bRet = bc.save_to_memfile(fileName, data);
         QCOMPARE(bRet, expected_bRet);
 
         if (bRet) {
-            QCOMPARE(bRet, true);
             if (fileName.endsWith(".eps") || fileName.endsWith(".svg") || fileName.endsWith(".txt")) {
+                QCOMPARE(data, expected_strData);
+                QCOMPARE(bc.save_to_memfile(fileName, data), true);
                 QCOMPARE(data, expected_strData);
             } else {
                 QByteArray expected_data = QByteArray::fromHex(expected_strData.toUtf8());
+                QCOMPARE(data, expected_data);
+                QCOMPARE(bc.save_to_memfile(fileName, data), true);
                 QCOMPARE(data, expected_data);
             }
         }
@@ -765,10 +909,10 @@ private slots:
             << 7 << false << false << false << false // eci-gs1SyntaxEngine
             << false << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 92 --bg=0,0,0,0 --cmyk --eci=7 -d '12345678Ж0%var%' --dotsize=0.9 --dotty --fg=71,0,40,44 --scale=4"
-                " --secure=1 --structapp='1,2,as\"dfa'\\''sdf' --vwhitesp=3 -w 2"
-            << "zint.exe -b 92 --bg=0,0,0,0 --cmyk --eci=7 -d \"12345678Ж0%var%\" --dotsize=0.9 --dotty --fg=71,0,40,44 --scale=4"
-                " --secure=1 --structapp=\"1,2,as\\\"dfa'sdf\" --vwhitesp=3 -w 2"
+            << "zint -b 92 --bg=0,0,0,0 --cmyk --eci=7 -d '12345678Ж0%var%' --dotsize=0.9 --dotty"
+                " --fg=71,0,40,44 --scale=4 --secure=1 --structapp='1,2,as\"dfa'\\''sdf' --vwhitesp=3 -w 2"
+            << "zint.exe -b 92 --bg=0,0,0,0 --cmyk --eci=7 -d \"12345678Ж0%var%\" --dotsize=0.9 --dotty"
+                " --fg=71,0,40,44 --scale=4 --secure=1 --structapp=\"1,2,as\\\"dfa'sdf\" --vwhitesp=3 -w 2"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_C25INTER") << true << 0.0f << ""
@@ -921,10 +1065,10 @@ private slots:
             << 0 << false << false << false << false // eci-gs1SyntaxEngine
             << true << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 74 --binary --border=4 --box --cols=5 --compliantheight -d 'T\\n\\xA0t\\\"' --esc --init"
-                " --rows=2 --scale=3 --separator=3"
-            << "zint.exe -b 74 --binary --border=4 --box --cols=5 --compliantheight -d \"T\\n\\xA0t\\\\\"\" --esc --init"
-                " --rows=2 --scale=3 --separator=3"
+            << "zint -b 74 --binary --border=4 --box --cols=5 --compliantheight -d 'T\\n\\xA0t\\\"' --esc"
+                " --init --rows=2 --scale=3 --separator=3"
+            << "zint.exe -b 74 --binary --border=4 --box --cols=5 --compliantheight -d \"T\\n\\xA0t\\\\\"\" --esc"
+                " --init --rows=2 --scale=3 --separator=3"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_DAFT") << false << 0.0f << ""
@@ -1019,8 +1163,10 @@ private slots:
             << 0 << false << false << true << true // eci-gs1SyntaxEngine
             << false << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 71 -d '010952012345678810BATCH4\\G2107' --dmb256=2 --esc --gs1raw --gs1strict --gssep --square"
-            << "zint.exe -b 71 -d \"010952012345678810BATCH4\\G2107\" --dmb256=2 --esc --gs1raw --gs1strict --gssep --square"
+            << "zint -b 71 -d '010952012345678810BATCH4\\G2107' --dmb256=2 --esc --gs1raw --gs1strict --gssep"
+                    " --square"
+            << "zint.exe -b 71 -d \"010952012345678810BATCH4\\G2107\" --dmb256=2 --esc --gs1raw --gs1strict --gssep"
+                    " --square"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_DATAMATRIX") << false << 0.0f << ""
@@ -1040,7 +1186,7 @@ private slots:
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_MAILMARK_2D") << false << 0.0f << ""
-            << BARCODE_DATAMATRIX << UNICODE_MODE // symbology-inputMode
+            << BARCODE_MAILMARK_2D << UNICODE_MODE // symbology-inputMode
             << "JGB 012100123412345678AB19XY1A 0             www.xyz.com" << "" // text-primary
             << 0.0f << 0 << 0 << DM_C40_START << 1.0f // height-scale
             << 0.0f << false << 0.7f << 1.0f // dpmm-textGap
@@ -1051,8 +1197,8 @@ private slots:
             << 0 << false << false << false << false // eci-gs1SyntaxEngine
             << false << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 71 -d 'JGB 012100123412345678AB19XY1A 0             www.xyz.com' --dmc40=0 --rotate=90"
-            << "zint.exe -b 71 -d \"JGB 012100123412345678AB19XY1A 0             www.xyz.com\" --dmc40=0 --rotate=90"
+            << "zint -b 119 -d 'JGB 012100123412345678AB19XY1A 0             www.xyz.com' --dmc40=0 --rotate=90"
+            << "zint.exe -b 119 -d \"JGB 012100123412345678AB19XY1A 0             www.xyz.com\" --dmc40=0 --rotate=90"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_DBAR_EXPSTK_CC") << false << 40.8f << ""
@@ -1122,6 +1268,23 @@ private slots:
             << "" << "" << ""
             << "zint -b 96 --compliantheight -d '1234567890123456789012345678' --scalexdimdp=0.375mm,600dpi";
 
+        QTest::newRow("BARCODE_DPD") << true << 0.0f << ""
+            << BARCODE_DPD << UNICODE_MODE // symbology-inputMode
+            << "1234567890123456789012345678" << "" // text-primary
+            << 0.0f << -1 << 0 << 0 << 4.5f // height-scale
+            << 24.0f << true << 0.8f << 1.0f // dpmm-textGap
+            << 0.0f << 0 << 0 << "" // guardDescent-structAppID
+            << "" << "" << QColor(Qt::black) << QColor(Qt::white) << false // fgStr-cmyk
+            << 3 << 3 << 0 << 0 << 0 // borderTypeIndex-fontSetting
+            << true << false << false << false << true << 0 // showText-rotateAngle
+            << 0 << false << false << false << false // eci-gs1SyntaxEngine
+            << false << false << false << WARN_DEFAULT << false // readerInit-debug
+            << 0.375 << 0 << 600 << 1 << 0 << 0 // xdimdp
+            << "zint -b 96 --compliantheight -d '1234567890123456789012345678' --scalexdimdp=0.375,24"
+            << "zint.exe -b 96 --compliantheight -d \"1234567890123456789012345678\" --scalexdimdp=0.375,24"
+            << "" << "" << ""
+            << "zint -b 96 --compliantheight -d '1234567890123456789012345678' --scalexdimdp=0.375mm,600dpi";
+
         QTest::newRow("BARCODE_EAN13") << true << 0.0f << ""
             << BARCODE_EAN13 << UNICODE_MODE // symbology-inputMode
             << "123456789012+12" << "" // text-primary
@@ -1166,8 +1329,10 @@ private slots:
             << 0 << false << false << false << false // eci-gs1SyntaxEngine
             << false << true << true << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 15 --addongap=8 --compliantheight -d '123456789012+12' --embedfont --guarddescent=0 --guardwhitespace"
-            << "zint.exe -b 15 --addongap=8 --compliantheight -d \"123456789012+12\" --embedfont --guarddescent=0 --guardwhitespace"
+            << "zint -b 15 --addongap=8 --compliantheight -d '123456789012+12' --embedfont --guarddescent=0"
+                    " --guardwhitespace"
+            << "zint.exe -b 15 --addongap=8 --compliantheight -d \"123456789012+12\" --embedfont --guarddescent=0"
+                    " --guardwhitespace"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_EANX (guardWhitespace/embedVectorFont") << true << 0.0f << ""
@@ -1182,8 +1347,10 @@ private slots:
             << 0 << false << false << false << false // eci-gs1SyntaxEngine
             << false << true << true << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 13 --addongap=8 --compliantheight -d '123456789012+12' --embedfont --guarddescent=0 --guardwhitespace"
-            << "zint.exe -b 13 --addongap=8 --compliantheight -d \"123456789012+12\" --embedfont --guarddescent=0 --guardwhitespace"
+            << "zint -b 13 --addongap=8 --compliantheight -d '123456789012+12' --embedfont --guarddescent=0"
+                    " --guardwhitespace"
+            << "zint.exe -b 13 --addongap=8 --compliantheight -d \"123456789012+12\" --embedfont --guarddescent=0"
+                    " --guardwhitespace"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_GRIDMATRIX") << false << 0.0f << ""
@@ -1284,6 +1451,22 @@ private slots:
             << "zint.exe -b 89 --border=1 --compliantheight -d \"9212320967145\""
             << "" << "" << "" << "";
 
+        QTest::newRow("BARCODE_ITF14 (border)") << true << 0.0f << ""
+            << BARCODE_ITF14 << UNICODE_MODE // symbology-inputMode
+            << "9212320967145" << "" // text-primary
+            << 30.0f << -1 << 0 << 0 << 1.0f // height-scale
+            << 0.0f << false << 0.8f << 1.0f // dpmm-textGap
+            << 5.0f << 0 << 0 << "" // guardDescent-structAppID
+            << "" << "" << QColor(Qt::black) << QColor(Qt::white) << false // fgStr-cmyk
+            << 2 << 5 << 0 << 0 << 0 // borderTypeIndex-fontSetting
+            << true << false << false << false << true << 0 // showText-rotateAngle
+            << 0 << false << false << false << false // eci-gs1SyntaxEngine
+            << false << false << false << WARN_DEFAULT << false // readerInit-debug
+            << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
+            << "zint -b 89 --compliantheight -d '9212320967145'"
+            << "zint.exe -b 89 --compliantheight -d \"9212320967145\""
+            << "" << "" << "" << "";
+
         QTest::newRow("BARCODE_MAXICODE") << true << 0.0f << ""
             << BARCODE_MAXICODE << (UNICODE_MODE | ESCAPE_MODE) // symbology-inputMode
             << "152382802840001"
@@ -1297,10 +1480,10 @@ private slots:
             << 0 << false << false << false << false // eci-gs1SyntaxEngine
             << false << false << false << WARN_DEFAULT << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 57 -d '1Z00004951\\GUPSN\\G06X610\\G159\\G1234567\\G1/1\\G\\GY\\G1 MAIN ST\\GTOWN\\GNY\\R\\E'"
-                " --esc --primary='152382802840001' --quietzones --scale=2.5 --scmvv=96"
-            << "zint.exe -b 57 -d \"1Z00004951\\GUPSN\\G06X610\\G159\\G1234567\\G1/1\\G\\GY\\G1 MAIN ST\\GTOWN\\GNY\\R\\E\""
-                " --esc --primary=\"152382802840001\" --quietzones --scale=2.5 --scmvv=96"
+            << "zint -b 57 -d '1Z00004951\\GUPSN\\G06X610\\G159\\G1234567\\G1/1\\G\\GY\\G1 MAIN ST\\GTOWN\\GNY"
+                "\\R\\E' --esc --primary='152382802840001' --quietzones --scale=2.5 --scmvv=96"
+            << "zint.exe -b 57 -d \"1Z00004951\\GUPSN\\G06X610\\G159\\G1234567\\G1/1\\G\\GY\\G1 MAIN ST\\GTOWN\\GNY"
+                "\\R\\E\" --esc --primary=\"152382802840001\" --quietzones --scale=2.5 --scmvv=96"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_MICROQR") << false << 0.0f << ""
@@ -1421,10 +1604,12 @@ private slots:
             << 0 << false << true << true << true // eci-gs1SyntaxEngine
             << false << false << false << WARN_FAIL_ALL << false // readerInit-debug
             << 0.0 << 0 << 0 << 0 << 0 << 0 // xdimdp
-            << "zint -b 136 --compliantheight -d '1190122299ABCDE' --fg=EF2929 --gs1nocheck --gs1raw --gs1strict --guarddescent=6.5"
-                " --noquietzones -o 'out.svg' --primary='12345670+1234' --small --werror"
-            << "zint.exe -b 136 --compliantheight -d \"1190122299ABCDE\" --fg=EF2929 --gs1nocheck --gs1raw --gs1strict --guarddescent=6.5"
-                " --noquietzones -o \"out.svg\" --primary=\"12345670+1234\" --small --werror"
+            << "zint -b 136 --compliantheight -d '1190122299ABCDE' --fg=EF2929 --gs1nocheck --gs1raw"
+                " --gs1strict --guarddescent=6.5 --noquietzones -o 'out.svg' --primary='12345670+1234' --small"
+                " --werror"
+            << "zint.exe -b 136 --compliantheight -d \"1190122299ABCDE\" --fg=EF2929 --gs1nocheck --gs1raw"
+                " --gs1strict --guarddescent=6.5 --noquietzones -o \"out.svg\" --primary=\"12345670+1234\" --small"
+                " --werror"
             << "" << "" << "" << "";
 
         QTest::newRow("BARCODE_VIN") << false << 2.0f << ""
@@ -1643,19 +1828,20 @@ private slots:
 
         std::vector<Zint::QZintSeg> segs;
         for (int i = 0; i < (int) segTexts.size(); i++) {
-            segs.push_back(Zint::QZintSeg(segTexts[i]));
-            segs.back().m_eci = segECIs[i];
+            segs.push_back({segTexts[i], Zint::QZint::ECIValueToECIIndex(segECIs[i])});
         }
 
         bc.setSymbol(BARCODE_QRCODE);
         bc.setSegs(segs);
         bc.setDotty(true);
 
-        expected_cmd = "zint -b 58 --eci=9 -d 'Τεχτ' --seg1=3,'Téxt' --seg2=13,'กขฯ' --seg3=20,'貫やぐ禁' --dotty";
+        expected_cmd = "zint -b 58 --eci=9 -d 'Τεχτ' --seg1=3,'Téxt' --seg2=13,'กขฯ' --seg3=20,'貫やぐ禁'"
+                        " --dotty";
         cmd = bc.getAsCLI(false /*win*/);
         QCOMPARE(cmd, expected_cmd);
 
-        expected_win = "zint.exe -b 58 --eci=9 -d \"Τεχτ\" --seg1=3,\"Téxt\" --seg2=13,\"กขฯ\" --seg3=20,\"貫やぐ禁\" --dotty";
+        expected_win = "zint.exe -b 58 --eci=9 -d \"Τεχτ\" --seg1=3,\"Téxt\" --seg2=13,\"กขฯ\" --seg3=20,\"貫やぐ禁\""
+                        " --dotty";
         cmd = bc.getAsCLI(true /*win*/);
         QCOMPARE(cmd, expected_win);
     }
@@ -1666,11 +1852,16 @@ private slots:
         QTest::addColumn<int>("rotateAngles");
         QTest::addColumn<QString>("text");
 
-        QTest::newRow("symbology=BARCODE_DATAMATRIX  rotateAngles=0   text=1234")          << BARCODE_DATAMATRIX << 0   << "1234";
-        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=0   text=Hello%20World") << BARCODE_QRCODE     << 0   << "Hello%20World";
-        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=90  text=Hello%20World") << BARCODE_QRCODE     << 90  << "Hello%20World";
-        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=180 text=Hello%20World") << BARCODE_QRCODE     << 180 << "Hello%20World";
-        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=270 text=Hello%20World") << BARCODE_QRCODE     << 270 << "Hello%20World";
+        QTest::newRow("symbology=BARCODE_DATAMATRIX  rotateAngles=0   text=1234")          << BARCODE_DATAMATRIX
+                << 0   << "1234";
+        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=0   text=Hello%20World") << BARCODE_QRCODE
+                << 0   << "Hello%20World";
+        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=90  text=Hello%20World") << BARCODE_QRCODE
+                << 90  << "Hello%20World";
+        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=180 text=Hello%20World") << BARCODE_QRCODE
+                << 180 << "Hello%20World";
+        QTest::newRow("symbology=BARCODE_QRCODE      rotateAngles=270 text=Hello%20World") << BARCODE_QRCODE
+                << 270 << "Hello%20World";
     }
 
     void qZintAndLibZintEqualTest()
@@ -1694,7 +1885,8 @@ private slots:
         qstrcpy(symbol->outfile, qUtf8Printable(fileNameForLibZint));
 
         bc.save_to_file(fileNameForQZint);
-        ZBarcode_Encode_and_Print(symbol.data(), reinterpret_cast<const unsigned char*>(qUtf8Printable(text)), 0, rotateAngles);
+        ZBarcode_Encode_and_Print(symbol.data(), reinterpret_cast<const unsigned char*>(qUtf8Printable(text)), 0,
+                                    rotateAngles);
 
         QImage imageWrittenByVanilla(fileNameForLibZint);
         QImage imageWrittenByQZint(fileNameForQZint);
@@ -1716,6 +1908,7 @@ private slots:
         QTest::newRow("BARCODE_MAXICODE") << BARCODE_MAXICODE << "BARCODE_MAXICODE";
         QTest::newRow("BARCODE_CODE128AB") << BARCODE_CODE128AB << "BARCODE_CODE128AB";
         QTest::newRow("BARCODE_CODE128B") << BARCODE_CODE128B << "BARCODE_CODE128AB";
+        QTest::newRow("BARCODE_LAST") << 0 << "";
     }
 
     void barcodeNameTest()
@@ -1725,6 +1918,67 @@ private slots:
 
         QString name = Zint::QZint::barcodeName(symbology);
         QCOMPARE(name, expected_name);
+    }
+
+    void ECIIndexTest()
+    {
+        for (int i = 0; i < 900; i++) {
+            int eciIndex = Zint::QZint::ECIValueToECIIndex(i);
+            int eci = Zint::QZint::ECIIndexToECIValue(eciIndex);
+            QCOMPARE(eciIndex, Zint::QZint::ECIValueToECIIndex(eci));
+            QCOMPARE(eci, Zint::QZint::ECIIndexToECIValue(eciIndex));
+            if (i < 3 || (i > 35 && i != 170 && i != 899) || i == 14 || i == 19) {
+                QCOMPARE(eci, 0);
+            } else {
+                QCOMPARE(eci, i);
+            }
+            if (i == 40) {
+                i = 170 - 1;
+            } else if (i == 170) {
+                i = 899 - 1;
+            }
+        }
+    }
+
+    void XdimDpVarsTest()
+    {
+        struct Zint::QZintXdimDpVars vars;
+
+        int symbol = BARCODE_CODE128;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "GIF");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "raster");
+
+        vars.filetype = 1;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "SVG");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "vector");
+
+        vars.filetype = 2;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "SVG");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "vector");
+
+        vars.filetype = -1;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "GIF");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "raster");
+
+        symbol = BARCODE_MAXICODE;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "GIF");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "raster");
+
+        vars.filetype_maxicode = 1;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "SVG");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "vector");
+
+        vars.filetype_maxicode = 2;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "EMF");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "EMF");
+
+        vars.filetype_maxicode = 3;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "EMF");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "EMF");
+
+        vars.filetype_maxicode = -1;
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, false /*msg*/), "GIF");
+        QCOMPARE(Zint::QZintXdimDpVars::getFileType(symbol, &vars, true /*msg*/), "raster");
     }
 };
 

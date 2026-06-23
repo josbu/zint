@@ -422,30 +422,13 @@ INTERNAL int zint_ps_plot(struct zint_symbol *symbol) {
             previous_diameter = circle->diameter - circle->width;
             radius = 0.5f * previous_diameter;
         }
-        if (circle->colour) { /* Legacy - no longer used */
-            /* A 'white' circle */
-            if (is_rgb) {
-                ps_put_rgbcolor(red_paper, green_paper, blue_paper, fmp);
-            } else {
-                ps_put_cmykcolor(cyan_paper, magenta_paper, yellow_paper, black_paper, fmp);
-            }
-            ps_put_circle(symbol, circle, radius, 0 /*type*/, fmp);
-            if (circle->next) {
-                if (is_rgb) {
-                    ps_put_rgbcolor(red_ink, green_ink, blue_ink, fmp);
-                } else {
-                    ps_put_cmykcolor(cyan_ink, magenta_ink, yellow_ink, black_ink, fmp);
-                }
-            }
+        assert(circle->colour == 0); /* Legacy - no longer used */
+        if (circle->next && circle->y == circle->next->y && circle->diameter == circle->next->diameter) {
+            ps_put_circle(symbol, circle, radius, type_latch ? 2 : 1, fmp);
+            type_latch = 1;
         } else {
-            /* A 'black' circle */
-            if (circle->next && circle->y == circle->next->y && circle->diameter == circle->next->diameter) {
-                ps_put_circle(symbol, circle, radius, type_latch ? 2 : 1, fmp);
-                type_latch = 1;
-            } else {
-                ps_put_circle(symbol, circle, radius, type_latch ? 3 : 0, fmp);
-                type_latch = 0;
-            }
+            ps_put_circle(symbol, circle, radius, type_latch ? 3 : 0, fmp);
+            type_latch = 0;
         }
     }
 

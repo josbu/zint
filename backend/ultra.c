@@ -250,23 +250,15 @@ static int ult_find_fragment(const unsigned char source[], const int length, con
 static float ult_look_ahead_eightbit(const unsigned char source[], const int length, const int in_locn,
             const int current_mode, const int end_char, int cw[], int *cw_len, const int gs1) {
     int codeword_count = 0;
-    int i;
     int letters_encoded = 0;
+    int i;
 
     if (current_mode != ULT_EIGHTBIT_MODE) {
-        cw[codeword_count] = 282; /* Unlatch */
-        codeword_count += 1;
+        cw[codeword_count++] = 282; /* Unlatch */
     }
 
-    i = in_locn;
-    while (i < length && i < end_char) {
-        if (gs1 && source[i] == '\x1D') {
-            cw[codeword_count] = 268; /* FNC1 */
-        } else {
-            cw[codeword_count] = source[i];
-        }
-        i++;
-        codeword_count++;
+    for (i = in_locn; i < length && i < end_char; i++) {
+        cw[codeword_count++] = gs1 && source[i] == '\x1D' ? 268 /*FNC1*/ : source[i];
     }
 
     letters_encoded = i - in_locn;
@@ -284,28 +276,24 @@ static float ult_look_ahead_ascii(unsigned char source[], const int length, cons
             const int current_mode, const int symbol_mode, const int end_char, int cw[], int *cw_len, int *encoded,
             const int gs1) {
     int codeword_count = 0;
-    int i;
-    int done;
     int letters_encoded = 0;
+    int i;
 
     if (current_mode == ULT_EIGHTBIT_MODE) {
-        cw[codeword_count] = 267; /* Latch ASCII Submode */
-        codeword_count++;
+        cw[codeword_count++] = 267; /* Latch ASCII Submode */
     }
 
     if (current_mode == ULT_C43_MODE) {
-        cw[codeword_count] = 282; /* Unlatch */
-        codeword_count++;
+        cw[codeword_count++] = 282; /* Unlatch */
         if (symbol_mode == ULT_EIGHTBIT_MODE) {
-            cw[codeword_count] = 267; /* Latch ASCII Submode */
-            codeword_count++;
+            cw[codeword_count++] = 267; /* Latch ASCII Submode */
         }
     }
 
     i = in_locn;
     do {
         /* Check for double digits */
-        done = 0;
+        int done = 0;
         if (i + 1 < length) {
             const int first_digit = z_posn(ult_digit, source[i]);
             const int second_digit = z_posn(ult_digit, source[i + 1]);
@@ -313,32 +301,27 @@ static float ult_look_ahead_ascii(unsigned char source[], const int length, cons
                 /* Double digit can be encoded */
                 if (first_digit >= 0 && first_digit <= 9 && second_digit >= 0 && second_digit <= 9) {
                     /* Double digit numerics */
-                    cw[codeword_count] = (10 * first_digit) + second_digit + 128;
-                    codeword_count++;
+                    cw[codeword_count++] = (10 * first_digit) + second_digit + 128;
                     i += 2;
                     done = 1;
                 } else if (first_digit >= 0 && first_digit <= 9 && second_digit == 10) {
                     /* Single digit followed by selected decimal point character */
-                    cw[codeword_count] = first_digit + 228;
-                    codeword_count++;
+                    cw[codeword_count++] = first_digit + 228;
                     i += 2;
                     done = 1;
                 } else if (first_digit == 10 && second_digit >= 0 && second_digit <= 9) {
                     /* Selected decimal point character followed by single digit */
-                    cw[codeword_count] = second_digit + 238;
-                    codeword_count++;
+                    cw[codeword_count++] = second_digit + 238;
                     i += 2;
                     done = 1;
                 } else if (first_digit >= 0 && first_digit <= 9 && second_digit == 11) {
                     /* Single digit or decimal point followed by field deliminator */
-                    cw[codeword_count] = first_digit + 248;
-                    codeword_count++;
+                    cw[codeword_count++] = first_digit + 248;
                     i += 2;
                     done = 1;
                 } else if (first_digit == 11 && second_digit >= 0 && second_digit <= 9) {
                     /* Field deliminator followed by single digit or decimal point */
-                    cw[codeword_count] = second_digit + 259;
-                    codeword_count++;
+                    cw[codeword_count++] = second_digit + 259;
                     i += 2;
                     done = 1;
                 }
@@ -346,12 +329,7 @@ static float ult_look_ahead_ascii(unsigned char source[], const int length, cons
         }
 
         if (!done && z_isascii(source[i])) {
-            if (gs1 && source[i] == '\x1D') {
-                cw[codeword_count] = 272; /* FNC1 */
-            } else {
-                cw[codeword_count] = source[i];
-            }
-            codeword_count++;
+            cw[codeword_count++] = gs1 && source[i] == '\x1D' ? 272 /*FNC1*/ : source[i];
             i++;
         }
     } while (i < length && i < end_char && z_isascii(source[i]));
@@ -467,53 +445,43 @@ static float ult_look_ahead_c43(const unsigned char source[], const int length, 
 
         switch (fragno) {
             case 17: /* mailto: */
-                cw[codeword_count] = 276;
+                cw[codeword_count++] = 276;
                 sublocn += (int) strlen(ult_fragment[fragno]);
-                codeword_count++;
                 break;
             case 18: /* tel: */
-                cw[codeword_count] = 277;
+                cw[codeword_count++] = 277;
                 sublocn += (int) strlen(ult_fragment[fragno]);
-                codeword_count++;
                 break;
             case 26: /* file: */
-                cw[codeword_count] = 278;
+                cw[codeword_count++] = 278;
                 sublocn += (int) strlen(ult_fragment[fragno]);
-                codeword_count++;
                 break;
             case 0: /* http:// */
-                cw[codeword_count] = 279;
+                cw[codeword_count++] = 279;
                 sublocn += (int) strlen(ult_fragment[fragno]);
-                codeword_count++;
                 break;
             case 1: /* https:// */
-                cw[codeword_count] = 280;
+                cw[codeword_count++] = 280;
                 sublocn += (int) strlen(ult_fragment[fragno]);
-                codeword_count++;
                 break;
             case 4: /* ftp:// */
-                cw[codeword_count] = 281;
+                cw[codeword_count++] = 281;
                 sublocn += (int) strlen(ult_fragment[fragno]);
-                codeword_count++;
                 break;
             default:
                 if (subset == 1) {
-                    cw[codeword_count] = 260; /* C43 Compaction Submode C1 */
-                    codeword_count++;
+                    cw[codeword_count++] = 260; /* C43 Compaction Submode C1 */
                 } else if (subset == 2 || subset == 3) {
-                    cw[codeword_count] = 266; /* C43 Compaction Submode C2 */
-                    codeword_count++;
+                    cw[codeword_count++] = 266; /* C43 Compaction Submode C2 */
                 }
                 break;
         }
 
     } else if (current_mode == ULT_ASCII_MODE) {
         if (subset == 1) {
-            cw[codeword_count] = 278; /* C43 Compaction Submode C1 */
-            codeword_count++;
+            cw[codeword_count++] = 278; /* C43 Compaction Submode C1 */
         } else if (subset == 2 || subset == 3) {
-            cw[codeword_count] = 280; /* C43 Compaction Submode C2 */
-            codeword_count++;
+            cw[codeword_count++] = 280; /* C43 Compaction Submode C2 */
         }
     }
     unshift_set = subset;
@@ -532,14 +500,11 @@ static float ult_look_ahead_c43(const unsigned char source[], const int length, 
 
         if (new_subset != subset && (new_subset == 1 || new_subset == 2)) {
             if (ult_c43_should_latch_other(source, length, sublocn, subset)) {
-                subcw[subcodeword_count] = 42; /* Latch to other C43 set */
-                subcodeword_count++;
+                subcw[subcodeword_count++] = 42; /* Latch to other C43 set */
                 unshift_set = new_subset;
             } else {
-                subcw[subcodeword_count] = 40; /* Shift to other C43 set for 1 char */
-                subcodeword_count++;
-                subcw[subcodeword_count] = z_posn(new_subset == 1 ? ult_c43_set1 : ult_c43_set2, source[sublocn]);
-                subcodeword_count++;
+                subcw[subcodeword_count++] = 40; /* Shift to other C43 set for 1 char */
+                subcw[subcodeword_count++] = z_posn(new_subset == 1 ? ult_c43_set1 : ult_c43_set2, source[sublocn]);
                 sublocn++;
                 continue;
             }
@@ -548,32 +513,26 @@ static float ult_look_ahead_c43(const unsigned char source[], const int length, 
         subset = new_subset;
 
         if (subset == 1) {
-            subcw[subcodeword_count] = z_posn(ult_c43_set1, source[sublocn]);
-            subcodeword_count++;
+            subcw[subcodeword_count++] = z_posn(ult_c43_set1, source[sublocn]);
             sublocn++;
         } else if (subset == 2) {
-            subcw[subcodeword_count] = z_posn(ult_c43_set2, source[sublocn]);
-            subcodeword_count++;
+            subcw[subcodeword_count++] = z_posn(ult_c43_set2, source[sublocn]);
             sublocn++;
         } else if (subset == 3) {
-            subcw[subcodeword_count] = 41; /* Shift to set 3 */
-            subcodeword_count++;
+            subcw[subcodeword_count++] = 41; /* Shift to set 3 */
 
             fragno = ult_find_fragment(source, length, sublocn);
             if (fragno != -1 && fragno != 26) {
                 if (fragno <= 18) {
-                    subcw[subcodeword_count] = fragno; /* C43 Set 3 codewords 0 to 18 */
-                    subcodeword_count++;
+                    subcw[subcodeword_count++] = fragno; /* C43 Set 3 codewords 0 to 18 */
                     sublocn += (int) strlen(ult_fragment[fragno]);
                 } else {
-                    subcw[subcodeword_count] = fragno + 17; /* C43 Set 3 codewords 36 to 42 */
-                    subcodeword_count++;
+                    subcw[subcodeword_count++] = fragno + 17; /* C43 Set 3 codewords 36 to 42 */
                     sublocn += (int) strlen(ult_fragment[fragno]);
                 }
             } else {
                 /* C43 Set 3 codewords 19 to 35 */
-                subcw[subcodeword_count] = z_posn(ult_c43_set3, source[sublocn]) + 19;
-                subcodeword_count++;
+                subcw[subcodeword_count++] = z_posn(ult_c43_set3, source[sublocn]) + 19;
                 sublocn++;
             }
             subset = unshift_set;
@@ -586,8 +545,7 @@ static float ult_look_ahead_c43(const unsigned char source[], const int length, 
     }
 
     for (i = 0; i < pad; i++) {
-        subcw[subcodeword_count] = 42; /* Latch to other C43 set used as pad */
-        subcodeword_count++;
+        subcw[subcodeword_count++] = 42; /* Latch to other C43 set used as pad */
     }
 
     if (debug_print) {
@@ -603,10 +561,8 @@ static float ult_look_ahead_c43(const unsigned char source[], const int length, 
 
     for (i = 0; i < subcodeword_count; i += 3) {
         base43_value = (43 * 43 * subcw[i]) + (43 * subcw[i + 1]) + subcw[i + 2];
-        cw[codeword_count] = base43_value / 282;
-        codeword_count++;
-        cw[codeword_count] = base43_value % 282;
-        codeword_count++;
+        cw[codeword_count++] = base43_value / 282;
+        cw[codeword_count++] = base43_value % 282;
     }
 
     *cw_len = codeword_count;
@@ -796,7 +752,7 @@ static int ult_generate_codewords(struct zint_symbol *symbol, const unsigned cha
 
 /* Call `ult_generate_codewords()` for each segment, dealing with symbol mode and start codeword beforehand */
 static int ult_generate_codewords_segs(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count,
-            int codewords[], int *p_data_cw_count) {
+            int codewords[]) {
     int i;
     int codeword_count = 0;
     int symbol_mode;
@@ -926,13 +882,11 @@ static int ult_generate_codewords_segs(struct zint_symbol *symbol, struct zint_s
         }
     }
 
-    *p_data_cw_count = codeword_count;
-
-    return 0;
+    return codeword_count;
 }
 
 INTERNAL int zint_ultra(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count) {
-    int data_cw_count = 0;
+    int data_cw_count;
     int acc, qcc;
     int scr[3] = {0}, scr_cw_count = 0; /* Symbol Control Region (only if have Structured Append) */
     int dr_count;
@@ -1008,9 +962,7 @@ INTERNAL int zint_ultra(struct zint_symbol *symbol, struct zint_seg segs[], cons
 
     data_codewords = (int *) z_alloca(sizeof(int) * cw_alloc);
 
-    if (ult_generate_codewords_segs(symbol, segs, seg_count, data_codewords, &data_cw_count)) {
-        return ZINT_ERROR_MEMORY; /* `ult_generate_codewords_segs()` only returns non-zero if OOM */
-    }
+    data_cw_count = ult_generate_codewords_segs(symbol, segs, seg_count, data_codewords);
 
     if (debug_print) {
         printf("Codewords (%d):", data_cw_count);

@@ -319,15 +319,16 @@ static void test_input(const testCtx *const p_ctx) {
         /*  5*/ { BARCODE_TELEPEN, 1, "\020", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 397: DLE (ASCII 16) cannot be first character in Full ASCII + Compressed Numeric Mode" },
         /*  6*/ { BARCODE_TELEPEN, -1, "A\020B", -1, 0, 1, 96, "" },
         /*  7*/ { BARCODE_TELEPEN, 1, "A\020B", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 396: Invalid character at position 3 in input (digits and \"X\" only)" },
-        /*  8*/ { BARCODE_TELEPEN_NUM, -1, "1234567890", -1, 0, 1, 128, "" },
-        /*  9*/ { BARCODE_TELEPEN_NUM, -1, "123456789A", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 393: Invalid character at position 10 in input (digits and \"X\" only)" },
-        /* 10*/ { BARCODE_TELEPEN_NUM, -1, "123456789X", -1, 0, 1, 128, "" }, /* [0-9]X allowed */
-        /* 11*/ { BARCODE_TELEPEN_NUM, -1, "12345678X9", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 394: Invalid odd position 9 of \"X\" in Telepen data" }, /* X[0-9] not allowed */
-        /* 12*/ { BARCODE_TELEPEN_NUM, -1, "1X34567X9X", -1, 0, 1, 128, "" }, /* [0-9]X allowed multiple times */
-        /* 13*/ { BARCODE_TELEPEN_NUM, -1, "\020", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 398: DLE (ASCII 16) cannot be first character in Compressed Numeric Mode" },
-        /* 14*/ { BARCODE_TELEPEN_NUM, 1, "\020", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 398: DLE (ASCII 16) cannot be first character in Compressed Numeric Mode" },
-        /* 15*/ { BARCODE_TELEPEN_NUM, -1, "12\020é", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 395: Invalid character at position 4 in input, extended ASCII not allowed" },
-        /* 16*/ { BARCODE_TELEPEN_NUM, 1, "12\020é", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 395: Invalid character at position 4 in input, extended ASCII not allowed" },
+        /*  8*/ { BARCODE_TELEPEN, 1, "A\02012X3", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 394: Invalid odd position 4 of \"X\" in Telepen data" },
+        /*  9*/ { BARCODE_TELEPEN_NUM, -1, "1234567890", -1, 0, 1, 128, "" },
+        /* 10*/ { BARCODE_TELEPEN_NUM, -1, "123456789A", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 393: Invalid character at position 10 in input (digits and \"X\" only)" },
+        /* 11*/ { BARCODE_TELEPEN_NUM, -1, "123456789X", -1, 0, 1, 128, "" }, /* [0-9]X allowed */
+        /* 12*/ { BARCODE_TELEPEN_NUM, -1, "12345678X9", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 394: Invalid odd position 9 of \"X\" in Telepen data" }, /* X[0-9] not allowed */
+        /* 13*/ { BARCODE_TELEPEN_NUM, -1, "1X34567X9X", -1, 0, 1, 128, "" }, /* [0-9]X allowed multiple times */
+        /* 14*/ { BARCODE_TELEPEN_NUM, -1, "\020", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 398: DLE (ASCII 16) cannot be first character in Compressed Numeric Mode" },
+        /* 15*/ { BARCODE_TELEPEN_NUM, 1, "\020", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 398: DLE (ASCII 16) cannot be first character in Compressed Numeric Mode" },
+        /* 16*/ { BARCODE_TELEPEN_NUM, -1, "12\020é", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 395: Invalid character at position 4 in input, extended ASCII not allowed" },
+        /* 17*/ { BARCODE_TELEPEN_NUM, 1, "12\020é", -1, ZINT_ERROR_INVALID_DATA, -1, -1, "Error 395: Invalid character at position 4 in input, extended ASCII not allowed" },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;

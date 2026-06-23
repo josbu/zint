@@ -77,7 +77,7 @@ extern "C" {
         float x, y;         /* Centre */
         float diameter;     /* Circle diameter. Does not include width (if any) */
         float width;        /* Width of circle perimeter (circumference). 0 for fill (disc) */
-        int colour;         /* Zero for draw with foreground colour (else draw with background colour (legacy)) */
+        int colour;         /* Legacy, no longer used (set to 0) */
         struct zint_vector_circle *next; /* Pointer to next circle */
     };
 
@@ -366,7 +366,6 @@ extern "C" {
 #define ZINT_CAP_HRT                0x0001  /* Prints Human Readable Text? */
 #define ZINT_CAP_STACKABLE          0x0002  /* Is stackable? */
 #define ZINT_CAP_EANUPC             0x0004  /* Is EAN/UPC? */
-#define ZINT_CAP_EXTENDABLE         0x0004  /* Legacy */
 #define ZINT_CAP_COMPOSITE          0x0008  /* Can have composite data? */
 #define ZINT_CAP_ECI                0x0010  /* Supports Extended Channel Interpretations? */
 #define ZINT_CAP_GS1                0x0020  /* Supports GS1 data? */
@@ -379,6 +378,9 @@ extern "C" {
 #define ZINT_CAP_STRUCTAPP          0x1000  /* Supports Structured Append? */
 #define ZINT_CAP_COMPLIANT_HEIGHT   0x2000  /* Has compliant height? */
 #define ZINT_CAP_BINDABLE           0x4000  /* Can set row separators? */
+
+/* Legacy capability flag name */
+#define ZINT_CAP_EXTENDABLE         ZINT_CAP_EANUPC
 
 /* The largest amount of data that can be encoded is 4350 4-byte UTF-8 chars in Han Xin Code */
 #define ZINT_MAX_DATA_LEN       17400

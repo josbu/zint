@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -119,6 +119,8 @@ static void test_upce_input(const testCtx *const p_ctx) {
         /* 73*/ { BARCODE_UPCE, "000000", 0, "", "00000000" },
         /* 74*/ { BARCODE_UPCE, "000001", 0, "", "00000019" },
         /* 75*/ { BARCODE_UPCE, "000002", 0, "", "00000028" },
+        /* 76*/ { BARCODE_UPCE, "2001234000055", ZINT_ERROR_TOO_LONG, "Error 290: Input length 13 too long (maximum 8)", "" },
+        /* 77*/ { BARCODE_UPCE, "0001234000040", ZINT_ERROR_TOO_LONG, "Error 290: Input length 13 too long (maximum 8)", "" },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;

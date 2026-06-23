@@ -341,9 +341,7 @@ static void test_bs(const testCtx *const p_ctx) {
     testFinish();
 }
 
-static void test_many_states(const testCtx *const p_ctx) {
-    int debug = p_ctx->debug;
-
+static const char *test_many_states_data(char *buf, const int length) {
     static char modes_buf[6][6] = {
         { 'A', 'B',    ' ',  'C', 'D', 'E' }, /* AZ_U */
         { 'a', ' ',    'b',  'c', 'd', 'e' }, /* AZ_L */
@@ -352,21 +350,7 @@ static void test_many_states(const testCtx *const p_ctx) {
         { '1', ',',    ' ',  '2', '3', ',' }, /* AZ_D */
         { 'A', '*', '\016',  '2', '1', '0' }, /* Single AZ_B (<SO>) amongst non-AZ_B */
     };
-
-    int i, j, k, ret;
-    struct zint_symbol *symbol = NULL;
-
-    const int length = 3191;
-    char buf[3191];
-
-    char escaped[9216];
-    char cmp_buf[32768];
-    char cmp_msg[1024];
-
-    /* Only do zxing-cpp test if asked, too slow otherwise */
-    int do_zxingcpp = (debug & ZINT_DEBUG_TEST_ZXINGCPP) && testUtilHaveZXingCPPDecoder();
-
-    testStartSymbol(p_ctx->func_name, &symbol);
+    int i, j, k;
 
     for (i = 0; i < length; i += 36) {
         for (j = 0; j < 6; j++) {
@@ -381,6 +365,28 @@ static void test_many_states(const testCtx *const p_ctx) {
             break;
         }
     }
+    return buf;
+}
+
+static void test_many_states(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    int ret;
+    struct zint_symbol *symbol = NULL;
+
+    const int length = 3191;
+    char buf[3191];
+
+    char escaped[9216];
+    char cmp_buf[32768];
+    char cmp_msg[1024];
+
+    /* Only do zxing-cpp test if asked, too slow otherwise */
+    int do_zxingcpp = (debug & ZINT_DEBUG_TEST_ZXINGCPP) && testUtilHaveZXingCPPDecoder();
+
+    testStartSymbol(p_ctx->func_name, &symbol);
+
+    (void) test_many_states_data(buf, length);
 
     symbol = ZBarcode_Create();
     assert_nonnull(symbol, "Symbol not created\n");
@@ -392,21 +398,19 @@ static void test_many_states(const testCtx *const p_ctx) {
     ret = ZBarcode_Encode(symbol, TCU(buf), length);
     assert_nonzero(ret < ZINT_ERROR, "ZBarcode_Encode(%d) ret %d >= ZINT_ERROR (%s)\n", length, ret, symbol->errtxt);
 
-    if (do_zxingcpp && testUtilCanZXingCPP(i, symbol, buf, length, debug)) {
+    if (do_zxingcpp && testUtilCanZXingCPP(0, symbol, buf, length, debug)) {
         int cmp_len, ret_len;
         char modules_dump[22801 + 1];
         assert_notequal(testUtilModulesDump(symbol, modules_dump, sizeof(modules_dump)),
-                    -1, "i:%d testUtilModulesDump == -1\n", i);
-        ret = testUtilZXingCPP(i, symbol, buf, length, modules_dump, 3 /*zxingcpp_cmp*/,
+                    -1, "testUtilModulesDump == -1\n");
+        ret = testUtilZXingCPP(0, symbol, buf, length, modules_dump, 3 /*zxingcpp_cmp*/,
                     cmp_buf, sizeof(cmp_buf), &cmp_len);
-        assert_zero(ret, "i:%d %s testUtilZXingCPP ret %d != 0\n",
-                    i, testUtilBarcodeName(symbol->symbology), ret);
+        assert_zero(ret, "%s testUtilZXingCPP ret %d != 0\n", testUtilBarcodeName(symbol->symbology), ret);
 
         ret = testUtilZXingCPPCmp(symbol, cmp_msg, cmp_buf, cmp_len, buf, length,
                     NULL /*primary*/, escaped, &ret_len);
-        assert_zero(ret, "i:%d %s testUtilZXingCPPCmp %d != 0 %s\n  actual: %.*s\nexpected: %.*s\n",
-                    i, testUtilBarcodeName(symbol->symbology), ret, cmp_msg, cmp_len, cmp_buf, ret_len,
-                    escaped);
+        assert_zero(ret, "%s testUtilZXingCPPCmp %d != 0 %s\n  actual: %.*s\nexpected: %.*s\n",
+                    testUtilBarcodeName(symbol->symbology), ret, cmp_msg, cmp_len, cmp_buf, ret_len, escaped);
     }
 
     ZBarcode_Delete(symbol);
@@ -9933,6 +9937,84 @@ static void test_fuzz(const testCtx *const p_ctx) {
     testFinish();
 }
 
+INTERNAL void zint_test_az_set_fail(const int id, const int at);
+
+/* TODO: put these & above def in "aztec.h" (& rename existing "aztec.h" to "aztec_tabs.h" */
+#define AZ_FAIL_ID_LIST_INIT    1
+#define AZ_FAIL_ID_CPY          2
+#define AZ_FAIL_ID_ADD_CHK      3
+#define AZ_FAIL_ID_LIST_ADD_CHK 4
+
+static void test_alloc(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int output_options;
+        const char *data;
+        int length;
+        int ret;
+        int ats[5];
+        int at_cnt;
+        int id;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_MEMORY_FILE, "Aa345", -1, ZINT_ERROR_MEMORY, { 1, 2, 3, 0, 0 }, 3, AZ_FAIL_ID_LIST_INIT },
+        /*  1*/ { BARCODE_MEMORY_FILE, "\015\012. , : ", -1, ZINT_ERROR_MEMORY, { 1, 2, 3, 0, 0 }, 3, AZ_FAIL_ID_LIST_INIT },
+        /*  2*/ { BARCODE_MEMORY_FILE, "Aa345", -1, ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_CPY },
+        /*  3*/ { BARCODE_MEMORY_FILE, "ABC\241", -1, ZINT_ERROR_MEMORY, { 5, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_CPY },
+        /*  4*/ { BARCODE_MEMORY_FILE, "\241\015\012", -1, ZINT_ERROR_MEMORY, { 4, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_CPY },
+        /*  5*/ { BARCODE_MEMORY_FILE, NULL, 32, ZINT_ERROR_MEMORY, { 7, 42, 95, 96, 0 }, 4, AZ_FAIL_ID_CPY },
+        /*  6*/ { BARCODE_MEMORY_FILE, NULL, 32, ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_ADD_CHK },
+        /*  7*/ { BARCODE_MEMORY_FILE, "Code 2D!", -1, ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_LIST_ADD_CHK },
+        /*  8*/ { BARCODE_MEMORY_FILE, "+/EO5232013", -1, ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_LIST_ADD_CHK },
+        /*  9*/ { BARCODE_MEMORY_FILE, "+/KN12345A", -1, ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_LIST_ADD_CHK },
+        /* 10*/ { BARCODE_MEMORY_FILE, ", . , ", -1, ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0 }, 1, AZ_FAIL_ID_LIST_ADD_CHK },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, length, ret;
+    struct zint_symbol *symbol = NULL;
+
+    char buf[3191];
+    const char *text;
+
+    testStartSymbol(p_ctx->func_name, &symbol);
+
+    for (i = 0; i < data_size; i++) {
+        int j;
+
+        if (testContinue(p_ctx, i)) continue;
+
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        for (j = 0; j < data[i].at_cnt; j++) {
+
+            if (data[i].data) {
+                text = data[i].data;
+            } else {
+                assert_nonzero(data[i].length > 0, "i:%d data length %d <= 0\n", i, data[i].length);
+                assert_nonzero(data[i].length <= ARRAY_SIZE(buf), "i:%d data length %d > buf %d\n",
+                                i, data[i].length, ARRAY_SIZE(buf));
+                text = test_many_states_data(buf, data[i].length);
+            }
+            length = testUtilSetSymbol(symbol, BARCODE_AZTEC, -1 /*input_mode*/, -1 /*eci*/,
+                                        -1 /*option_1*/, -1 /*option_2*/, -1 /*option_3*/, data[i].output_options,
+                                        text, data[i].length, debug);
+            zint_test_az_set_fail(data[i].id, data[i].ats[j]);
+            ret = ZBarcode_Encode(symbol, ZCUCP(text), length);
+            assert_equal(ret, data[i].ret, "i:%d j:%d ZBarcode_Print (%d,%d) ret %d != %d (%s)\n",
+                            i, j, data[i].id, data[i].ats[j], ret, data[i].ret, symbol->errtxt);
+            ZBarcode_Reset(symbol);
+        }
+        zint_test_az_set_fail(0, 0);
+
+        ZBarcode_Delete(symbol);
+    }
+
+    testFinish();
+}
+
 int main(int argc, char *argv[]) {
 
     testFunction funcs[] = { /* name, func */
@@ -9945,6 +10027,7 @@ int main(int argc, char *argv[]) {
         { "test_ct", test_ct },
         { "test_ct_segs", test_ct_segs },
         { "test_fuzz", test_fuzz },
+        { "test_alloc", test_alloc },
     };
 
     testRun(argc, argv, funcs, ARRAY_SIZE(funcs));

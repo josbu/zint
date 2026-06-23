@@ -1,4 +1,4 @@
-Version 2.16.0.9 (dev) not released yet (2026-05-26)
+Version 2.16.0.9 (dev) not released yet (2026-06-23)
 ====================================================
 
 **Incompatible changes**
@@ -11,6 +11,8 @@ Version 2.16.0.9 (dev) not released yet (2026-05-26)
 - New Qt Backend method `save_as_memfile()` to save file to memory
 - New Qt Backend methods `gs1Raw()` and `setGS1Raw()` for new `GS1RAW_MODE`
   option for processing GS1 input
+- New Qt Backend helper methods `setBorderTypeValue()`, `encodedInputMode()`,
+  `encodedOutputOptions()`, `ECIValueToECIIndex()` and `ECIIndexToECIValue()`
 - CLI now warns if both "--dmre" and "--square" are given
   (previously silently ignored "--dmre")
 - New escape sequences `\L` (DLE), `\F` (FS), `\N` (US)
@@ -22,6 +24,7 @@ Changes
   creating temporary file
 - CLI: allow "tiff" as filetype (saved as ".tif");
   make args for "--scalexdimdp" and "--scmvv" optional;
+  make "--mirror" available in standard non-batch mode;
   add `ZINT_TEST`-only "--test" option to do various internal tests
 - GS1SE: exclude GS1_128 from requisite AIs check as may be spread across more
   than one barcode (ticket #348, props Harald Oehlmann and Terry Burton)
@@ -71,6 +74,7 @@ Bugs
 - ZBarcode_Encode_Segs: allow for multiple (stacked) rows when setting absolute
   minimum height
 - CLI: stop looping over data args when have error
+- composite: preserve `gs1_verify()` warning (if any)
 
 
 Version 2.16.0 (2025-12-19)

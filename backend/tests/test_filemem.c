@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2023-2025 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2023-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -204,7 +204,8 @@ static void test_putsf(const testCtx *const p_ctx) {
 
             zint_fm_putsf(data[i].prefix, data[i].dp, data[i].arg, fmp);
 
-            assert_nonzero(zint_fm_close(fmp, symbol), "i:%d: zint_fm_close fail (%d, %s)\n", i, fmp->err, strerror(fmp->err));
+            assert_nonzero(zint_fm_close(fmp, symbol), "i:%d: zint_fm_close fail (%d, %s)\n",
+                            i, fmp->err, strerror(fmp->err));
 
             if (locale) {
                 assert_nonnull(setlocale(LC_ALL, locale), "i:%d: setlocale(%s) restore fail (%d, %s)\n",
@@ -274,6 +275,9 @@ static void test_printf(const testCtx *const p_ctx) {
         ret = zint_fm_printf(fmp, fmt1, "gosh", 123, "gee");
         assert_equal(ret, 1, "zint_fm_printf ret %d != 1\n", ret);
 
+        ret = zint_fm_flush(fmp);
+        assert_equal(ret, 1, "zint_fm_flush ret %d != 1\n", ret);
+
         ret = zint_fm_close(fmp, symbol);
         assert_equal(ret, 1, "zint_fm_close ret %d != 1\n", ret);
 
@@ -335,6 +339,92 @@ static void test_printf(const testCtx *const p_ctx) {
         }
 
         ZBarcode_Clear(symbol);
+    }
+
+    testFinish();
+}
+
+static void test_write(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        const char *data;
+        size_t size;
+        size_t nitems;
+        const char *expected;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    struct item data[] = {
+        /*  0*/ { "123", 3, 1, "123" },
+        /*  1*/ { "123", 3, 0, "" },
+        /*  2*/ { "", 0, 1, "" },
+    };
+    int data_size = ARRAY_SIZE(data);
+    int i, j;
+
+    struct zint_symbol symbol_data = {0};
+    struct zint_symbol *const symbol = &symbol_data;
+    struct filemem fm = {0}; /* Suppress clang -fsanitize=memory false positive */
+    struct filemem *const fmp = &fm;
+#ifndef ZINT_TEST_NO_FMEMOPEN
+    FILE *fp;
+    char buf[512] = {0}; /* Suppress clang-16/17 run-time exception MemorySanitizer: use-of-uninitialized-value */
+#endif
+
+    (void)debug;
+
+    testStart(p_ctx->func_name);
+
+    for (j = 0; j < 2; j++) { /* 1st `memfile`, then file */
+#ifdef ZINT_TEST_NO_FMEMOPEN
+        if (j == 1) break; /* Skip file test on Windows/Solaris */
+#endif
+        for (i = 0; i < data_size; i++) {
+            int expected_size;
+
+            if (testContinue(p_ctx, i)) continue;
+
+            ZBarcode_Reset(symbol);
+            if (j == 1) {
+#ifndef ZINT_TEST_NO_FMEMOPEN
+                buf[0] = '\0';
+                fp = fmemopen(buf, sizeof(buf), "w");
+                assert_nonnull(fp, "%d: fmemopen fail (%d, %s)\n", i, errno, strerror(errno));
+#endif
+            } else {
+                symbol->output_options |= BARCODE_MEMORY_FILE;
+            }
+            assert_nonzero(zint_fm_open(fmp, symbol, "w"), "i:%d: zint_fm_open fail (%d, %s)\n",
+                        i, fmp->err, strerror(fmp->err));
+            if (j == 1) {
+#ifndef ZINT_TEST_NO_FMEMOPEN
+                /* Hack in `fmemopen()` fp */
+                assert_zero(fclose(fmp->fp), "i:%d fclose(fmp->fp) fail (%d, %s)\n", i, errno, strerror(errno));
+                fmp->fp = fp;
+#endif
+            }
+
+            zint_fm_write(data[i].data, data[i].size, data[i].nitems, fmp);
+
+            assert_nonzero(zint_fm_close(fmp, symbol), "i:%d: zint_fm_close fail (%d, %s)\n",
+                            i, fmp->err, strerror(fmp->err));
+
+            if (j == 1) {
+#ifndef ZINT_TEST_NO_FMEMOPEN
+                assert_zero(strcmp(buf, data[i].expected), "%d: strcmp(%s, %s) != 0\n", i, buf, data[i].expected);
+#endif
+            } else {
+                expected_size = (int) strlen(data[i].expected);
+                assert_equal(symbol->memfile_size, expected_size, "i:%d: memfile_size %d != expected_size %d\n",
+                            i, symbol->memfile_size, expected_size);
+                assert_nonnull(symbol->memfile, "i:%d memfile NULL\n", i);
+                assert_zero(memcmp(symbol->memfile, data[i].expected, expected_size),
+                            "i:%d: memcmp(%.*s, %.*s) != 0\n",
+                            i, symbol->memfile_size, symbol->memfile, expected_size, data[i].expected);
+            }
+
+            ZBarcode_Clear(symbol);
+        }
     }
 
     testFinish();
@@ -469,14 +559,83 @@ static void test_large(const testCtx *const p_ctx) {
     testFinish();
 }
 
+static void test_alloc(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int symbology;
+        int option_2;
+        int output_options;
+        const char *outfile;
+        const char *fgcolour;
+        float scale;
+        const char *data;
+        int ret;
+        int ats[5];
+        int at_cnt;
+        int id;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_CODE128, -1, BARCODE_MEMORY_FILE, "out.pcx", "FEDCBA98", 0.0f, "12345", ZINT_ERROR_FILE_ACCESS, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_MALLOC },
+        /*  1*/ { BARCODE_CODE128, -1, BARCODE_MEMORY_FILE, "out.pcx", "FEDCBA98", 0.0f, "12345", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_REALLOC },
+        /*  2*/ { BARCODE_QRCODE, 34, BARCODE_MEMORY_FILE, "out.gif", NULL, 2.5f, "12345", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_REALLOC },
+        /*  3*/ { BARCODE_MAXICODE, -1, BARCODE_MEMORY_FILE, "out.svg", "FEDCBA98", 101.43f, "12345", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_REALLOC },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, length, ret;
+    struct zint_symbol *symbol = NULL;
+
+    testStartSymbol(p_ctx->func_name, &symbol);
+
+    for (i = 0; i < data_size; i++) {
+        int j;
+
+        if (testContinue(p_ctx, i)) continue;
+
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        for (j = 0; j < data[i].at_cnt; j++) {
+
+            length = testUtilSetSymbol(symbol, data[i].symbology, -1 /*input_mode*/, -1 /*eci*/,
+                                        -1 /*option_1*/, data[i].option_2, -1 /*option_3*/, data[i].output_options,
+                                        data[i].data, -1, debug);
+            strcpy(symbol->outfile, data[i].outfile);
+            if (data[i].fgcolour) {
+                strcpy(symbol->fgcolour, data[i].fgcolour);
+            }
+            if (data[i].scale) {
+                symbol->scale = data[i].scale;
+            }
+            ret = ZBarcode_Encode(symbol, ZCUCP(data[i].data), length);
+            assert_zero(ret, "i:%d %s ZBarcode_Encode ret %d != 0 %s\n",
+                        i, testUtilBarcodeName(data[i].symbology), ret, symbol->errtxt);
+
+            zint_test_fm_set_fail(data[i].id, data[i].ats[j]);
+            ret = ZBarcode_Print(symbol, 0 /*rotate_angle*/);
+            assert_equal(ret, data[i].ret, "i:%d j:%d ZBarcode_Print (%d,%d) ret %d != %d (%s)\n",
+                            i, j, data[i].id, data[i].ats[j], ret, data[i].ret, symbol->errtxt);
+            ZBarcode_Reset(symbol);
+        }
+        zint_test_fm_set_fail(0, 0);
+
+        ZBarcode_Delete(symbol);
+    }
+
+    testFinish();
+}
+
 int main(int argc, char *argv[]) {
 
     testFunction funcs[] = { /* name, func */
         { "test_file", test_file },
         { "test_putsf", test_putsf },
         { "test_printf", test_printf },
+        { "test_write", test_write },
         { "test_seek", test_seek },
         { "test_large", test_large },
+        { "test_alloc", test_alloc },
     };
 
     testRun(argc, argv, funcs, ARRAY_SIZE(funcs));
@@ -487,4 +646,3 @@ int main(int argc, char *argv[]) {
 }
 
 /* vim: set ts=4 sw=4 et : */
-

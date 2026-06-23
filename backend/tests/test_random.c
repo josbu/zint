@@ -248,7 +248,7 @@ static void test_dotcode(const testCtx *const p_ctx) {
 
 static void test_hanxin(const testCtx *const p_ctx) {
     struct random_item rdata = {
-        FLAG_FULL_8BIT, BARCODE_HANXIN, DATA_MODE, 899, 1, 0, 0, -1, 3261
+        FLAG_FULL_8BIT, BARCODE_HANXIN, DATA_MODE, 899, 1, 0, 0, -1, 3258
     };
 
     test_random(p_ctx, &rdata);

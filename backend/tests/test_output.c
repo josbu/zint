@@ -35,6 +35,7 @@
 #include <windows.h>
 #include <direct.h>
 #endif
+#include <sys/stat.h>
 
 static void test_check_colour_options(const testCtx *const p_ctx) {
     struct item {
@@ -82,7 +83,8 @@ static void test_check_colour_options(const testCtx *const p_ctx) {
 
         ret = zint_out_check_colour_options(&symbol);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d (%s)\n", i, ret, data[i].ret, symbol.errtxt);
-        assert_zero(strcmp(symbol.errtxt, data[i].expected), "i:%d symbol.errtxt (%s) != expected (%s)\n", i, symbol.errtxt, data[i].expected);
+        assert_zero(strcmp(symbol.errtxt, data[i].expected), "i:%d symbol.errtxt (%s) != expected (%s)\n",
+                    i, symbol.errtxt, data[i].expected);
     }
 
     testFinish();
@@ -130,10 +132,14 @@ static void test_colour_get_rgb(const testCtx *const p_ctx) {
 
         ret = zint_out_colour_get_rgb(data[i].colour, &red, &green, &blue, &alpha);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
-        assert_equal(red, data[i].red, "i:%d red 0x%02X (%d) != 0x%02X (%d) (green 0x%02X, blue 0x%02X)\n", i, red, red, data[i].red, data[i].red, green, blue);
-        assert_equal(green, data[i].green, "i:%d green %d (0x%02X) != %d (0x%02X)\n", i, green, green, data[i].green, data[i].green);
-        assert_equal(blue, data[i].blue, "i:%d blue %d (0x%02X) != %d (0x%02X)\n", i, blue, blue, data[i].blue, data[i].blue);
-        assert_equal(alpha, data[i].alpha, "i:%d alpha %d (0x%02X) != %d (0x%02X)\n", i, alpha, alpha, data[i].alpha, data[i].alpha);
+        assert_equal(red, data[i].red, "i:%d red 0x%02X (%d) != 0x%02X (%d) (green 0x%02X, blue 0x%02X)\n",
+                        i, red, red, data[i].red, data[i].red, green, blue);
+        assert_equal(green, data[i].green, "i:%d green %d (0x%02X) != %d (0x%02X)\n",
+                        i, green, green, data[i].green, data[i].green);
+        assert_equal(blue, data[i].blue, "i:%d blue %d (0x%02X) != %d (0x%02X)\n",
+                        i, blue, blue, data[i].blue, data[i].blue);
+        assert_equal(alpha, data[i].alpha, "i:%d alpha %d (0x%02X) != %d (0x%02X)\n",
+                        i, alpha, alpha, data[i].alpha, data[i].alpha);
 
         have_alpha = ret == 1;
         if (have_alpha) {
@@ -142,11 +148,14 @@ static void test_colour_get_rgb(const testCtx *const p_ctx) {
             sprintf(rgb, "%02X%02X%02X", red, green, blue);
         }
         ret = zint_out_colour_get_cmyk(rgb, &cyan, &magenta, &yellow, &black, &rgb_alpha);
-        assert_equal(ret, 1 + have_alpha, "i:%d zint_out_colour_get_cmyk(%s) ret %d != %d\n", i, rgb, ret, 1 + have_alpha);
-        assert_equal(rgb_alpha, alpha, "i:%d rgb_alpha %d (0x%02X) != %d (0x%02X)\n", i, rgb_alpha, rgb_alpha, alpha, alpha);
+        assert_equal(ret, 1 + have_alpha, "i:%d zint_out_colour_get_cmyk(%s) ret %d != %d\n",
+                        i, rgb, ret, 1 + have_alpha);
+        assert_equal(rgb_alpha, alpha, "i:%d rgb_alpha %d (0x%02X) != %d (0x%02X)\n",
+                        i, rgb_alpha, rgb_alpha, alpha, alpha);
 
         sprintf(cmyk, "%d,%d,%d,%d", cyan, magenta, yellow, black);
-        assert_zero(strcmp(cmyk, data[i].expected_cmyk), "i:%d strcmp(%s, %s) != 0\n", i, cmyk, data[i].expected_cmyk);
+        assert_zero(strcmp(cmyk, data[i].expected_cmyk), "i:%d strcmp(%s, %s) != 0\n",
+                    i, cmyk, data[i].expected_cmyk);
     }
 
     testFinish();
@@ -188,17 +197,60 @@ static void test_colour_get_cmyk(const testCtx *const p_ctx) {
 
         ret = zint_out_colour_get_cmyk(data[i].colour, &cyan, &magenta, &yellow, &black, &alpha);
         assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
-        assert_equal(cyan, data[i].cyan, "i:%d cyan %d != %d (magenta %d, yellow %d, black %d)\n", i, cyan, data[i].cyan, magenta, yellow, black);
+        assert_equal(cyan, data[i].cyan, "i:%d cyan %d != %d (magenta %d, yellow %d, black %d)\n",
+                        i, cyan, data[i].cyan, magenta, yellow, black);
         assert_equal(magenta, data[i].magenta, "i:%d magenta %d != %d\n", i, magenta, data[i].magenta);
         assert_equal(yellow, data[i].yellow, "i:%d yellow %d != %d\n", i, yellow, data[i].yellow);
         assert_equal(alpha, data[i].alpha, "i:%d alpha %d != %d\n", i, alpha, data[i].alpha);
 
         ret = zint_out_colour_get_rgb(data[i].colour, &red, &green, &blue, &rgb_alpha);
-        assert_equal(ret, data[i].ret_rgb, "i:%d zint_out_colour_get_rgb(%s) ret %d != %d\n", i, rgb, ret, data[i].ret_rgb);
+        assert_equal(ret, data[i].ret_rgb, "i:%d zint_out_colour_get_rgb(%s) ret %d != %d\n",
+                        i, rgb, ret, data[i].ret_rgb);
         assert_equal(rgb_alpha, alpha, "i:%d rgb_alpha %d != %d\n", i, rgb_alpha, alpha);
 
         sprintf(rgb, "%02X%02X%02X%02X", red, green, blue, rgb_alpha);
         assert_zero(strcmp(rgb, data[i].expected_rgb), "i:%d strcmp(%s, %s) != 0\n", i, rgb, data[i].expected_rgb);
+    }
+
+    testFinish();
+}
+
+static void test_colour_char_to_rgb(const testCtx *const p_ctx) {
+    struct item {
+        const char ch;
+        int ret;
+        unsigned char red;
+        unsigned char green;
+        unsigned char blue;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { 'W', 1, 0xFF, 0xFF, 0xFF },
+        /*  1*/ { 'C', 1, 0x00, 0xFF, 0xFF },
+        /*  2*/ { 'B', 1, 0x00, 0x00, 0xFF },
+        /*  3*/ { 'G', 1, 0x00, 0xFF, 0x00 },
+        /*  4*/ { 'K', 1, 0x00, 0x00, 0x00 },
+        /*  5*/ { 'L', 0, 0x00, 0x00, 0x00 },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, ret;
+
+    testStart(p_ctx->func_name);
+
+    for (i = 0; i < data_size; i++) {
+        /* Suppress clang-16 run-time exception MemorySanitizer: use-of-uninitialized-value (fixed in clang-17) */
+        unsigned char red = 0, green = 0, blue = 0;
+
+        if (testContinue(p_ctx, i)) continue;
+
+        ret = zint_out_colour_char_to_rgb(data[i].ch, &red, &green, &blue);
+        assert_equal(ret, data[i].ret, "i:%d ret %d != %d\n", i, ret, data[i].ret);
+        assert_equal(red, data[i].red, "i:%d red 0x%02X (%d) != 0x%02X (%d) (green 0x%02X, blue 0x%02X)\n",
+                        i, red, red, data[i].red, data[i].red, green, blue);
+        assert_equal(green, data[i].green, "i:%d green %d (0x%02X) != %d (0x%02X)\n",
+                        i, green, green, data[i].green, data[i].green);
+        assert_equal(blue, data[i].blue, "i:%d blue %d (0x%02X) != %d (0x%02X)\n",
+                        i, blue, blue, data[i].blue, data[i].blue);
     }
 
     testFinish();
@@ -287,22 +339,32 @@ static void test_set_whitespace_offsets(const testCtx *const p_ctx) {
         zint_out_set_whitespace_offsets(&symbol, data[i].hide_text, data[i].comp_xoffset,
                 &xoffset, &yoffset, &roffset, &boffset, &qz_right, data[i].scaler,
                 &xoffset_si, &yoffset_si, &roffset_si, &boffset_si, &qz_right_si);
-        assert_equal(xoffset, data[i].expected_xoffset, "i:%d xoffset %g != %g\n", i, xoffset, data[i].expected_xoffset);
-        assert_equal(yoffset, data[i].expected_yoffset, "i:%d yoffset %g != %g\n", i, yoffset, data[i].expected_yoffset);
-        assert_equal(roffset, data[i].expected_roffset, "i:%d roffset %g != %g\n", i, roffset, data[i].expected_roffset);
-        assert_equal(boffset, data[i].expected_boffset, "i:%d boffset %g != %g\n", i, boffset, data[i].expected_boffset);
-        assert_equal(qz_right, data[i].expected_qz_right, "i:%d qz_right %g != %g\n", i, qz_right, data[i].expected_qz_right);
+        assert_equal(xoffset, data[i].expected_xoffset, "i:%d xoffset %g != %g\n",
+                        i, xoffset, data[i].expected_xoffset);
+        assert_equal(yoffset, data[i].expected_yoffset, "i:%d yoffset %g != %g\n",
+                        i, yoffset, data[i].expected_yoffset);
+        assert_equal(roffset, data[i].expected_roffset, "i:%d roffset %g != %g\n",
+                        i, roffset, data[i].expected_roffset);
+        assert_equal(boffset, data[i].expected_boffset, "i:%d boffset %g != %g\n",
+                        i, boffset, data[i].expected_boffset);
+        assert_equal(qz_right, data[i].expected_qz_right, "i:%d qz_right %g != %g\n",
+                        i, qz_right, data[i].expected_qz_right);
         if (data[i].scaler) {
             int expected_xoffset_si = (int) (data[i].expected_xoffset * data[i].scaler);
             int expected_yoffset_si = (int) (data[i].expected_yoffset * data[i].scaler);
             int expected_roffset_si = (int) (data[i].expected_roffset * data[i].scaler);
             int expected_boffset_si = (int) (data[i].expected_boffset * data[i].scaler);
             int expected_qz_right_si = (int) (data[i].expected_qz_right * data[i].scaler);
-            assert_equal(xoffset_si, expected_xoffset_si, "i:%d xoffset_si %d != %d\n", i, xoffset_si, expected_xoffset_si);
-            assert_equal(yoffset_si, expected_yoffset_si, "i:%d yoffset_si %d != %d\n", i, yoffset_si, expected_yoffset_si);
-            assert_equal(roffset_si, expected_roffset_si, "i:%d roffset_si %d != %d\n", i, roffset_si, expected_roffset_si);
-            assert_equal(boffset_si, expected_boffset_si, "i:%d boffset_si %d != %d\n", i, boffset_si, expected_boffset_si);
-            assert_equal(qz_right_si, expected_qz_right_si, "i:%d qz_right_si %d != %d\n", i, qz_right_si, expected_qz_right_si);
+            assert_equal(xoffset_si, expected_xoffset_si, "i:%d xoffset_si %d != %d\n",
+                            i, xoffset_si, expected_xoffset_si);
+            assert_equal(yoffset_si, expected_yoffset_si, "i:%d yoffset_si %d != %d\n",
+                            i, yoffset_si, expected_yoffset_si);
+            assert_equal(roffset_si, expected_roffset_si, "i:%d roffset_si %d != %d\n",
+                            i, roffset_si, expected_roffset_si);
+            assert_equal(boffset_si, expected_boffset_si, "i:%d boffset_si %d != %d\n",
+                            i, boffset_si, expected_boffset_si);
+            assert_equal(qz_right_si, expected_qz_right_si, "i:%d qz_right_si %d != %d\n",
+                            i, qz_right_si, expected_qz_right_si);
         } else {
             assert_zero(xoffset_si, "i:%d xoffset_si %d non-zero\n", i, xoffset_si);
             assert_zero(yoffset_si, "i:%d yoffset_si %d non-zero\n", i, yoffset_si);
@@ -322,6 +384,53 @@ static void test_set_whitespace_offsets(const testCtx *const p_ctx) {
 #define TEST_OUT_SEP        '/'
 #define TEST_OUT_SEP_STR    "/"
 #endif
+
+INTERNAL int zint_test_out_maybe_mkdir(const char *path);
+
+static void test_out_maybe_mkdir(const testCtx *const p_ctx) {
+    int ret;
+    const char dir[] = "test_maybe_dir";
+    const char subdir[] = "test_maybe_dir/subdir";
+#ifndef _WIN32
+    const int skip_readonly_test = getuid() == 0; /* Skip if running as root on Unix as can't create read-only file */
+#endif
+
+    testStart(p_ctx->func_name);
+
+    (void) testUtilRmDir(dir); /* In case lying around from previous fail */
+    (void) testUtilRemove(dir); /* In case lying around from previous fail */
+
+    ret = zint_test_out_maybe_mkdir(dir);
+    assert_zero(ret, "out_maybe_mkdir(%s) ret %d != 0\n", dir, ret);
+
+    ret = zint_test_out_maybe_mkdir(dir);
+    assert_zero(ret, "out_maybe_mkdir(%s) (exists) ret %d != 0\n", dir, ret);
+
+    assert_zero(testUtilRmDir(dir), "testUtilRmDir(%s) != 0 (%d: %s)\n", dir, errno, strerror(errno));
+
+    assert_equal(testUtilCreateFile(dir), 1, "CreateFile(%s) != 1 (%d: %s)\n", dir, errno, strerror(errno));
+
+    ret = zint_test_out_maybe_mkdir(dir);
+    assert_equal(ret, -1, "out_maybe_mkdir(%s) file exists ret %d != -1\n", dir, ret);
+
+    assert_zero(testUtilRemove(dir), "testUtilRemove(%s) != 0 (%d: %s)\n", dir, errno, strerror(errno));
+
+#ifndef _WIN32
+    if (!skip_readonly_test) {
+        ret = zint_test_out_maybe_mkdir(dir);
+        assert_zero(ret, "ret %d != 0\n", ret);
+        assert_zero(chmod(dir, S_IRUSR | S_IRGRP | S_IROTH), "chmod((%s) read-only != 0 (%d: %s)\n",
+                    dir, errno, strerror(errno));
+
+        ret = zint_test_out_maybe_mkdir(subdir);
+        assert_equal(ret, -1, "out_maybe_mkdir(%s) ret %d != -1\n", subdir, ret);
+
+        assert_zero(testUtilRemove(dir), "testUtilRemove(%s) != 0 (%d: %s)\n", dir, errno, strerror(errno));
+    }
+#endif
+
+    testFinish();
+}
 
 static void test_fopen(const testCtx *const p_ctx) {
     struct item {
@@ -393,17 +502,40 @@ static void test_fopen(const testCtx *const p_ctx) {
         if (data[i].succeed) {
             assert_nonnull(ret, "i:%d zint_out_fopen(%s) == NULL (%d: %s)\n", i, outfile, errno, strerror(errno));
             assert_zero(fclose(ret), "i:%d fclose(%s) != 0 (%d: %s)\n", i, outfile, errno, strerror(errno));
-            assert_nonzero(testUtilExists(outfile), "i:%d testUtilExists(%s) != 0 (%d: %s)\n", i, outfile, errno, strerror(errno));
+            assert_nonzero(testUtilExists(outfile), "i:%d testUtilExists(%s) != 0 (%d: %s)\n",
+                            i, outfile, errno, strerror(errno));
             if (data[i].dir[0]) {
-                assert_nonzero(testUtilDirExists(dirname), "i:%d testUtilDirExists(%s) != 0 (%d: %s)\n", i, dirname, errno, strerror(errno));
+                assert_nonzero(testUtilDirExists(dirname), "i:%d testUtilDirExists(%s) != 0 (%d: %s)\n",
+                                i, dirname, errno, strerror(errno));
             }
-            assert_zero(testUtilRemove(outfile), "i:%d testUtilRemove(%s) != 0 (%d: %s)\n", i, outfile, errno, strerror(errno));
+            assert_zero(testUtilRemove(outfile), "i:%d testUtilRemove(%s) != 0 (%d: %s)\n",
+                        i, outfile, errno, strerror(errno));
             if (data[i].dir[0]) {
                 if (data[i].subdir[0] && !subdir_exists) {
-                    assert_zero(testUtilRmDir(subdirname), "i:%d rmdir(%s) != 0 (%d: %s)\n", i, subdirname, errno, strerror(errno));
+                    assert_zero(testUtilRmDir(subdirname), "i:%d rmdir(%s) != 0 (%d: %s)\n",
+                                i, subdirname, errno, strerror(errno));
                 }
                 if (!dir_exists && strcmp(dirname, "/") != 0 && strcmp(dirname, "\\") != 0) {
-                    assert_zero(testUtilRmDir(dirname), "i:%d rmdir(%s) != 0 (%d: %s)\n", i, dirname, errno, strerror(errno));
+#ifndef _WIN32
+                    /* Skip if running as root on Unix as can't create read-only file */
+                    const int skip_readonly_test = getuid() == 0;
+#endif
+                    assert_zero(testUtilRmDir(dirname), "i:%d rmdir(%s) != 0 (%d: %s)\n",
+                                i, dirname, errno, strerror(errno));
+
+#ifndef _WIN32
+                    if (!skip_readonly_test) {
+                        int iret = testUtilMkDir(dirname);
+                        assert_zero(iret, "i:%d testUtilMkDir iret %d != 0\n", i, iret);
+                        assert_zero(chmod(dirname, S_IRUSR | S_IRGRP | S_IROTH),
+                                    "i:%d chmod((%s) read-only != 0 (%d: %s)\n", i, dirname, errno, strerror(errno));
+                        ret = zint_out_fopen(outfile, "w");
+                        assert_null(ret, "i:%d zint_out_fopen(%s) != NULL (%d: %s)\n",
+                                    i, outfile, errno, strerror(errno));
+                        assert_zero(testUtilRmDir(dirname), "i:%d rmdir(%s) != 0 (%d: %s)\n",
+                                    i, dirname, errno, strerror(errno));
+                    }
+#endif
                 }
             }
         } else {
@@ -421,8 +553,10 @@ int main(int argc, char *argv[]) {
         { "test_check_colour_options", test_check_colour_options },
         { "test_colour_get_rgb", test_colour_get_rgb },
         { "test_colour_get_cmyk", test_colour_get_cmyk },
+        { "test_colour_char_to_rgb", test_colour_char_to_rgb },
         { "test_quiet_zones", test_quiet_zones },
         { "test_set_whitespace_offsets", test_set_whitespace_offsets },
+        { "test_out_maybe_mkdir", test_out_maybe_mkdir },
         { "test_fopen", test_fopen },
     };
 

@@ -67,8 +67,10 @@ typedef char static_assert_int_at_least_32bits[sizeof(int) * CHAR_BIT < 32 ? -1 
 #define z_isdigit(ch) ((ch) <= '9' && (ch) >= '0')
 #define z_isupper(ch) ((ch) >= 'A' && (ch) <= 'Z')
 #define z_islower(ch) ((ch) >= 'a' && (ch) <= 'z')
+#define z_iscntrl(ch) (!((ch) & ~0x1F) || (ch) == 127)
 
 #define ZUCP(p)     ((unsigned char *) (p))
+#define ZCUCP(p)    ((const unsigned char *) (p))
 #define ZCCP(p)     ((const char *) (p))
 
 /* End of copy from "backend/common.h" */
@@ -216,7 +218,7 @@ if (have_gs1syntaxengine) {
            "  -i, --input=FILE      Read input data from FILE\n"
            "  --init                Create Reader Initialisation (Programming) symbol\n"
            "  --mask=INTEGER        Set masking pattern to use (QR/Han Xin/DotCode)\n"
-           "  --mirror              Use batch data to determine filename\n", stdout);
+           "  --mirror              Use data to determine filename\n", stdout);
     fputs( "  --mode=INTEGER        Set encoding mode (MaxiCode/Composite)\n", stdout);
     printf("  --nobackground        Remove background (EMF/EPS/GIF%s/SVG/TIF only)\n", no_png_type);
     fputs( "  --noquietzones        Disable default quiet zones\n"
@@ -373,23 +375,20 @@ static int validate_float(const char source[], const int allow_neg, float *const
         const char *e;
         for (e = dot + strlen(dot) - 1; e > dot && *e == '0'; e--); /* Ignore trailing zeroes */
         fract_len = (int) (e + 1 - dot);
-        if (fract_len) {
-            if (fract_len > 7) {
-                cpy_str(errbuf, ERRBUF_SIZE, "fractional part must be 7 digits maximum");
-                return 0;
-            }
-            if (!validate_int(dot, fract_len, &val2)) {
-                cpy_str(errbuf, ERRBUF_SIZE, "fractional part must be digits only");
-                return 0;
-            }
-            if (val2 && int_len + fract_len > 7) {
-                cpy_str(errbuf, ERRBUF_SIZE, "7 significant digits maximum");
-                return 0;
-            }
-            *p_val = val + val2 * fract_muls[fract_len - 1];
-        } else {
-            *p_val = (float) val;
+        assert(fract_len);
+        if (fract_len > 7) {
+            cpy_str(errbuf, ERRBUF_SIZE, "fractional part must be 7 digits maximum");
+            return 0;
         }
+        if (!validate_int(dot, fract_len, &val2)) {
+            cpy_str(errbuf, ERRBUF_SIZE, "fractional part must be digits only");
+            return 0;
+        }
+        if (val2 && int_len + fract_len > 7) {
+            cpy_str(errbuf, ERRBUF_SIZE, "7 significant digits maximum");
+            return 0;
+        }
+        *p_val = val + val2 * fract_muls[fract_len - 1];
     } else {
         *p_val = (float) val;
     }
@@ -415,6 +414,13 @@ static void to_lower(char source[]) {
 static int is_composite(const int symbology) {
     return (symbology >= BARCODE_EANX_CC && symbology <= BARCODE_DBAR_EXPSTK_CC)
             || symbology == BARCODE_EAN8_CC || symbology == BARCODE_EAN13_CC;
+}
+
+/* Returns 1 if `symbol` can process EXTRA_ESCAPE_MODE (copied from "library.c") */
+static int supports_extra_escape_mode(const struct zint_symbol *const symbol) {
+    return symbol->symbology == BARCODE_CODE128
+                || ((symbol->symbology == BARCODE_AZTEC || symbol->symbology == BARCODE_DATAMATRIX)
+                    && (symbol->input_mode & 0x07) != GS1_MODE);
 }
 
 /* Return symbology id if `barcode_name` a barcode name */
@@ -451,7 +457,7 @@ static int get_barcode_name(const char *const barcode_name) {
         { BARCODE_C25INTER, "c25inter" },
         { BARCODE_C25INTER, "c25interleaved" }, /* Synonym */
         { BARCODE_C25LOGIC, "c25logic" },
-        { BARCODE_C25STANDARD, "c25matrix" },
+        { BARCODE_C25STANDARD, "c25matrix" }, /* Synonym */
         { BARCODE_C25STANDARD, "c25standard" },
         { BARCODE_CEPNET, "cepnet" },
         { BARCODE_CHANNEL, "channel" },
@@ -656,6 +662,7 @@ static int get_barcode_name(const char *const barcode_name) {
     int i, j, length;
 
 #ifdef ZINT_TEST
+/* LCOV_EXCL_START */
     if (test) {
         /* Ensure array sorted */
         for (i = 0; i < e; i++) {
@@ -667,6 +674,7 @@ static int get_barcode_name(const char *const barcode_name) {
         }
         return 1;
     }
+/* LCOV_EXCL_STOP */
 #endif
 
     /* Ignore case and any "BARCODE" prefix */
@@ -982,6 +990,104 @@ static int validate_seg(const char *const arg, const int N, struct zint_seg segs
     return 1;
 }
 
+/* Use directory if any from `symbol->outfile`, returning length in `p_mirror_start_o` */
+static int mirror_start(const struct zint_symbol *const symbol, const int output_given, int *p_mirror_start_o) {
+    int warn_number = 0;
+
+    *p_mirror_start_o = 0;
+
+    /* Use directory if any from outfile */
+    if (output_given && symbol->outfile[0]) {
+#ifndef _WIN32
+        const char *dir = strrchr(symbol->outfile, '/');
+#else
+        const char *dir = strrchr(symbol->outfile, '\\');
+        if (!dir) {
+            dir = strrchr(symbol->outfile, '/');
+        }
+#endif
+        if (dir) {
+            *p_mirror_start_o = (int) (dir + 1 - symbol->outfile);
+            if (*p_mirror_start_o > 221) { /* Insist on leaving at least ~30 chars for filename */
+                fprintf(stderr, "Warning 188: Directory for mirrored output too long (greater than 220),"
+                        " **IGNORED**\n");
+                fflush(stderr);
+                warn_number = ZINT_WARN_INVALID_OPTION; /* TODO: maybe new warning ZINT_WARN_INVALID_INPUT? */
+                *p_mirror_start_o = 0;
+            }
+        }
+    }
+
+    return warn_number;
+}
+
+/* Name the output file from the data being processed */
+static void mirror_outfile(struct zint_symbol *const symbol, const unsigned char source[], const int length,
+                const char *const filetype, char *output_file, int o) {
+    const int extra_escape_mode = (symbol->input_mode & EXTRA_ESCAPE_MODE) && supports_extra_escape_mode(symbol);
+    const int escape_mode = (symbol->input_mode & ESCAPE_MODE) || extra_escape_mode;
+    int i = 0;
+
+    if (output_file == NULL) {
+        output_file = symbol->outfile;
+    }
+
+    do {
+        if (z_iscntrl(source[i])) {
+            output_file[o] = '_';
+        } else {
+            switch (source[i]) {
+#ifndef _WIN32
+                case '/':
+                    output_file[o] = '_';
+                    break;
+                case '\\':
+                    output_file[o] = escape_mode ? '_' : '\\';
+                    break;
+#else /* These are all forbidden on Windows */
+                case '!':
+                case '"':
+                case '*':
+                case '/':
+                case ':':
+                case '<':
+                case '>':
+                case '?':
+                case '\\':
+                case '|':
+                    output_file[o] = '_';
+                    break;
+#endif
+                default:
+                    output_file[o] = source[i];
+                    break;
+            }
+        }
+
+        /* Skip escape characters */
+        if (source[i] == '\\' && escape_mode) {
+            i++;
+            if (source[i] == 'x') {
+                i += 2;
+            } else if (source[i] == 'd' || source[i] == 'o') {
+                i += 3;
+            } else if (source[i] == 'u') {
+                i += 4;
+            } else if (source[i] == 'U') {
+                i += 6;
+            } else if (extra_escape_mode && source[i] == '^') {
+                i++;
+            }
+        }
+        i++;
+        o++;
+    } while (i < length && o < 251);
+
+    /* Add file extension */
+    output_file[o] = '.';
+    ncpy_str(output_file + o + 1, ARRAY_SIZE(symbol->outfile) - o - 1, filetype, 3);
+}
+
 #ifdef _WIN32
 static FILE *win_fopen(const char *const filename, const char *const mode); /* Forward ref */
 #endif
@@ -992,7 +1098,9 @@ static int batch_process(struct zint_symbol *const symbol, const char *const fil
     FILE *file;
     unsigned char buffer[ZINT_MAX_DATA_LEN] = {0}; /* Maximum HanXin input */
     unsigned char character = 0;
-    int buf_posn = 0, error_number = 0, warn_number = 0, line_count = 1;
+    int buf_posn = 0;
+    int error_number = 0, warn_number = 0;
+    int line_count = 1;
     char output_file[ARRAY_SIZE(symbol->outfile)];
     char format_string[ARRAY_SIZE(symbol->outfile)];
     int i, mirror_start_o = 0;
@@ -1000,27 +1108,9 @@ static int batch_process(struct zint_symbol *const symbol, const char *const fil
 
     if (mirror_mode) {
         /* Use directory if any from outfile */
-        if (output_given && symbol->outfile[0]) {
-#ifndef _WIN32
-            const char *dir = strrchr(symbol->outfile, '/');
-#else
-            const char *dir = strrchr(symbol->outfile, '\\');
-            if (!dir) {
-                dir = strrchr(symbol->outfile, '/');
-            }
-#endif
-            if (dir) {
-                mirror_start_o = (int) (dir + 1 - symbol->outfile);
-                if (mirror_start_o > 221) { /* Insist on leaving at least ~30 chars for filename */
-                    fprintf(stderr, "Warning 188: directory for mirrored batch output too long (greater than 220),"
-                            " **IGNORED**\n");
-                    fflush(stderr);
-                    warn_number = ZINT_WARN_INVALID_OPTION; /* TODO: maybe new warning ZINT_WARN_INVALID_INPUT? */
-                    mirror_start_o = 0;
-                } else {
-                    memcpy(output_file, symbol->outfile, mirror_start_o);
-                }
-            }
+        warn_number = mirror_start(symbol, output_given, &mirror_start_o);
+        if (mirror_start_o) {
+            memcpy(output_file, symbol->outfile, mirror_start_o);
         }
     } else {
         if (symbol->outfile[0] == '\0' || !output_given) {
@@ -1121,52 +1211,7 @@ static int batch_process(struct zint_symbol *const symbol, const char *const fil
                 }
             } else {
                 /* Name the output file from the data being processed */
-                int o = mirror_start_o;
-                i = 0;
-                do {
-                    if (buffer[i] < 0x20) {
-                        output_file[o] = '_';
-                    } else {
-                        switch (buffer[i]) {
-                            case '!':
-                            case '"':
-                            case '*':
-                            case '/':
-                            case ':':
-                            case '<':
-                            case '>':
-                            case '?':
-                            case '\\':
-                            case '|':
-                            case 0x7f: /* DEL */
-                                output_file[o] = '_';
-                                break;
-                            default:
-                                output_file[o] = buffer[i];
-                                break;
-                        }
-                    }
-
-                    /* Skip escape characters */
-                    if (buffer[i] == '\\' && (symbol->input_mode & ESCAPE_MODE)) {
-                        i++;
-                        if (buffer[i] == 'x') {
-                            i += 2;
-                        } else if (buffer[i] == 'd' || buffer[i] == 'o') {
-                            i += 3;
-                        } else if (buffer[i] == 'u') {
-                            i += 4;
-                        } else if (buffer[i] == 'U') {
-                            i += 6;
-                        }
-                    }
-                    i++;
-                    o++;
-                } while (i < buf_posn && o < 251);
-
-                /* Add file extension */
-                output_file[o] = '.';
-                ncpy_str(output_file + o + 1, ARRAY_SIZE(output_file) - o - 1, filetype, 3);
+                mirror_outfile(symbol, buffer, buf_posn, filetype, output_file, mirror_start_o);
             }
 
             cpy_str(symbol->outfile, ARRAY_SIZE(symbol->outfile), output_file);
@@ -1188,6 +1233,9 @@ static int batch_process(struct zint_symbol *const symbol, const char *const fil
         if (buf_posn >= ARRAY_SIZE(buffer)) {
             fprintf(stderr, "On line %d: Error 103: Input data too long\n", line_count);
             fflush(stderr);
+            if (error_number == 0) {
+                error_number = ZINT_ERROR_TOO_LONG;
+            }
             do {
                 if ((intChar = fgetc(file)) == EOF) {
                     break;
@@ -1211,10 +1259,7 @@ static int batch_process(struct zint_symbol *const symbol, const char *const fil
             warn_number = ZINT_WARN_INVALID_OPTION; /* TODO: maybe new warning e.g. ZINT_WARN_INVALID_INPUT? */
         }
     }
-    if (error_number == 0) {
-        error_number = warn_number;
-    }
-    return error_number;
+    return error_number ? error_number : warn_number;
 }
 
 /* Stuff to convert args on Windows command line to UTF-8 */
@@ -1525,7 +1570,6 @@ int main(int argc, char **argv) {
     int val;
     int i;
     int ret;
-    const char *outfile_extension;
     int data_arg_num = 0;
     int seg_count = 0;
     float x_dim_mm = 0.0f, dpmm = 0.0f;
@@ -1685,7 +1729,7 @@ int main(int argc, char **argv) {
                 my_symbol->option_3 = ZINT_AZTEC_FULL | (my_symbol->option_3 & ~0xFF);
                 break;
             case OPT_BATCH:
-                if (data_cnt == 0) {
+                if (data_cnt == 0 && seg_count == 0) {
                     /* Switch to batch processing mode */
                     batch_mode = 1;
                 } else {
@@ -1714,10 +1758,10 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "Error 107: Invalid border width value (digits only)\n");
                     return do_exit(ZINT_ERROR_INVALID_OPTION);
                 }
-                if (val <= 1000) { /* `val` >= 0 always */
+                if (val <= 100) { /* `val` >= 0 always */
                     my_symbol->border_width = val;
                 } else {
-                    fprintf(stderr, "Warning 108: Border width '%d' out of range (0 to 1000), **IGNORED**\n", val);
+                    fprintf(stderr, "Warning 108: Border width '%d' out of range (0 to 100), **IGNORED**\n", val);
                     fflush(stderr);
                     warn_number = ZINT_WARN_INVALID_OPTION;
                 }
@@ -1774,7 +1818,7 @@ int main(int argc, char **argv) {
                 }
                 /* C40 overwrites Base 256 */
                 if ((my_symbol->option_3 & DM_B256_C40_START_MASK) == DM_B256_START) {
-                    fprintf(stderr, "Warning 161: previous '--dmb256' overwritten by '--dmc40'\n");
+                    fprintf(stderr, "Warning 161: Previous '--dmb256' overwritten by '--dmc40'\n");
                     fflush(stderr);
                     warn_number = ZINT_WARN_INVALID_OPTION;
                 }
@@ -2115,7 +2159,7 @@ int main(int argc, char **argv) {
             case OPT_SQUARE:
                 /* Square overwrites DMRE */
                 if ((my_symbol->option_3 & DM_SQUARE_DMRE_MASK) == DM_DMRE) {
-                    fprintf(stderr, "Warning 157: previous '--dmre' overwritten by '--square'\n");
+                    fprintf(stderr, "Warning 157: Previous '--dmre' overwritten by '--square'\n");
                     fflush(stderr);
                     warn_number = ZINT_WARN_INVALID_OPTION;
                 }
@@ -2129,12 +2173,14 @@ int main(int argc, char **argv) {
                 }
                 break;
 #ifdef ZINT_TEST
+/* LCOV_EXCL_START */
             case OPT_TEST:
                 if (!test()) {
                     return do_exit(ZINT_ERROR_ENCODING_PROBLEM);
                 }
                 help = 1; /* Mark as help to avoid "No data" warning */
                 break;
+/* LCOV_EXCL_STOP */
 #endif
             case OPT_TEXTGAP:
                 if (!validate_float(optarg, 1 /*allow_neg*/, &float_opt, errbuf)) {
@@ -2171,11 +2217,11 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "Error 153: Invalid vertical whitespace value '%s' (digits only)\n", optarg);
                     return do_exit(ZINT_ERROR_INVALID_OPTION);
                 }
-                if (val <= 1000) { /* `val` >= 0 always */
+                if (val <= 100) { /* `val` >= 0 always */
                     my_symbol->whitespace_height = val;
                 } else {
                     fprintf(stderr,
-                            "Warning 154: Vertical whitespace value '%d' out of range (0 to 1000), **IGNORED**\n",
+                            "Warning 154: Vertical whitespace value '%d' out of range (0 to 100), **IGNORED**\n",
                             val);
                     fflush(stderr);
                     warn_number = ZINT_WARN_INVALID_OPTION;
@@ -2219,11 +2265,11 @@ int main(int argc, char **argv) {
                     fprintf(stderr, "Error 120: Invalid horizontal whitespace value '%s' (digits only)\n", optarg);
                     return do_exit(ZINT_ERROR_INVALID_OPTION);
                 }
-                if (val <= 1000) { /* `val` >= 0 always */
+                if (val <= 100) { /* `val` >= 0 always */
                     my_symbol->whitespace_width = val;
                 } else {
                     fprintf(stderr,
-                            "Warning 121: Horizontal whitespace value '%d' out of range (0 to 1000), **IGNORED**\n",
+                            "Warning 121: Horizontal whitespace value '%d' out of range (0 to 100), **IGNORED**\n",
                             val);
                     fflush(stderr);
                     warn_number = ZINT_WARN_INVALID_OPTION;
@@ -2289,14 +2335,14 @@ int main(int argc, char **argv) {
                             return do_exit(ZINT_ERROR_ENCODING_PROBLEM);
                         }
                         if (long_options[i].has_arg) {
-                            fprintf(stderr, "Error 109: option '%s' requires an argument\n", arg);
+                            fprintf(stderr, "Error 109: Option '%s' requires an argument\n", arg);
                         } else {
                             const char *const eqs = strchr(arg, '=');
                             const int optlen = eqs ? (int) (eqs - arg) : (int) strlen(arg);
-                            fprintf(stderr, "Error 126: option '%.*s' does not take an argument\n", optlen, arg);
+                            fprintf(stderr, "Error 126: Option '%.*s' does not take an argument\n", optlen, arg);
                         }
                     } else {
-                        fprintf(stderr, "Error 101: unknown option '%s'\n", arg);
+                        fprintf(stderr, "Error 101: Unknown option '%s'\n", arg);
                     }
                 }
                 return do_exit(ZINT_ERROR_INVALID_OPTION);
@@ -2310,9 +2356,9 @@ int main(int argc, char **argv) {
     }
     if (optind != argc) {
         if (optind + 1 == argc) {
-            fprintf(stderr, "Warning 191: extra argument '%s' **IGNORED**\n", argv[optind]);
+            fprintf(stderr, "Warning 191: Extra argument '%s' **IGNORED**\n", argv[optind]);
         } else {
-            fprintf(stderr, "Warning 192: extra arguments beginning with '%s' **IGNORED**\n", argv[optind]);
+            fprintf(stderr, "Warning 192: Extra arguments beginning with '%s' **IGNORED**\n", argv[optind]);
         }
         fflush(stderr);
         warn_number = ZINT_WARN_INVALID_OPTION;
@@ -2320,7 +2366,7 @@ int main(int argc, char **argv) {
 
     if (data_arg_num) {
         const int symbology = my_symbol->symbology;
-        const unsigned int cap = ZBarcode_Cap(symbology, ZINT_CAP_EXTENDABLE | ZINT_CAP_FULL_MULTIBYTE
+        const unsigned int cap = ZBarcode_Cap(symbology, ZINT_CAP_EANUPC | ZINT_CAP_FULL_MULTIBYTE
                                     | ZINT_CAP_MASK | ZINT_CAP_BINDABLE);
         if (fullmultibyte && (cap & ZINT_CAP_FULL_MULTIBYTE)) {
             my_symbol->option_3 = ZINT_FULL_MULTIBYTE;
@@ -2331,7 +2377,7 @@ int main(int argc, char **argv) {
         if (separator && (cap & ZINT_CAP_BINDABLE)) {
             my_symbol->option_3 = separator;
         }
-        if (addon_gap && (cap & ZINT_CAP_EXTENDABLE)) {
+        if (addon_gap && (cap & ZINT_CAP_EANUPC)) {
             my_symbol->option_2 = addon_gap;
         }
         if (rows) {
@@ -2356,6 +2402,14 @@ int main(int argc, char **argv) {
             fflush(stderr);
             warn_number = ZINT_WARN_INVALID_OPTION;
         }
+        if (filetype[0] == '\0') {
+            const char *outfile_extension = get_extension(my_symbol->outfile);
+            if (outfile_extension && supported_filetype(outfile_extension, no_png, NULL /*png_refused*/)) {
+                cpy_str(filetype, ARRAY_SIZE(filetype), outfile_extension);
+            } else {
+                cpy_str(filetype, ARRAY_SIZE(filetype), no_png ? "gif" : "png");
+            }
+        }
         if (batch_mode) {
             /* Take each line of text as a separate data set */
             if (data_arg_num > 1) {
@@ -2365,34 +2419,16 @@ int main(int argc, char **argv) {
                 fflush(stderr);
                 warn_number = ZINT_WARN_INVALID_OPTION;
             }
-            if (seg_count) {
-                fprintf(stderr, "Warning 169: Segment arguments **IGNORED**\n");
-                fflush(stderr);
-                warn_number = ZINT_WARN_INVALID_OPTION;
-            }
-            if (filetype[0] == '\0') {
-                outfile_extension = get_extension(my_symbol->outfile);
-                if (outfile_extension && supported_filetype(outfile_extension, no_png, NULL /*png_refused*/)) {
-                    cpy_str(filetype, ARRAY_SIZE(filetype), outfile_extension);
-                } else {
-                    cpy_str(filetype, ARRAY_SIZE(filetype), no_png ? "gif" : "png");
-                }
-            }
-            if (dpmm) { /* Allow `x_dim_mm` to be zero */
+            assert(seg_count == 0); /* Previous checks ensure this */
+            if (dpmm) {
+                /* Allow `x_dim_mm` to be zero */
                 if (x_dim_mm == 0.0f) {
                     x_dim_mm = ZBarcode_Default_Xdim(symbology);
                 }
                 float_opt = ZBarcode_Scale_From_XdimDp(symbology, x_dim_mm, dpmm, filetype);
-                if (float_opt > 0.0f) {
-                    my_symbol->scale = float_opt;
-                    my_symbol->dpmm = dpmm;
-                } else {
-                    fprintf(stderr,
-                            "Warning 187: Invalid scalexdimdp X-dim '%g', resolution '%g' combo, **IGNORED**\n",
-                            x_dim_mm, dpmm);
-                    fflush(stderr);
-                    warn_number = ZINT_WARN_INVALID_OPTION;
-                }
+                assert(float_opt > 0.0f); /* Can't fail due to previous checks */
+                my_symbol->scale = float_opt;
+                my_symbol->dpmm = dpmm;
             }
             if (((symbology != BARCODE_MAXICODE && my_symbol->scale < 0.5f) || my_symbol->scale < 0.2f)
                     && is_raster(filetype, no_png)) {
@@ -2424,24 +2460,30 @@ int main(int argc, char **argv) {
                     }
                 }
             }
+            if (mirror_mode) {
+                if (arg_opts[0].opt != 'd') {
+                    fprintf(stderr, "Warning 163: '--mirror' given but no data argument, **IGNORED**\n");
+                    fflush(stderr);
+                    warn_number = ZINT_WARN_INVALID_OPTION;
+                } else {
+                    int mirror_start_o;
+                    warn_number = mirror_start(my_symbol, output_given, &mirror_start_o);
+                    mirror_outfile(my_symbol, ZUCP(arg_opts[0].arg), (int) strlen(arg_opts[0].arg), filetype, NULL,
+                                    mirror_start_o);
+                }
+            }
             if (filetype[0] != '\0') {
                 set_extension(my_symbol->outfile, filetype);
             }
-            if (dpmm) { /* Allow `x_dim_mm` to be zero */
+            if (dpmm) {
+                /* Allow `x_dim_mm` to be zero */
                 if (x_dim_mm == 0.0f) {
                     x_dim_mm = ZBarcode_Default_Xdim(symbology);
                 }
                 float_opt = ZBarcode_Scale_From_XdimDp(symbology, x_dim_mm, dpmm, get_extension(my_symbol->outfile));
-                if (float_opt > 0.0f) {
-                    my_symbol->scale = float_opt;
-                    my_symbol->dpmm = dpmm;
-                } else {
-                    fprintf(stderr,
-                            "Warning 190: Invalid scalexdimdp X-dim '%g', resolution '%g' combo **IGNORED**\n",
-                            x_dim_mm, dpmm);
-                    fflush(stderr);
-                    warn_number = ZINT_WARN_INVALID_OPTION;
-                }
+                assert(float_opt > 0.0f); /* Can't fail due to previous checks */
+                my_symbol->scale = float_opt;
+                my_symbol->dpmm = dpmm;
             }
             if (((symbology != BARCODE_MAXICODE && my_symbol->scale < 0.5f) || my_symbol->scale < 0.2f)
                     && is_raster(get_extension(my_symbol->outfile), no_png)) {
@@ -2500,6 +2542,7 @@ int main(int argc, char **argv) {
 }
 
 #ifdef ZINT_TEST
+/* LCOV_EXCL_START */
 
 static int test_cpy_str(void) {
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
@@ -2624,11 +2667,12 @@ static int test_validate_float(void) {
         /* 19*/ { "1234.5670", 0, 1234.567f, "", 1 },
         /* 20*/ { "1234.56700", 0, 1234.567f, "", 1 },
         /* 21*/ { "0.", 0, 0.0f, "", 1 },
-        /* 22*/ { "-0", 1, 0.0f, "", 1 },
-        /* 23*/ { ".0", 0, 0.0f, "", 1 },
-        /* 24*/ { ".", 0, 0.0f, "", 1 },
-        /* 25*/ { "+.", 0, 0.0f, "", 1 },
-        /* 26*/ { "-.", 1, 0.0f, "", 1 },
+        /* 22*/ { "0.0", 0, 0.0f, "", 1 },
+        /* 23*/ { "-0", 1, 0.0f, "", 1 },
+        /* 24*/ { ".0", 0, 0.0f, "", 1 },
+        /* 25*/ { ".", 0, 0.0f, "", 1 },
+        /* 26*/ { "+.", 0, 0.0f, "", 1 },
+        /* 27*/ { "-.", 1, 0.0f, "", 1 },
     };
     int i;
     for (i = 0; i < ARRAY_SIZE(data); i++) {
@@ -2929,18 +2973,20 @@ static int test_validate_structapp(void) {
         /*  1*/ { ",", { -1, -1, "" }, 0, "Structured Append index too short" },
         /*  2*/ { "1234567890,", { -1, -1, "" }, 0, "Structured Append index too long" },
         /*  3*/ { "123456789,", { -1, -1, "" }, 0, "Structured Append count too short" },
-        /*  4*/ { "1,1234567890", { -1, -1, "" }, 0, "Structured Append count too long" },
-        /*  5*/ { "1,123456789,", { -1, -1, "" }, 0, "Structured Append ID too short" },
-        /*  6*/ { "123456789,123456789,123456789012345678901234567890123", { -1, -1, "" }, 0, "Structured Append ID too long" },
-        /*  7*/ { "123456789,123456789,12345678901234567890123456789012", { 123456789, 123456789, {'1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9','0','1','2'} }, 1, "" },
-        /*  8*/ { "2,3,5006", { 2, 3, "5006" }, 1, "" },
-        /*  9*/ { "2,3,,", { 2, 3, "," }, 1, "" },
-        /* 10*/ { "1.2,1", { -1, -1, "" }, 0, "Invalid Structured Append index (digits only)" },
-        /* 11*/ { "12,1.0", { 12, -1, "" }, 0, "Invalid Structured Append count (digits only)" },
-        /* 12*/ { "12,1", { 12, 1, "" }, 0, "Invalid Structured Append count '1', must be greater than or equal to 2" },
-        /* 13*/ { "12,11", { 12, 11, "" }, 0, "Structured Append index '12' out of range (1 to count '11')" },
-        /* 14*/ { "12,12", { 12, 12, "" }, 1, "" },
-        /* 15*/ { "0,2", { 0, 2, "" }, 0, "Structured Append index '0' out of range (1 to count '2')" },
+        /*  4*/ { "123456789,,", { -1, -1, "" }, 0, "Structured Append count too short" },
+        /*  5*/ { "1,1234567890", { -1, -1, "" }, 0, "Structured Append count too long" },
+        /*  6*/ { "1,1234567890,", { -1, -1, "" }, 0, "Structured Append count too long" },
+        /*  7*/ { "1,123456789,", { -1, -1, "" }, 0, "Structured Append ID too short" },
+        /*  8*/ { "123456789,123456789,123456789012345678901234567890123", { -1, -1, "" }, 0, "Structured Append ID too long" },
+        /*  9*/ { "123456789,123456789,12345678901234567890123456789012", { 123456789, 123456789, {'1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9','0','1','2'} }, 1, "" },
+        /* 10*/ { "2,3,5006", { 2, 3, "5006" }, 1, "" },
+        /* 11*/ { "2,3,,", { 2, 3, "," }, 1, "" },
+        /* 12*/ { "1.2,1", { -1, -1, "" }, 0, "Invalid Structured Append index (digits only)" },
+        /* 13*/ { "12,1.0", { 12, -1, "" }, 0, "Invalid Structured Append count (digits only)" },
+        /* 14*/ { "12,1", { 12, 1, "" }, 0, "Invalid Structured Append count '1', must be greater than or equal to 2" },
+        /* 15*/ { "12,11", { 12, 11, "" }, 0, "Structured Append index '12' out of range (1 to count '11')" },
+        /* 16*/ { "12,12", { 12, 12, "" }, 1, "" },
+        /* 17*/ { "0,2", { 0, 2, "" }, 0, "Structured Append index '0' out of range (1 to count '2')" },
     };
     int i;
     for (i = 0; i < ARRAY_SIZE(data); i++) {
@@ -3031,6 +3077,172 @@ static int test_validate_seg(void) {
             return 0;
         }
     }
+    return 1;
+}
+
+#define TEST_MIRRORED_LONG "test_67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890" /* 250 chars */
+
+#define TEST_MIRRORED_DIR_LONG "testdir_9012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789/" /* 220 chars */
+#define TEST_MIRRORED_DIR_TOO_LONG "testdir_901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901/" /* 222 chars */
+
+static int test_mirror_start(void) {
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct { const char *outfile; int output_given; int ret; int mirror_start_o; } data[] = {
+        /*  0*/ { NULL, 0, 0, 0 },
+        /*  1*/ { "", 0, 0, 0 },
+        /*  2*/ { "123.svg", 1, 0, 0 },
+        /*  3*/ { "ABCDF/123.svg", 1, 0, 6 },
+        /*  4*/ { "ABCDF/", 1, 0, 6 },
+        /*  5*/ { TEST_MIRRORED_DIR_LONG, 1, 0, 220 },
+        /*  6*/ { TEST_MIRRORED_DIR_TOO_LONG, 1, ZINT_WARN_INVALID_OPTION, 0 },
+    };
+    int i, ret;
+    struct zint_symbol s_symbol = {0};
+    struct zint_symbol *symbol = &s_symbol;
+
+    for (i = 0; i < ARRAY_SIZE(data); i++) {
+        int mirror_start_o = -1;
+
+        ZBarcode_Reset(symbol);
+
+        if (data[i].outfile) {
+            cpy_str(symbol->outfile, ARRAY_SIZE(symbol->outfile), data[i].outfile);
+        }
+
+        if (data[i].ret) {
+            printf("++++ Following warning expected, ignore: ");
+            fflush(stdout);
+        }
+        ret = mirror_start(symbol, data[i].output_given, &mirror_start_o);
+        if (ret != data[i].ret) {
+            fprintf(stderr, "%d: ret %d != %d\n", i, ret, data[i].ret);
+            assert(0);
+            return 0;
+        }
+        if (mirror_start_o != data[i].mirror_start_o) {
+            fprintf(stderr, "%d: mirror_start_o %d != %d\n", i, mirror_start_o, data[i].mirror_start_o);
+            assert(0);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+#ifndef _WIN32
+#define TEST_MIRROR_BSLASH   "\\"
+#define TEST_MIRROR_EXCLAIM  "!"
+#define TEST_MIRROR_DQUOTE   "\""
+#define TEST_MIRROR_ASTERISK "*"
+#define TEST_MIRROR_COLON    ":"
+#define TEST_MIRROR_LANGLE   "<"
+#define TEST_MIRROR_RANGLE   ">"
+#define TEST_MIRROR_QUESTION "?"
+#define TEST_MIRROR_PIPE     "|"
+#else
+#define TEST_MIRROR_BSLASH   "_"
+#define TEST_MIRROR_EXCLAIM  "_"
+#define TEST_MIRROR_DQUOTE   "_"
+#define TEST_MIRROR_ASTERISK "_"
+#define TEST_MIRROR_COLON    "_"
+#define TEST_MIRROR_LANGLE   "_"
+#define TEST_MIRROR_RANGLE   "_"
+#define TEST_MIRROR_QUESTION "_"
+#define TEST_MIRROR_PIPE     "_"
+#endif
+
+static int test_mirror_outfile(void) {
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct {
+        int symbology; int input_mode;
+        const char *source; const char *outfile; const char *filetype; int use_symbol_outfile; int o;
+        const char *expected_outfile;
+    } data[] = {
+        /*  0*/ { -1, -1, "123", NULL, "png", 1, 0, "123.png" },
+        /*  1*/ { -1, -1, "123", NULL, "png", 0, 0, "123.png" },
+        /*  2*/ { -1, -1, "\001", NULL, "png", 0, 0, "_.png" },
+        /*  3*/ { -1, -1, "1!!2", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM TEST_MIRROR_EXCLAIM "2.png" },
+        /*  4*/ { -1, -1, "1!2\"3*4/5:6<7>8?9\\0|1\1772\0173", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM "2" TEST_MIRROR_DQUOTE "3" TEST_MIRROR_ASTERISK "4_5" TEST_MIRROR_COLON "6" TEST_MIRROR_LANGLE "7" TEST_MIRROR_RANGLE "8" TEST_MIRROR_QUESTION "9" TEST_MIRROR_BSLASH "0" TEST_MIRROR_PIPE "1_2_3.png" },
+        /*  5*/ { -1, -1, "ABC\\d123\\o123\\x12\\u1234\\U123456\\0\\E\\a\\N\\U1234", NULL, "png", 1, 0, "ABC" TEST_MIRROR_BSLASH "d123" TEST_MIRROR_BSLASH "o123" TEST_MIRROR_BSLASH "x12" TEST_MIRROR_BSLASH "u1234" TEST_MIRROR_BSLASH "U123456" TEST_MIRROR_BSLASH "0" TEST_MIRROR_BSLASH "E" TEST_MIRROR_BSLASH "a" TEST_MIRROR_BSLASH "N" TEST_MIRROR_BSLASH "U1234.png" },
+        /*  6*/ { -1, ESCAPE_MODE, "ABC\\d123\\o123\\x12\\u1234\\U123456\\0\\E\\a\\N\\U1234", NULL, "png", 1, 0, "ABC__________.png" }, /* 10 escape sequences, 10 underscores */
+        /*  7*/ { -1, -1, "1!2\\d1233*4\\^15", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM "2" TEST_MIRROR_BSLASH "d1233" TEST_MIRROR_ASTERISK "4" TEST_MIRROR_BSLASH "^15.png" },
+        /*  8*/ { -1, ESCAPE_MODE, "1!2\\d1233*4\\^15", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM "2_3" TEST_MIRROR_ASTERISK "4_15.png" },
+        /*  9*/ { -1, ESCAPE_MODE | EXTRA_ESCAPE_MODE, "1!2\\d1233*4\\^15", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM "2_3" TEST_MIRROR_ASTERISK "4_5.png" },
+        /* 10*/ { -1, EXTRA_ESCAPE_MODE, "1!2\\d1233*4\\^15", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM "2_3" TEST_MIRROR_ASTERISK "4_5.png" },
+        /* 11*/ { BARCODE_DATAMATRIX, GS1_MODE | EXTRA_ESCAPE_MODE, "1!2\\d1233*4\\^15", NULL, "png", 0, 0, "1" TEST_MIRROR_EXCLAIM "2" TEST_MIRROR_BSLASH "d1233" TEST_MIRROR_ASTERISK "4" TEST_MIRROR_BSLASH "^15.png" },
+        /* 12*/ { -1, -1, "ABC123", "test_dir/out.png", "png", 1, 0, "test_dir/ABC123.png" },
+        /* 13*/ { -1, -1, "ABC123", "test_dir/out.png", "png", 0, 9, "test_dir/ABC123.png" },
+        /* 14*/ { -1, -1, TEST_MIRRORED_LONG "123456", NULL, "pcx", 1, 0, TEST_MIRRORED_LONG "1.pcx" },
+        /* 15*/ { -1, -1, TEST_MIRRORED_LONG "123456", NULL, "pcx", 0, 0, TEST_MIRRORED_LONG "1.pcx" },
+        /* 16*/ { -1, -1, TEST_MIRRORED_LONG, TEST_MIRRORED_DIR_LONG, "eps", 1, 0, TEST_MIRRORED_DIR_LONG "test_67890123456789012345678901.eps" },
+        /* 17*/ { -1, -1, TEST_MIRRORED_LONG, TEST_MIRRORED_DIR_LONG, "eps", 0, 220, TEST_MIRRORED_DIR_LONG "test_67890123456789012345678901.eps" },
+    };
+    int i;
+    struct zint_symbol s_symbol = {0};
+    struct zint_symbol *symbol = &s_symbol;
+
+    for (i = 0; i < ARRAY_SIZE(data); i++) {
+        const int length = (int) strlen(data[i].source);
+        char output_file[256] = {0};
+
+        ZBarcode_Reset(symbol);
+
+        if (data[i].symbology != -1) {
+            symbol->symbology = data[i].symbology;
+        }
+        if (data[i].input_mode != -1) {
+            symbol->input_mode = data[i].input_mode;
+        }
+
+        if (data[i].use_symbol_outfile) {
+            int mirror_start_o;
+            if (data[i].outfile) {
+                cpy_str(symbol->outfile, ARRAY_SIZE(symbol->outfile), data[i].outfile);
+            }
+            mirror_start(symbol, 1 /*output_given*/, &mirror_start_o);
+            mirror_outfile(symbol, ZCUCP(data[i].source), length, data[i].filetype, NULL, mirror_start_o);
+            if (strcmp(symbol->outfile, data[i].expected_outfile) != 0) {
+                fprintf(stderr, "%d: symbol->outfile \"%s\" != \"%s\"\n",
+                        i, symbol->outfile, data[i].expected_outfile);
+                assert(0);
+                return 0;
+            }
+        } else {
+            if (data[i].outfile) {
+                cpy_str(output_file, ARRAY_SIZE(output_file), data[i].outfile);
+            }
+            mirror_outfile(symbol, ZCUCP(data[i].source), length, data[i].filetype, output_file, data[i].o);
+            if (strcmp(output_file, data[i].expected_outfile) != 0) {
+                fprintf(stderr, "%d: output_file \"%s\" != \"%s\"\n", i, output_file, data[i].expected_outfile);
+                assert(0);
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+static int test_batch_process(void) {
+    int ret;
+    struct zint_symbol s_symbol = {0};
+    struct zint_symbol *symbol = &s_symbol;
+
+    const char filename[] = "test_nosuch.file";
+    const char filetype[] = "gif";
+    int mirror_mode = 0;
+    int output_given = 0;
+    int rotate_angle = 0;
+
+    printf("++++ Following error expected, ignore: ");
+    fflush(stdout);
+
+    ret = batch_process(symbol, filename, mirror_mode, filetype, output_given, rotate_angle);
+
+    if (ret != ZINT_ERROR_INVALID_DATA) {
+        fprintf(stderr, "batch_process \"%s\", ret %d != \n", filename, ret);
+        assert(0);
+        return 0;
+    }
+
     return 1;
 }
 
@@ -3163,6 +3375,9 @@ static int test(void) {
     ret &= test_validate_scalexdimdp();
     ret &= test_validate_structapp();
     ret &= test_validate_seg();
+    ret &= test_mirror_start();
+    ret &= test_mirror_outfile();
+    ret &= test_batch_process();
 #ifdef _WIN32
     ret &= test_win_CommandLineToArgvW();
     ret &= test_utf8_to_wide();
@@ -3170,6 +3385,7 @@ static int test(void) {
     return ret;
 }
 
+/* LCOV_EXCL_STOP */
 #endif /* ZINT_TEST */
 
 /* vim: set ts=4 sw=4 et : */

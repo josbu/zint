@@ -30,6 +30,7 @@
  */
 /* SPDX-License-Identifier: BSD-3-Clause */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include "common.h"
@@ -163,14 +164,14 @@ static int gif_NextCode(struct gif_state *pState, unsigned char *pPixelValueCur,
     return 1;
 }
 
-static int gif_lzw(struct gif_state *pState, unsigned char paletteBitSize) {
+static void gif_lzw(struct gif_state *pState, unsigned char paletteBitSize) {
     unsigned char PixelValueCur;
     unsigned char CodeBits;
     unsigned short Pos;
 
+    assert(pState->pIn != pState->pInEnd);
+
     /* > Get first data byte */
-    if (pState->pIn == pState->pInEnd)
-        return 0;
     PixelValueCur = pState->map[*pState->pIn++];
     /* Number of bits per data item (=pixel)
      * We need at least a value of 2, otherwise the cc and eoi code consumes
@@ -217,7 +218,7 @@ static int gif_lzw(struct gif_state *pState, unsigned char paletteBitSize) {
                     = (unsigned char) (pState->OutPosCur - pState->OutByteCountPos - 1);
             }
             pState->OutPosCur++;
-            return 1;
+            return;
         }
         /* Check for currently last code */
         if (pState->FreeCode == (1U << CodeBits))
@@ -444,11 +445,7 @@ INTERNAL int zint_gif_pixel_plot(struct zint_symbol *symbol, unsigned char *pixe
     zint_fm_write(outbuf, 1, 10, State.fmp);
 
     /* Call lzw encoding */
-    if (!gif_lzw(&State, paletteBitSize)) {
-        free(State.pOut);
-        (void) zint_fm_close(State.fmp, symbol);
-        return z_errtxt(ZINT_ERROR_MEMORY, symbol, 613, "Insufficient memory for GIF LZW buffer");
-    }
+    gif_lzw(&State, paletteBitSize);
     zint_fm_write(State.pOut, 1, State.OutPosCur, State.fmp);
     free(State.pOut);
 

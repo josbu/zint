@@ -1,7 +1,7 @@
 /* composite.c - Tables for UCC.EAN Composite Symbols */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2008-2024 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2008-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -52,18 +52,18 @@ static const unsigned short cc_aCoeffs[30] = {
 };
 
 /* rows, error codewords, k-offset of valid CC-A sizes from ISO/IEC 24723:2006 Table 9 */
-static const char cc_aVariants[51] = {
-    5, 6, 7, 8, 9, 10, 12, 4, 5, 6,  7,  8, 3, 4, 5,  6,  7,
-    4, 4, 5, 5, 6,  6,  7, 4, 5, 6,  7,  7, 4, 5, 6,  7,  8,
-    0, 0, 4, 4, 9,  9, 15, 0, 4, 9, 15, 15, 0, 4, 9, 15, 22
+static const char cc_aVariants[3][17] = {
+    { 5, 6, 7, 8, 9, 10, 12, 4, 5, 6,  7,  8, 3, 4, 5,  6,  7 },
+    { 4, 4, 5, 5, 6,  6,  7, 4, 5, 6,  7,  7, 4, 5, 6,  7,  8 },
+    { 0, 0, 4, 4, 9,  9, 15, 0, 4, 9, 15, 15, 0, 4, 9, 15, 22 }
 };
 
-/* following is Left RAP, Centre RAP, Right RAP and Start Cluster from ISO/IEC 24723:2006 tables 10 and 11 */
-static const char cc_aRAPTable[68] = {
-    39,  1, 32,  8, 14, 43, 20, 11,  1,  5, 15, 21, 40, 43, 46, 34, 29,
-     0,  0,  0,  0,  0,  0,  0, 43, 33, 37, 47,  1, 20, 23, 26, 14,  9,
-    19, 33, 12, 40, 46, 23, 52, 23, 13, 17, 27, 33, 52,  3,  6, 46, 41,
-     6,  0,  3,  3,  3,  0,  3,  3,  0,  3,  6,  6,  0,  0,  0,  0,  3
+/* following is Left RAP, Centre RAP, Right RAP and (Start Cluster / 3) from ISO/IEC 24723:2006 tables 10 and 11 */
+static const char cc_aRAPTable[4][17] = {
+    { 39,  1, 32,  8, 14, 43, 20, 11,  1,  5, 15, 21, 40, 43, 46, 34, 29 },
+    {  0,  0,  0,  0,  0,  0,  0, 43, 33, 37, 47,  1, 20, 23, 26, 14,  9 },
+    { 19, 33, 12, 40, 46, 23, 52, 23, 13, 17, 27, 33, 52,  3,  6, 46, 41 },
+    {  2,  0,  1,  1,  1,  0,  1,  1,  0,  1,  2,  2,  0,  0,  0,  0,  1 }
 };
 
 /* Row Address Patterns are as defined in pdf417.h */

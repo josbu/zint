@@ -49,6 +49,7 @@ extern "C" {
 #define ZINT_DEBUG_TEST_ZXINGCPP        512
 #define ZINT_DEBUG_TEST_BWIPP_ZXINGCPP  1024
 #define ZINT_DEBUG_TEST_AZTEC_SKIP_ALL  2048
+#define ZINT_DEBUG_TEST_PNG_FLUSH       4096
 
 #ifdef ZINT_SANITIZEM /* Suppress clang -fsanitize=memory false positives */
 #define ZINT_TESTUTIL_SANITIZEM_INIT     = {0}
@@ -190,6 +191,7 @@ int testUtilDirExists(const char *dirname);
 int testUtilMkDir(const char *dirname);
 int testUtilRmDir(const char *dirname);
 int testUtilRename(const char *oldpath, const char *newpath);
+int testUtilCreateFile(const char *filename);
 int testUtilCreateROFile(const char *filename);
 int testUtilRmROFile(const char *filename);
 int testUtilReadFile(const char *filename, unsigned char *buffer, int buffer_size, int *p_size);

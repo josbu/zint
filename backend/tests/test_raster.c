@@ -3428,6 +3428,129 @@ static void test_hrt_content_segs(const testCtx *const p_ctx) {
     testFinish();
 }
 
+/* TODO: add new "raster.h" & put these (plus decl.) in it */
+#define RAST_FAIL_ID_BITMAP         1
+#define RAST_FAIL_ID_ALPHA          2
+#define RAST_FAIL_ID_ROTATED        3
+#define RAST_FAIL_ID_MC_PIXELBUF    4
+#define RAST_FAIL_ID_MC_HEXAGON     5
+#define RAST_FAIL_ID_DOTTY_SCALED   6
+#define RAST_FAIL_ID_PIXELBUF       7
+#define RAST_FAIL_ID_SCALED         8
+
+INTERNAL void zint_test_raster_set_fail(const int id, const int at);
+
+static void test_alloc(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int symbology;
+        int output_options;
+        const char *fgcolour;
+        float scale;
+        int rotate_angle;
+        const char *data;
+        int ret;
+        int ats[6];
+        int at_cnt;
+        int id;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_CODE128, -1, NULL, 0.0f, 0, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_BITMAP },
+        /*  1*/ { BARCODE_CODE128, -1, "80808080", 0.0f, 0, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_ALPHA },
+        /*  2*/ { BARCODE_CODE128, -1, NULL, 0.0f, 90, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_ROTATED },
+        /*  3*/ { BARCODE_MAXICODE, -1, NULL, 0.0f, 0, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_MC_PIXELBUF },
+        /*  4*/ { BARCODE_MAXICODE, -1, NULL, 0.0f, 180, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_MC_HEXAGON },
+        /*  5*/ { BARCODE_DATAMATRIX, BARCODE_DOTTY_MODE, NULL, 0.0f, 0, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_DOTTY_SCALED },
+        /*  6*/ { BARCODE_CODE128, -1, NULL, 0.0f, 0, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_PIXELBUF },
+        /*  7*/ { BARCODE_CODE128, -1, NULL, 1.75f, 0, "123", ZINT_ERROR_MEMORY, { 1, 0, 0, 0, 0, 0 }, 1, RAST_FAIL_ID_SCALED },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, length, ret;
+    struct zint_symbol *symbol = NULL;
+
+    testStartSymbol(p_ctx->func_name, &symbol);
+
+    for (i = 0; i < data_size; i++) {
+        int j;
+
+        if (testContinue(p_ctx, i)) continue;
+
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        for (j = 0; j < data[i].at_cnt; j++) {
+
+            length = testUtilSetSymbol(symbol, data[i].symbology, -1 /*input_mode*/, -1 /*eci*/,
+                                        -1 /*option_1*/, -1 /*option_2*/, -1 /*option_3*/, data[i].output_options,
+                                        data[i].data, -1, debug);
+            if (data[i].fgcolour) {
+                strcpy(symbol->fgcolour, data[i].fgcolour);
+            }
+            if (data[i].scale) {
+                symbol->scale = data[i].scale;
+            }
+            ret = ZBarcode_Encode(symbol, ZCUCP(data[i].data), length);
+            assert_nonzero(ret < ZINT_ERROR, "i:%d %s ZBarcode_Encode ret %d >= ZINT_ERROR %s\n",
+                        i, testUtilBarcodeName(data[i].symbology), ret, symbol->errtxt);
+
+            zint_test_raster_set_fail(data[i].id, data[i].ats[j]);
+            ret = ZBarcode_Buffer(symbol, data[i].rotate_angle);
+            assert_equal(ret, data[i].ret, "i:%d j:%d ZBarcode_Print (%d,%d) ret %d != %d (%s)\n",
+                            i, j, data[i].id, data[i].ats[j], ret, data[i].ret, symbol->errtxt);
+            ZBarcode_Reset(symbol);
+        }
+        zint_test_raster_set_fail(0, 0);
+
+        ZBarcode_Delete(symbol);
+    }
+
+    testFinish();
+}
+
+#include <zfiletypes.h>
+
+INTERNAL int zint_plot_raster(struct zint_symbol *symbol, int rotate_angle, int file_type);
+
+static void test_plot_raster(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+    int ret;
+
+    struct zint_symbol s_symbol = {0};
+    struct zint_symbol *symbol = &s_symbol;
+    const unsigned char data[] = "123";
+
+    testStart(p_ctx->func_name);
+
+    ZBarcode_Reset(symbol);
+    symbol->debug = debug;
+    strcpy(symbol->fgcolour, "80808080");
+
+    ret = ZBarcode_Encode(symbol, data, -1);
+    assert_zero(ret, "ZBarcode_Encode ret %d != 0 (%s)\n", ret, symbol->errtxt);
+
+    /* Call twice without clearing */
+    ret = zint_plot_raster(symbol, 0 /*rotate_angle*/, OUT_BUFFER);
+    assert_zero(ret, "zint_plot_raster ret %d != 0 (%s)\n", ret, symbol->errtxt);
+
+    ret = zint_plot_raster(symbol, 0 /*rotate_angle*/, OUT_BUFFER);
+    assert_zero(ret, "zint_plot_raster ret %d != 0 (%s)\n", ret, symbol->errtxt);
+
+    symbol->output_options |= OUT_BUFFER_INTERMEDIATE;
+    ret = zint_plot_raster(symbol, 0 /*rotate_angle*/, OUT_BUFFER);
+    assert_zero(ret, "zint_plot_raster ret %d != 0 (%s)\n", ret, symbol->errtxt);
+
+    symbol->rows = 0; /* Trigger row guard */
+    ret = zint_plot_raster(symbol, 0 /*rotate_angle*/, OUT_BUFFER);
+    assert_equal(ret, ZINT_ERROR_INVALID_OPTION, "zint_plot_raster ret %d != ZINT_ERROR_INVALID_OPTION (%s)\n",
+                    ret, symbol->errtxt);
+
+    ZBarcode_Clear(symbol);
+
+    testFinish();
+}
+
 #include <time.h>
 
 #define TEST_PERF_ITER_MILLES   1
@@ -3568,6 +3691,8 @@ int main(int argc, char *argv[]) {
         { "test_height", test_height },
         { "test_height_per_row", test_height_per_row },
         { "test_hrt_content_segs", test_hrt_content_segs },
+        { "test_alloc", test_alloc },
+        { "test_plot_raster", test_plot_raster },
         { "test_perf_scale", test_perf_scale },
     };
 

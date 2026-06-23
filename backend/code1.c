@@ -1,7 +1,7 @@
 /* code1.c - USS Code One */
 /*
     libzint - the open source barcode library
-    Copyright (C) 2009-2025 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2009-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -195,30 +195,30 @@ static int c1_look_ahead_test(const unsigned char source[], const int length, co
         byte_count = C1_MULT_3;
     }
 
+    assert(current_mode != C1_EDI); /* Not called in EDI mode */
     switch (current_mode) {
         case C1_C40: c40_count = 0; break; /* Step J2 */
         case C1_TEXT: text_count = 0; break; /* Step J3 */
-        case C1_EDI: edi_count = 0; break; /* Missing in spec */
         case C1_BYTE: byte_count = 0; break; /* Step J4 */
     }
 
     for (sp = position; sp < length; sp++) {
-        const unsigned char c = source[sp];
-        const int is_extended = !z_isascii(c);
+        const unsigned char ch = source[sp];
+        const int is_extended = !z_isascii(ch);
 
         /* Step L */
-        if (z_isdigit(c)) {
+        if (z_isdigit(ch)) {
             ascii_count += C1_MULT_1_DIV_2; /* Step L1 */
         } else {
             if (is_extended) {
-                ascii_count = ceilf(ascii_count) + C1_MULT_2; /* Step L2 */
+                ascii_count = C1_MULT_CEIL(ascii_count) + C1_MULT_2; /* Step L2 */
             } else {
-                ascii_count = ceilf(ascii_count) + C1_MULT_1; /* Step L3 */
+                ascii_count = C1_MULT_CEIL(ascii_count) + C1_MULT_1; /* Step L3 */
             }
         }
 
         /* Step M */
-        if (c1_isc40(c)) {
+        if (c1_isc40(ch)) {
             c40_count += C1_MULT_2_DIV_3; /* Step M1 */
         } else if (is_extended) {
             c40_count += C1_MULT_8_DIV_3; /* Step M2 */
@@ -227,7 +227,7 @@ static int c1_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* Step N */
-        if (c1_istext(c)) {
+        if (c1_istext(ch)) {
             text_count += C1_MULT_2_DIV_3; /* Step N1 */
         } else if (is_extended) {
             text_count += C1_MULT_8_DIV_3; /* Step N2 */
@@ -236,7 +236,7 @@ static int c1_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* Step O */
-        if (c1_isedi(c)) {
+        if (c1_isedi(ch)) {
             edi_count += C1_MULT_2_DIV_3; /* Step O1 */
         } else if (is_extended) {
             edi_count += C1_MULT_13_DIV_3; /* Step O2 */
@@ -245,7 +245,7 @@ static int c1_look_ahead_test(const unsigned char source[], const int length, co
         }
 
         /* Step P */
-        if (gs1 && c == '\x1D') {
+        if (gs1 && ch == '\x1D') {
             byte_count += C1_MULT_3; /* Step P1 */
         } else {
             byte_count += C1_MULT_1; /* Step P2 */
@@ -978,7 +978,7 @@ static int c1_encode(struct zint_symbol *symbol, unsigned char source[], int len
 }
 
 /* Call `c1_encode()` for each segment */
-static int c1_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count, const int gs1,
+static void c1_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count, const int gs1,
             unsigned int target[], int *p_data_length, int *p_last_mode) {
     int i;
     int tp = 0;
@@ -994,8 +994,6 @@ static int c1_encode_segs(struct zint_symbol *symbol, struct zint_seg segs[], co
     }
 
     *p_data_length = tp;
-
-    return 0;
 }
 
 /* Set symbol from datagrid */
@@ -1160,9 +1158,7 @@ INTERNAL int zint_codeone(struct zint_symbol *symbol, struct zint_seg segs[], co
                             i);
         }
 
-        if (c1_encode_segs(symbol, segs, seg_count, gs1, target, &data_length, &last_mode)) {
-            return ZINT_ERROR_MEMORY; /* `c1_encode_segs()` only returns non-zero with OOM */
-        }
+        c1_encode_segs(symbol, segs, seg_count, gs1, target, &data_length, &last_mode);
 
         assert(data_length); /* Can't exceed C1_MAX_CWS as input <= 90 */
         if (data_length > 38) {
@@ -1245,9 +1241,7 @@ INTERNAL int zint_codeone(struct zint_symbol *symbol, struct zint_seg segs[], co
         int blocks, data_blocks, ecc_blocks, ecc_length;
         int last_mode;
 
-        if (c1_encode_segs(symbol, segs, seg_count, gs1, target, &data_length, &last_mode)) {
-            return ZINT_ERROR_MEMORY; /* `c1_encode_segs()` only returns non-zero with OOM */
-        }
+        c1_encode_segs(symbol, segs, seg_count, gs1, target, &data_length, &last_mode);
 
         if (data_length == 0) {
             return z_errtxt(ZINT_ERROR_TOO_LONG, symbol, 517,

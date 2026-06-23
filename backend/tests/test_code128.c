@@ -1346,6 +1346,7 @@ static void test_upu_s10_input(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
     struct item {
+        int output_options;
         const char *data;
         int ret;
         int expected_width;
@@ -1353,36 +1354,37 @@ static void test_upu_s10_input(const testCtx *const p_ctx) {
         const char *comment;
     };
     static const struct item data[] = {
-        /*  0*/ { "AB123456789ABC", ZINT_ERROR_TOO_LONG, 0, "Error 834: Input length 14 wrong (12 or 13 characters required)", "" },
-        /*  1*/ { "AB1234567AB", ZINT_ERROR_TOO_LONG, 0, "Error 834: Input length 11 wrong (12 or 13 characters required)", "" },
-        /*  2*/ { "1B123456789AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
-        /*  3*/ { "1B12345678AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
-        /*  4*/ { "A2123456789AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
-        /*  5*/ { "A212345678AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
-        /*  6*/ { "ABX23456789AB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 9 characters) (digits only)", "" },
-        /*  7*/ { "AB12345678XAB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 9 characters) (digits only)", "" },
-        /*  8*/ { "ABX2345678AB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 8 characters) (digits only)", "" },
-        /*  9*/ { "AB1234567XAB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 8 characters) (digits only)", "" },
-        /* 10*/ { "AB1234567891B", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
-        /* 11*/ { "AB123456781B", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
-        /* 12*/ { "AB123456789A2", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
-        /* 13*/ { "AB12345678A2", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
-        /* 14*/ { "AB123456789AB", ZINT_ERROR_INVALID_CHECK, 0, "Error 838: Invalid check digit '9', expecting '5'", "" },
-        /* 15*/ { "JB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'JB' (first character should not be any of \"JKSTW\")", "" },
-        /* 16*/ { "KB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'KB' (first character should not be any of \"JKSTW\")", "" },
-        /* 17*/ { "LB123456785AD", 0, 156, "", "" },
-        /* 18*/ { "SB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'SB' (first character should not be any of \"JKSTW\")", "" },
-        /* 19*/ { "TB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'TB' (first character should not be any of \"JKSTW\")", "" },
-        /* 20*/ { "WB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'WB' (first character should not be any of \"JKSTW\")", "" },
-        /* 21*/ { "FB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'FB' (first 2 characters)", "" },
-        /* 22*/ { "HB123456785AD", 0, 156, "", "" },
-        /* 23*/ { "IB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'IB' (first 2 characters)", "" },
-        /* 24*/ { "OB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'OB' (first 2 characters)", "" },
-        /* 25*/ { "XB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'XB' (first 2 characters)", "" },
-        /* 26*/ { "YB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'YB' (first 2 characters)", "" },
-        /* 27*/ { "AB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 841: Country Code 'AB' (last two characters) is not ISO 3166-1", "" },
-        /* 28*/ { "AB123100000IE", 0, 156, "", "Check digit 10 -> 0" },
-        /* 29*/ { "AB000000005IE", 0, 156, "", "Check digit 11 -> 5" },
+        /*  0*/ { -1, "AB123456789ABC", ZINT_ERROR_TOO_LONG, 0, "Error 834: Input length 14 wrong (12 or 13 characters required)", "" },
+        /*  1*/ { -1, "AB1234567AB", ZINT_ERROR_TOO_LONG, 0, "Error 834: Input length 11 wrong (12 or 13 characters required)", "" },
+        /*  2*/ { -1, "1B123456789AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
+        /*  3*/ { -1, "1B12345678AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
+        /*  4*/ { -1, "A2123456789AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
+        /*  5*/ { -1, "A212345678AB", ZINT_ERROR_INVALID_DATA, 0, "Error 835: Invalid character in Service Indicator (first 2 characters) (alphabetic only)", "" },
+        /*  6*/ { -1, "ABX23456789AB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 9 characters) (digits only)", "" },
+        /*  7*/ { -1, "AB12345678XAB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 9 characters) (digits only)", "" },
+        /*  8*/ { -1, "ABX2345678AB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 8 characters) (digits only)", "" },
+        /*  9*/ { -1, "AB1234567XAB", ZINT_ERROR_INVALID_DATA, 0, "Error 836: Invalid character in Serial Number (middle 8 characters) (digits only)", "" },
+        /* 10*/ { -1, "AB1234567891B", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
+        /* 11*/ { -1, "AB123456781B", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
+        /* 12*/ { -1, "AB123456789A2", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
+        /* 13*/ { -1, "AB12345678A2", ZINT_ERROR_INVALID_DATA, 0, "Error 837: Invalid character in Country Code (last 2 characters) (alphabetic only)", "" },
+        /* 14*/ { -1, "AB123456789AB", ZINT_ERROR_INVALID_CHECK, 0, "Error 838: Invalid check digit '9', expecting '5'", "" },
+        /* 15*/ { -1, "JB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'JB' (first character should not be any of \"JKSTW\")", "" },
+        /* 16*/ { -1, "KB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'KB' (first character should not be any of \"JKSTW\")", "" },
+        /* 17*/ { -1, "LB123456785AD", 0, 156, "", "" },
+        /* 18*/ { -1, "SB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'SB' (first character should not be any of \"JKSTW\")", "" },
+        /* 19*/ { -1, "TB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'TB' (first character should not be any of \"JKSTW\")", "" },
+        /* 20*/ { -1, "WB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 839: Invalid Service Indicator 'WB' (first character should not be any of \"JKSTW\")", "" },
+        /* 21*/ { -1, "FB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'FB' (first 2 characters)", "" },
+        /* 22*/ { -1, "HB123456785AD", 0, 156, "", "" },
+        /* 23*/ { -1, "IB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'IB' (first 2 characters)", "" },
+        /* 24*/ { -1, "OB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'OB' (first 2 characters)", "" },
+        /* 25*/ { -1, "XB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'XB' (first 2 characters)", "" },
+        /* 26*/ { -1, "YB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 840: Non-standard Service Indicator 'YB' (first 2 characters)", "" },
+        /* 27*/ { -1, "AB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 841: Country Code 'AB' (last two characters) is not ISO 3166-1", "" },
+        /* 28*/ { COMPLIANT_HEIGHT, "AB123456785AB", ZINT_WARN_NONCOMPLIANT, 156, "Warning 841: Country Code 'AB' (last two characters) is not ISO 3166-1", "" },
+        /* 29*/ { -1, "AB123100000IE", 0, 156, "", "Check digit 10 -> 0" },
+        /* 30*/ { -1, "AB000000005IE", 0, 156, "", "Check digit 11 -> 5" },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -1408,15 +1410,16 @@ static void test_upu_s10_input(const testCtx *const p_ctx) {
         assert_nonnull(symbol, "Symbol not created\n");
 
         length = testUtilSetSymbol(symbol, BARCODE_UPU_S10, UNICODE_MODE, -1 /*eci*/,
-                                    -1 /*option_1*/, -1 /*option_2*/, -1 /*option_3*/, -1 /*output_options*/,
+                                    -1 /*option_1*/, -1 /*option_2*/, -1 /*option_3*/, data[i].output_options,
                                     data[i].data, -1, debug);
 
         ret = ZBarcode_Encode(symbol, TCU(data[i].data), length);
         assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
-            printf("        /*%3d*/ { \"%s\", %s, %d, \"%s\", \"%s\" },\n",
-                    i, testUtilEscape(data[i].data, length, escaped, sizeof(escaped)),
+            printf("        /*%3d*/ { %s, \"%s\", %s, %d, \"%s\", \"%s\" },\n",
+                    i, testUtilOutputOptionsName(data[i].output_options),
+                    testUtilEscape(data[i].data, length, escaped, sizeof(escaped)),
                     testUtilErrorName(data[i].ret), symbol->width,
                     testUtilEscape(symbol->errtxt, (int) strlen(symbol->errtxt), escaped2, sizeof(escaped2)), data[i].comment);
         } else {

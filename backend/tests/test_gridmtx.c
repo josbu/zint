@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2019-2025 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2019-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -35,6 +35,7 @@ static void test_large(const testCtx *const p_ctx) {
     int debug = p_ctx->debug;
 
     struct item {
+        int option_1;
         int option_2;
         int option_3;
         const char *pattern;
@@ -46,48 +47,49 @@ static void test_large(const testCtx *const p_ctx) {
     };
     /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
     static const struct item data[] = {
-        /*  0*/ { -1, -1, "1", 2751, 0, 162, 162, "" },
-        /*  1*/ { -1, -1, "1", 2752, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
-        /*  2*/ { -1, -1, "1", 2755, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" }, /* Triggers buffer > 9191 */
-        /*  3*/ { -1, -1, "A", 1836, 0, 162, 162, "" },
-        /*  4*/ { -1, -1, "A", 1837, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
-        /*  5*/ { -1, -1, "A1", 1529, 0, 162, 162, "" },
-        /*  6*/ { -1, -1, "A1", 1530, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
-        /*  7*/ { -1, -1, "\200", 1143, 0, 162, 162, "" },
-        /*  8*/ { -1, -1, "\200", 1144, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
-        /*  9*/ { -1, ZINT_FULL_MULTIBYTE, "\241", 1410, 0, 162, 162, "" },
-        /* 10*/ { -1, ZINT_FULL_MULTIBYTE, "\241", 1412, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
-        /* 11*/ { 1, -1, "1", 18, 0, 18, 18, "" },
-        /* 12*/ { 1, -1, "1", 19, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 13 codewords (maximum 11)" },
-        /* 13*/ { 1, -1, "A", 13, 0, 18, 18, "" },
-        /* 14*/ { 1, -1, "A", 14, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 12 codewords (maximum 11)" },
-        /* 15*/ { 1, -1, "\200", 7, 0, 18, 18, "" },
-        /* 16*/ { 1, -1, "\200", 8, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 12 codewords (maximum 11)" },
-        /* 17*/ { 1, ZINT_FULL_MULTIBYTE, "\241", 8, 0, 18, 18, "" },
-        /* 18*/ { 1, ZINT_FULL_MULTIBYTE, "\241", 10, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 12 codewords (maximum 11)" },
-        /* 19*/ { 2, ZINT_FULL_MULTIBYTE, "\241", 40, 0, 30, 30, "" },
-        /* 20*/ { 2, ZINT_FULL_MULTIBYTE, "\241", 41, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 2, requires 42 codewords (maximum 40)" },
-        /* 21*/ { 3, -1, "A", 108, 0, 42, 42, "" },
-        /* 22*/ { 3, -1, "A", 109, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 3, requires 80 codewords (maximum 79)" },
-        /* 23*/ { 4, -1, "A", 202, 0, 54, 54, "" },
-        /* 24*/ { 4, -1, "A", 203, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 4, requires 147 codewords (maximum 146)" },
-        /* 25*/ { 5, -1, "1", 453, 0, 66, 66, "" },
-        /* 26*/ { 5, -1, "1", 454, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 5, requires 220 codewords (maximum 218)" },
-        /* 27*/ { 6, -1, "1", 633, 0, 78, 78, "" },
-        /* 28*/ { 6, -1, "1", 634, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 6, requires 306 codewords (maximum 305)" },
-        /* 29*/ { 7, -1, "\200", 352, 0, 90, 90, "" },
-        /* 30*/ { 7, -1, "\200", 353, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 7, requires 406 codewords (maximum 405)" },
-        /* 31*/ { 8, -1, "A", 727, 0, 102, 102, "" },
-        /* 32*/ { 8, -1, "A", 728, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 8, requires 522 codewords (maximum 521)" },
-        /* 33*/ { 9, -1, "A", 908, 0, 114, 114, "" },
-        /* 34*/ { 9, -1, "A", 909, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 9, requires 651 codewords (maximum 650)" },
-        /* 35*/ { 10, -1, "1", 1662, 0, 126, 126, "" },
-        /* 36*/ { 10, -1, "1", 1663, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 10, requires 796 codewords (maximum 794)" },
-        /* 37*/ { 11, -1, "1", 1995, 0, 138, 138, "" },
-        /* 38*/ { 11, -1, "1", 1996, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 11, requires 954 codewords (maximum 953)" },
-        /* 39*/ { 11, -1, "1", 2748, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 11, requires 1311 codewords (maximum 953)" },
-        /* 40*/ { 12, -1, "1", 2355, 0, 150, 150, "" },
-        /* 41*/ { 12, -1, "1", 2356, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 12, requires 1126 codewords (maximum 1125)" },
+        /*  0*/ { -1, -1, -1, "1", 2751, 0, 162, 162, "" },
+        /*  1*/ { -1, -1, -1, "1", 2752, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
+        /*  2*/ { -1, -1, -1, "1", 2755, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" }, /* Triggers buffer > 9191 */
+        /*  3*/ { -1, -1, -1, "A", 1836, 0, 162, 162, "" },
+        /*  4*/ { -1, -1, -1, "A", 1837, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
+        /*  5*/ { -1, -1, -1, "A1", 1529, 0, 162, 162, "" },
+        /*  6*/ { -1, -1, -1, "A1", 1530, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
+        /*  7*/ { -1, -1, -1, "\200", 1143, 0, 162, 162, "" },
+        /*  8*/ { -1, -1, -1, "\200", 1144, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
+        /*  9*/ { -1, -1, ZINT_FULL_MULTIBYTE, "\241", 1410, 0, 162, 162, "" },
+        /* 10*/ { -1, -1, ZINT_FULL_MULTIBYTE, "\241", 1412, ZINT_ERROR_TOO_LONG, -1, -1, "Error 531: Input too long, requires too many codewords (maximum 1313)" },
+        /* 11*/ { -1, 1, -1, "1", 18, 0, 18, 18, "" },
+        /* 12*/ { -1, 1, -1, "1", 19, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 13 codewords (maximum 11)" },
+        /* 13*/ { -1, 1, -1, "A", 13, 0, 18, 18, "" },
+        /* 14*/ { -1, 1, -1, "A", 14, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 12 codewords (maximum 11)" },
+        /* 15*/ { -1, 1, -1, "\200", 7, 0, 18, 18, "" },
+        /* 16*/ { -1, 1, -1, "\200", 8, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 12 codewords (maximum 11)" },
+        /* 17*/ { -1, 1, ZINT_FULL_MULTIBYTE, "\241", 8, 0, 18, 18, "" },
+        /* 18*/ { -1, 1, ZINT_FULL_MULTIBYTE, "\241", 10, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 1, requires 12 codewords (maximum 11)" },
+        /* 19*/ { -1, 2, ZINT_FULL_MULTIBYTE, "\241", 40, 0, 30, 30, "" },
+        /* 20*/ { -1, 2, ZINT_FULL_MULTIBYTE, "\241", 41, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 2, requires 42 codewords (maximum 40)" },
+        /* 21*/ { -1, 3, -1, "A", 108, 0, 42, 42, "" },
+        /* 22*/ { -1, 3, -1, "A", 109, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 3, requires 80 codewords (maximum 79)" },
+        /* 23*/ { -1, 4, -1, "A", 202, 0, 54, 54, "" },
+        /* 24*/ { -1, 4, -1, "A", 203, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 4, requires 147 codewords (maximum 146)" },
+        /* 25*/ { -1, 5, -1, "1", 453, 0, 66, 66, "" },
+        /* 26*/ { -1, 5, -1, "1", 454, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 5, requires 220 codewords (maximum 218)" },
+        /* 27*/ { -1, 6, -1, "1", 633, 0, 78, 78, "" },
+        /* 28*/ { -1, 6, -1, "1", 634, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 6, requires 306 codewords (maximum 305)" },
+        /* 29*/ { -1, 7, -1, "\200", 352, 0, 90, 90, "" },
+        /* 30*/ { -1, 7, -1, "\200", 353, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 7, requires 406 codewords (maximum 405)" },
+        /* 31*/ { -1, 8, -1, "A", 727, 0, 102, 102, "" },
+        /* 32*/ { -1, 8, -1, "A", 728, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 8, requires 522 codewords (maximum 521)" },
+        /* 33*/ { -1, 9, -1, "A", 908, 0, 114, 114, "" },
+        /* 34*/ { -1, 9, -1, "A", 909, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 9, requires 651 codewords (maximum 650)" },
+        /* 35*/ { -1, 10, -1, "1", 1662, 0, 126, 126, "" },
+        /* 36*/ { -1, 10, -1, "1", 1663, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 10, requires 796 codewords (maximum 794)" },
+        /* 37*/ { -1, 11, -1, "1", 1995, 0, 138, 138, "" },
+        /* 38*/ { -1, 11, -1, "1", 1996, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 11, requires 954 codewords (maximum 953)" },
+        /* 39*/ { -1, 11, -1, "1", 2748, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 11, requires 1311 codewords (maximum 953)" },
+        /* 40*/ { -1, 12, -1, "1", 2355, 0, 150, 150, "" },
+        /* 41*/ { -1, 12, -1, "1", 2356, ZINT_ERROR_TOO_LONG, -1, -1, "Error 534: Input too long for Version 12, requires 1126 codewords (maximum 1125)" },
+        /* 42*/ { 2, 12, -1, "1", 2355, 0, 150, 150, "" },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -105,18 +107,26 @@ static void test_large(const testCtx *const p_ctx) {
         assert_nonnull(symbol, "Symbol not created\n");
 
         testUtilStrCpyRepeat(data_buf, data[i].pattern, data[i].length);
-        assert_equal(data[i].length, (int) strlen(data_buf), "i:%d length %d != strlen(data_buf) %d\n", i, data[i].length, (int) strlen(data_buf));
+        assert_equal(data[i].length, (int) strlen(data_buf), "i:%d length %d != strlen(data_buf) %d\n",
+                        i, data[i].length, (int) strlen(data_buf));
 
-        length = testUtilSetSymbol(symbol, BARCODE_GRIDMATRIX, -1 /*input_mode*/, -1 /*eci*/, -1 /*option_1*/, data[i].option_2, data[i].option_3, -1 /*output_options*/, data_buf, data[i].length, debug);
+        length = testUtilSetSymbol(symbol, BARCODE_GRIDMATRIX, -1 /*input_mode*/, -1 /*eci*/,
+                                    data[i].option_1, data[i].option_2, data[i].option_3, -1 /*output_options*/,
+                                    data_buf, data[i].length, debug);
 
         ret = ZBarcode_Encode(symbol, TCU(data_buf), length);
-        assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n", i, ret, data[i].ret, symbol->errtxt);
-        assert_equal(symbol->errtxt[0] == '\0', ret == 0, "i:%d symbol->errtxt not %s (%s)\n", i, ret ? "set" : "empty", symbol->errtxt);
-        assert_zero(strcmp(symbol->errtxt, data[i].expected_errtxt), "i:%d strcmp(%s, %s) != 0\n", i, symbol->errtxt, data[i].expected_errtxt);
+        assert_equal(ret, data[i].ret, "i:%d ZBarcode_Encode ret %d != %d (%s)\n",
+                        i, ret, data[i].ret, symbol->errtxt);
+        assert_equal(symbol->errtxt[0] == '\0', ret == 0, "i:%d symbol->errtxt not %s (%s)\n",
+                        i, ret ? "set" : "empty", symbol->errtxt);
+        assert_zero(strcmp(symbol->errtxt, data[i].expected_errtxt), "i:%d strcmp(%s, %s) != 0\n",
+                        i, symbol->errtxt, data[i].expected_errtxt);
 
         if (ret < ZINT_ERROR) {
-            assert_equal(symbol->rows, data[i].expected_rows, "i:%d symbol->rows %d != %d\n", i, symbol->rows, data[i].expected_rows);
-            assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n", i, symbol->width, data[i].expected_width);
+            assert_equal(symbol->rows, data[i].expected_rows, "i:%d symbol->rows %d != %d\n",
+                            i, symbol->rows, data[i].expected_rows);
+            assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n",
+                            i, symbol->width, data[i].expected_width);
         }
 
         ZBarcode_Delete(symbol);

@@ -184,14 +184,14 @@ $(OUT_TXT) : $(SOURCE) $(SOURCE_MAN_PAGE) $(INCLUDES_TXT) $(INFRASTRUCTURE)
 			-V $(MAIN_FONT) -V $(MONO_FONT) -V $(CJK_FONT) \
 			$(TXT_OPTS) \
 			-o $(OUT_TXT)
-	# Indent Man Page sections in TOC, remove trailing spaces, echoed image tags, tbl: hashes
-	# & clean up Table captions
+	# Indent Man Page sections in TOC, remove trailing spaces, tbl: hashes,
+	# clean up Table captions & prefix Figure nos. (https://stackoverflow.com/a/60073027)
 	sed -i \
 		-e 's/^\(-   [A-Z][A-Z ]*\)$$/    \1/' \
 		-e 's/  *$$//' \
-		-e '/^\[.*\]$$/{N;N;s/\[\(.*\)\]\n\n\1/[\1]/;p;d}' \
 		-e 's/ *{#tbl:[^}]*}//' \
 		-e 's/^  : Table/  Table/' \
+		-e '/^\[[^1-9].*$$/{x;s/.*/expr & + 1/e;x;G;s/^\[\(.*\)\n\(.*\)/[Figure \2: \1/}' \
 		$(OUT_TXT)
 	# Wrap
 	sed -i '/.\{81\}/{s/.\{80\}/&\n/}' $(OUT_TXT)

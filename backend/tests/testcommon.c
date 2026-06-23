@@ -70,6 +70,7 @@ struct zint_symbol **testAssertPPSymbol = NULL;
 const char *testAssertFilename = "";
 static const char *testName = NULL;
 static const char *testFunc = NULL;
+static const char *testFailedFuncs[128] = {0};
 
 /* Visual C++ 6 doesn't support variadic args to macros, so make do with functions, which have inferior behaviour,
    e.g. don't exit on failure, `assert_equal()` type-specific */
@@ -167,6 +168,9 @@ void testFinish(void) {
     }
     if (testAssertFailed) {
         printf("FAILED. (%d assertions failed)\n", testAssertFailed);
+        if (testFailed < ARRAY_SIZE(testFailedFuncs)) {
+            testFailedFuncs[testFailed] = testFunc;
+        }
         testFailed++;
     } else if (testDataset) {
         if (testAssertNum) {
@@ -206,12 +210,21 @@ void testSkip(const char *msg) {
 
 /* End test program */
 void testReport(void) {
+    int i;
     if (testFailed && testSkipped) {
-        printf("Total %d tests, %d skipped, %d **fails**.\n", testTests, testSkipped, testFailed);
+        printf("Total %d tests, %d skipped, %d **fails**: ", testTests, testSkipped, testFailed);
+        for (i = 0; i < testFailed; i++) {
+            printf(i == 0 ? "%s" : ", %s", testFailedFuncs[i]);
+        }
+        fputs("\n", stdout);
         exit(-1);
     }
     if (testFailed) {
-        printf("Total %d tests, %d **fails**.\n", testTests, testFailed);
+        printf("Total %d tests, %d **fails**: ", testTests, testFailed);
+        for (i = 0; i < testFailed; i++) {
+            printf(i == 0 ? "%s" : ", %s", testFailedFuncs[i]);
+        }
+        fputs("\n", stdout);
         exit(-1);
     }
     if (testSkipped) {
@@ -1640,6 +1653,18 @@ int testUtilRename(const char *oldpath, const char *newpath) {
 #endif
 }
 
+/* Create file. Returns 1 if successful, 0 if not */
+int testUtilCreateFile(const char *filename) {
+    FILE *fp = testUtilOpen(filename, "w+");
+    if (fp == NULL) {
+        return 0;
+    }
+    if (fclose(fp) != 0) {
+        return 0;
+    }
+    return 1;
+}
+
 /* Create read-only file. Returns 1 if successful, 0 if not */
 int testUtilCreateROFile(const char *filename) {
 #ifdef _WIN32
@@ -2677,7 +2702,6 @@ static int supports_extra_escape_mode(const struct zint_symbol *const symbol) {
                     && (symbol->input_mode & 0x07) != GS1_MODE);
 }
 
-#define z_isxdigit(c) (z_isdigit(c) || ((c) >= 'A' && (c) <= 'F') || ((c) >= 'a' && (c) <= 'f'))
 #define z_isodigit(c) ((c) <= '7' && (c) >= '0')
 
 /* Convert data to Ghostscript format for passing to bwipp_dump.ps */

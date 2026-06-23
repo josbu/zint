@@ -1,6 +1,6 @@
 /*
     libzint - the open source barcode library
-    Copyright (C) 2020-2025 Robin Stuart <rstuart114@gmail.com>
+    Copyright (C) 2020-2026 Robin Stuart <rstuart114@gmail.com>
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -143,6 +143,7 @@ static void test_encoding(const testCtx *const p_ctx) {
         /* 16*/ { 0x11d, 10, 0, 16, { 0x10, 0x20, 0x0C, 0x56, 0x61, 0x80, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11 }, { 0x55, 0x2C, 0x87, 0xC7, 0x36, 0xED, 0xC1, 0xD4, 0x24, 0xA5 } }, /* QRCODE Annex I.2 */
         /* 17*/ { 0x11d, 5, 0, 5, { 0x40, 0x18, 0xAC, 0xC3, 0x00 }, { 0x30, 0xAE, 0x22, 0x0D, 0x86 } }, /* QRCODE Annex I.3 */
         /* 18*/ { 0x163, 256, 0, 1, { 0xFF }, { 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255 } },
+        /* 19*/ { 0x163, 256, 1, 7, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -209,6 +210,7 @@ static void test_encoding_uint(const testCtx *const p_ctx) {
         /* 16*/ { 0x11d, 10, 0, 16, { 0x10, 0x20, 0x0C, 0x56, 0x61, 0x80, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11 }, { 0x55, 0x2C, 0x87, 0xC7, 0x36, 0xED, 0xC1, 0xD4, 0x24, 0xA5 } }, /* QRCODE Annex I.2 */
         /* 17*/ { 0x11d, 5, 0, 5, { 0x40, 0x18, 0xAC, 0xC3, 0x00 }, { 0x30, 0xAE, 0x22, 0x0D, 0x86 } }, /* QRCODE Annex I.3 */
         /* 18*/ { 0x163, 256, 0, 1, { 0xFF }, { 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255 } },
+        /* 19*/ { 0x163, 256, 1, 7, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -261,6 +263,7 @@ static void test_uint_encoding(const testCtx *const p_ctx) {
         /*  1*/ { 0x1069, 4095, 4, 1, 7, { 0xFFF, 0x000, 0x700, 0x7FF, 0xFFF, 0x000, 0x123 }, { 575, 3494, 2350, 3472 } },
         /*  2*/ { 0x1000, 4095, 4, 0, 7, { 0xFFF, 0x000, 0x700, 0x7FF, 0xFFF, 0x000, 0x123 }, { 64, 0, 65, 1 } },
         /*  3*/ { 0x1000, 4095, 256, 0, 1, { 0xFFF }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2048, 0, 512, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 } },
+        /*  4*/ { 0x409, 1023, 4, 0, 7, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     };
     int data_size = ARRAY_SIZE(data);
     int i;
@@ -314,6 +317,51 @@ static void test_uint_encoding(const testCtx *const p_ctx) {
     testFinish();
 }
 
+static void test_alloc(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int symbology;
+        int option_2;
+        const char *data;
+        int ret;
+        int id;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_AZTEC, 13, "123", ZINT_ERROR_MEMORY, RS_FAIL_ID_LOGT },
+        /*  1*/ { BARCODE_AZTEC, 13, "123", ZINT_ERROR_MEMORY, RS_FAIL_ID_ALOG },
+        /*  2*/ { BARCODE_AZTEC, 27, "123", ZINT_ERROR_MEMORY, RS_FAIL_ID_LOGT },
+        /*  3*/ { BARCODE_AZTEC, 27, "123", ZINT_ERROR_MEMORY, RS_FAIL_ID_ALOG },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, length, ret;
+    struct zint_symbol *symbol = NULL;
+
+    testStartSymbol(p_ctx->func_name, &symbol);
+
+    for (i = 0; i < data_size; i++) {
+
+        if (testContinue(p_ctx, i)) continue;
+
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        length = testUtilSetSymbol(symbol, data[i].symbology, -1 /*input_mode*/, -1 /*eci*/,
+                                    -1 /*option_1*/, data[i].option_2, -1 /*option_3*/, -1 /*output_options*/,
+                                    data[i].data, -1, debug);
+        zint_test_rs_set_fail(data[i].id);
+        ret = ZBarcode_Encode(symbol, ZCUCP(data[i].data), length);
+        assert_equal(ret, data[i].ret, "i:%d %s ZBarcode_Encode ret %d != %d (%s)\n",
+                    i, testUtilBarcodeName(data[i].symbology), ret, data[i].ret, symbol->errtxt);
+        zint_test_rs_set_fail(0);
+
+        ZBarcode_Delete(symbol);
+    }
+
+    testFinish();
+}
+
 int main(int argc, char *argv[]) {
 
     testFunction funcs[] = { /* name, func */
@@ -321,6 +369,7 @@ int main(int argc, char *argv[]) {
         { "test_encoding", test_encoding },
         { "test_encoding_uint", test_encoding_uint },
         { "test_uint_encoding", test_uint_encoding },
+        { "test_alloc", test_alloc },
     };
 
     testRun(argc, argv, funcs, ARRAY_SIZE(funcs));

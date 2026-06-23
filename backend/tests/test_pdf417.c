@@ -319,7 +319,8 @@ static void test_reader_init(const testCtx *const p_ctx) {
 
         if (p_ctx->generate) {
             printf("        /*%3d*/ { %s, %s, %s, \"%s\", %s, %d, %d, \"%s\", \"%s\" },\n",
-                    i, testUtilBarcodeName(data[i].symbology), testUtilInputModeName(data[i].input_mode), testUtilOutputOptionsName(data[i].output_options),
+                    i, testUtilBarcodeName(data[i].symbology), testUtilInputModeName(data[i].input_mode),
+                    testUtilOutputOptionsName(data[i].output_options),
                     testUtilEscape(data[i].data, length, escaped, sizeof(escaped)),
                     testUtilErrorName(data[i].ret), symbol->rows, symbol->width, symbol->errtxt, data[i].comment);
         } else {
@@ -471,6 +472,8 @@ static void test_input(const testCtx *const p_ctx) {
         /* 88*/ { BARCODE_PDF417, DATA_MODE, -1, -1, -1, { 0, 0, "" }, "12345678901234567890", 0, 0, 9, 103, "(18) 10 902 211 358 354 304 269 753 190 900 327 902 163 367 231 586 808 731", 1, "" },
         /* 89*/ { BARCODE_PDF417, DATA_MODE | FAST_MODE, -1, -1, -1, { 0, 0, "" }, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", 0, 0, 12, 137, "(48) 40 902 491 81 137 450 302 67 15 174 492 862 667 475 869 12 434 685 326 422 57 117 339", 1, "" },
         /* 90*/ { BARCODE_PDF417, DATA_MODE, -1, -1, -1, { 0, 0, "" }, "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", 0, 0, 12, 137, "(48) 40 902 491 81 137 450 302 67 15 174 492 862 667 475 869 12 434 685 326 422 57 117 339", 1, "" },
+        /* 91*/ { BARCODE_PDF417, DATA_MODE | FAST_MODE, -1, -1, -1, { 0, 0, "" }, "12345678901;;;;;;     ", 0, 0, 8, 120, "(24) 16 902 154 98 332 101 900 865 0 0 0 896 806 806 900 900 455 477 237 629 768 622 623", 0, "BWIPP: different encodation, see below" },
+        /* 92*/ { BARCODE_PDF417, DATA_MODE, -1, -1, -1, { 0, 0, "" }, "12345678901;;;;;;     ", 0, 0, 8, 120, "(24) 16 841 63 125 187 249 1 750 0 0 29 806 806 809 900 900 105 646 736 649 641 551 905 630", 1, "" },
     };
     const int data_size = ARRAY_SIZE(data);
     int i, length, ret;
@@ -508,7 +511,8 @@ static void test_input(const testCtx *const p_ctx) {
                     i, ret, data[i].ret, symbol->errtxt);
 
         if (p_ctx->generate) {
-            printf("        /*%3d*/ { %s, %s, %d, %d, %d, { %d, %d, \"%s\" }, \"%s\", %s, %d, %d, %d, \"%s\", %d, \"%s\" },\n",
+            printf("        /*%3d*/ { %s, %s, %d, %d, %d, { %d, %d, \"%s\" }, \"%s\", %s, %d, %d, %d, \"%s\", %d"
+                    ", \"%s\" },\n",
                     i, testUtilBarcodeName(data[i].symbology), testUtilInputModeName(data[i].input_mode), data[i].eci,
                     data[i].option_1, data[i].option_2,
                     data[i].structapp.index, data[i].structapp.count, data[i].structapp.id,
@@ -4871,7 +4875,8 @@ static void test_encode_segs(const testCtx *const p_ctx) {
                         data[i].segs[0].length, debug)) {
                     if ((data[i].input_mode & 0x07) == DATA_MODE) {
                         if (debug & ZINT_DEBUG_TEST_PRINT) {
-                            printf("i:%d %s multiple segments in DATA_MODE not currently supported for ZXing-C++ testing\n",
+                            printf("i:%d %s multiple segments in DATA_MODE not currently supported"
+                                    " for ZXing-C++ testing\n",
                                     i, testUtilBarcodeName(symbol->symbology));
                         }
                     } else {
@@ -4887,9 +4892,10 @@ static void test_encode_segs(const testCtx *const p_ctx) {
 
                         ret = testUtilZXingCPPCmpSegs(symbol, cmp_msg, cmp_buf, cmp_len, data[i].segs, seg_count,
                                 NULL /*primary*/, escaped, &ret_len);
-                        assert_zero(ret, "i:%d %s testUtilZXingCPPCmpSegs %d != 0 %s\n  actual: %.*s\nexpected: %.*s\n",
-                                i, testUtilBarcodeName(symbol->symbology), ret, cmp_msg, cmp_len, cmp_buf, ret_len,
-                                escaped);
+                        assert_zero(ret,
+                                    "i:%d %s testUtilZXingCPPCmpSegs %d != 0 %s\n  actual: %.*s\nexpected: %.*s\n",
+                                    i, testUtilBarcodeName(symbol->symbology), ret, cmp_msg, cmp_len, cmp_buf,
+                                    ret_len, escaped);
                     }
                 }
             }
@@ -4984,7 +4990,7 @@ static void test_rt(const testCtx *const p_ctx) {
                             i, symbol->content_segs[0].length, expected_length);
                 assert_zero(memcmp(symbol->content_segs[0].source, data[i].expected, expected_length),
                             "i:%d content_segs[0].source memcmp(%s, %s, %d) != 0\n", i,
-                            testUtilEscape((const char *) symbol->content_segs[0].source, symbol->content_segs[0].length,
+                            testUtilEscape(ZCCP(symbol->content_segs[0].source), symbol->content_segs[0].length,
                                             escaped, sizeof(escaped)),
                             testUtilEscape(data[i].expected, expected_length, escaped2, sizeof(escaped2)),
                             expected_length);
@@ -5066,8 +5072,9 @@ static void test_rt_segs(const testCtx *const p_ctx) {
         assert_equal(symbol->width, data[i].expected_width, "i:%d symbol->width %d != %d\n",
                     i, symbol->width, data[i].expected_width);
 
-        assert_equal(symbol->content_seg_count, data[i].expected_content_seg_count, "i:%d symbol->content_seg_count %d != %d\n",
-                    i, symbol->content_seg_count, data[i].expected_content_seg_count);
+        assert_equal(symbol->content_seg_count, data[i].expected_content_seg_count,
+                        "i:%d symbol->content_seg_count %d != %d\n",
+                        i, symbol->content_seg_count, data[i].expected_content_seg_count);
         if (symbol->output_options & BARCODE_CONTENT_SEGS) {
             assert_nonnull(symbol->content_segs, "i:%d content_segs NULL\n", i);
             for (j = 0; j < symbol->content_seg_count; j++) {
@@ -5078,7 +5085,8 @@ static void test_rt_segs(const testCtx *const p_ctx) {
                 assert_equal(symbol->content_segs[j].length, expected_length,
                             "i:%d content_segs[%d].length %d != expected_length %d\n",
                             i, j, symbol->content_segs[j].length, expected_length);
-                assert_zero(memcmp(symbol->content_segs[j].source, data[i].expected_content_segs[j].source, expected_length),
+                assert_zero(memcmp(symbol->content_segs[j].source, data[i].expected_content_segs[j].source,
+                                    expected_length),
                             "i:%d content_segs[%d].source memcmp(%s, %s, %d) != 0\n", i, j,
                             testUtilEscape((const char *) symbol->content_segs[j].source, expected_length, escaped,
                                             sizeof(escaped)),

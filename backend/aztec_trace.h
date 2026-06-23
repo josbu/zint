@@ -34,25 +34,25 @@
 #define Z_AZTEC_TRACE_H
 
 static void AZ_TRACE_EdgeToString(char *buf, const unsigned char *source, const int length, const char initial_mode,
-			struct az_edge *edges, struct az_edge *edge) {
+            struct az_edge *edges, struct az_edge *edge) {
     struct az_edge *previous_edge = AZ_PREVIOUS(edges, edge);
     int previousMode = previous_edge ? previous_edge->mode : initial_mode;
-	int previous = previous_edge ? (int) (previous_edge - edges) : 0;
-	int current = (int) (edge - edges);
+    int previous = previous_edge ? (int) (previous_edge - edges) : 0;
+    int current = (int) (edge - edges);
     (void)length;
     if (buf) {
         sprintf(buf, "%d_%c_%d %c(%d,%d) %d -> %d_%c_%d",
             edge->from, az_mode_char(previousMode), previous, az_mode_char(edge->mode), source[edge->from], edge->len,
-			edge->size, edge->from + 1, az_mode_char(edge->mode), current);
+            edge->size, edge->from + 1, az_mode_char(edge->mode), current);
     } else {
         printf("%d_%c_%d %c(%d,%d) %d -> %d_%c_%d",
             edge->from, az_mode_char(previousMode), previous, az_mode_char(edge->mode), source[edge->from], edge->len,
-			edge->size, edge->from + 1, az_mode_char(edge->mode), current);
+            edge->size, edge->from + 1, az_mode_char(edge->mode), current);
     }
 }
 
 static void AZ_TRACE_Path(const unsigned char *source, const int length, const char initial_mode,
-			struct az_edge *edges, struct az_edge *edge, char *result, const int result_size) {
+            struct az_edge *edges, struct az_edge *edge, char *result, const int result_size) {
     struct az_edge *current;
     AZ_TRACE_EdgeToString(result, source, length, initial_mode, edges, edge);
     current = AZ_PREVIOUS(edges, edge);

@@ -222,7 +222,6 @@ INTERNAL int zint_tif_pixel_plot(struct zint_symbol *symbol, const unsigned char
     struct filemem *const fmp = &fm;
     const unsigned char *pb;
     int compression = TIF_NO_COMPRESSION;
-    long file_pos;
     const int output_to_stdout = symbol->output_options & BARCODE_STDOUT;
     uint32_t *strip_offset;
     uint32_t *strip_bytes;
@@ -497,12 +496,23 @@ INTERNAL int zint_tif_pixel_plot(struct zint_symbol *symbol, const unsigned char
             /* End of strip */
             if (compression == TIF_LZW) {
                 #ifndef NDEBUG
-                file_pos = zint_fm_tell(fmp);
+                long before_file_pos, after_file_pos;
+                if ((before_file_pos = zint_fm_tell(fmp)) == -1L) {
+                    (void) zint_fm_close(fmp, symbol);
+                    return z_errtxt(ZINT_ERROR_FILE_WRITE, symbol, 671, "Failed to get file position in TIF output");
+                }
                 #endif
+
                 bytes_put = tif_lzw_compress(fmp, strip_buf, bytes_put);
+
                 #ifndef NDEBUG
-                assert(bytes_put == (unsigned int) (zint_fm_tell(fmp) - file_pos));
+                if ((after_file_pos = zint_fm_tell(fmp)) == -1L) {
+                    (void) zint_fm_close(fmp, symbol);
+                    return z_errtxt(ZINT_ERROR_FILE_WRITE, symbol, 673, "Failed to get file position in TIF output");
+                }
+                assert(bytes_put == (unsigned int) (after_file_pos - before_file_pos));
                 #endif
+
                 if (bytes_put != strip_bytes[strip]) {
                     const int diff = bytes_put - strip_bytes[strip];
                     strip_bytes[strip] = bytes_put;
@@ -528,7 +538,11 @@ INTERNAL int zint_tif_pixel_plot(struct zint_symbol *symbol, const unsigned char
     }
 
     if (compression == TIF_LZW) {
-        file_pos = zint_fm_tell(fmp);
+        long file_pos;
+        if ((file_pos = zint_fm_tell(fmp)) == -1L) {
+            (void) zint_fm_close(fmp, symbol);
+            return z_errtxt(ZINT_ERROR_FILE_WRITE, symbol, 675, "Failed to get file position in TIF output");
+        }
         zint_fm_seek(fmp, 4, SEEK_SET);
         free_memory = file_pos;
         temp32 = (uint32_t) free_memory;

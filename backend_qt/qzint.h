@@ -146,7 +146,8 @@ public:
 
     /* Type of border above/below/around barcode */
     int borderType() const; // `symbol->output_options | BARCODE_BIND | BARCODE_BOX | BARCODE_BIND_TOP`
-    void setBorderType(int borderTypeIndex);
+    void setBorderType(int borderTypeIndex); // Sets from comboBox index
+    void setBorderTypeValue(int borderType); // Sets literal value
 
     /* Size of border in X-dimensions */
     int borderWidth() const; // `symbol->border_width`
@@ -246,6 +247,8 @@ public:
     int encodedOption1() const; // Read-only, encoded `option_1`
     int encodedOption2() const; // Read-only, encoded `option_2`
     int encodedOption3() const; // Read-only, encoded `option_3`
+    int encodedInputMode() const; // Read-only, `input_mode`
+    int encodedOutputOptions() const; // Read-only, `output_options`
 
 
     /* Legacy property getters/setters */
@@ -322,6 +325,12 @@ public:
        after a successful `render()`. Returns false if `scale()` zero or render is in error, otherwise true */
     bool getWidthHeightXdim(float x_dim, float &width_x_dim, float &height_x_dim) const;
 
+
+    /* Convert literal ECI to ECI combobox index */
+    static int ECIValueToECIIndex(const int eci);
+
+    /* Convert ECI combo index to literal ECI */
+    static int ECIIndexToECIValue(const int ECIIndex);
 
     /* Return the BARCODE_XXX name of `symbology` */
     static QString barcodeName(const int symbology); // `ZBarcode_BarcodeName()`

@@ -66,11 +66,13 @@ INTERNAL int zint_ean_leading_zeroes(struct zint_symbol *symbol, const unsigned 
                 unsigned char local_source[], int *p_with_addon, unsigned char *zfirst_part,
                 unsigned char *zsecond_part);
 
-INTERNAL int zint_dbar_omnstk_set_height(struct zint_symbol *symbol, const int first_row);
+INTERNAL int zint_dbar_stk_set_height(struct zint_symbol *symbol, const int first_row, const int no_errtxt);
 INTERNAL int zint_dbar_omn_cc(struct zint_symbol *symbol, unsigned char source[], int length, const int cc_rows);
 INTERNAL int zint_dbar_ltd_cc(struct zint_symbol *symbol, unsigned char source[], int length, const int cc_rows);
 INTERNAL int zint_dbar_exp_cc(struct zint_symbol *symbol, unsigned char source[], int length, const int cc_rows);
 INTERNAL int zint_dbar_exp_date(const unsigned char source[], const int length, const int position);
+
+INTERNAL int zint_micropdf_variant(const int cols, const int mclength);
 
 static int cc_min(const int first, const int second) {
 
@@ -111,11 +113,9 @@ static int cc_encode928(const unsigned short bitString[], unsigned short codeWor
 
 /* CC-A 2D component */
 static void cc_a(struct zint_symbol *symbol, const char source[], const int cc_width) {
-    int i, segment, bitlen, cwCnt, variant;
-    int k, offset, j, total, rsCodeWords[8] = {0};
-    int LeftRAPStart, RightRAPStart, CentreRAPStart, StartCluster;
+    int i, j, bitlen, cwCnt, ecc_cwds, variant;
+    int offset, rsCodeWords[8] = {0};
     int LeftRAP, RightRAP, CentreRAP, Cluster;
-    int loop;
     unsigned short codeWords[28] = {0};
     unsigned short bitStr[13] = {0};
     char pattern[580];
@@ -126,14 +126,14 @@ static void cc_a(struct zint_symbol *symbol, const char source[], const int cc_w
 
     bitlen = (int) strlen(source);
 
-    for (segment = 0; segment < 13; segment++) {
-        const int strpos = segment * 16;
+    for (j = 0; j < 13; j++) {
+        const int strpos = j * 16;
         if (strpos >= bitlen) {
             break;
         }
         for (i = 0; i < 16 && strpos + i < bitlen; i++) {
             if (source[strpos + i] == '1') {
-                bitStr[segment] |= (0x8000 >> i);
+                bitStr[j] |= (0x8000 >> i);
             }
         }
     }
@@ -173,15 +173,15 @@ static void cc_a(struct zint_symbol *symbol, const char source[], const int cc_w
             break;
     }
 
-    symbol->rows = cc_aVariants[variant];
-    k = cc_aVariants[17 + variant];
-    offset = cc_aVariants[34 + variant];
+    symbol->rows = cc_aVariants[0][variant];
+    ecc_cwds = cc_aVariants[1][variant];
+    offset = cc_aVariants[2][variant];
 
     /* Reed-Solomon error correction */
 
     for (i = 0; i < cwCnt; i++) {
-        total = (codeWords[i] + rsCodeWords[k - 1]) % 929;
-        for (j = k - 1; j >= 0; j--) {
+        const int total = (codeWords[i] + rsCodeWords[ecc_cwds - 1]) % 929;
+        for (j = ecc_cwds - 1; j >= 0; j--) {
             if (j == 0) {
                 rsCodeWords[j] = (929 - (total * cc_aCoeffs[offset + j]) % 929) % 929;
             } else {
@@ -190,85 +190,66 @@ static void cc_a(struct zint_symbol *symbol, const char source[], const int cc_w
         }
     }
 
-    for (j = 0; j < k; j++) {
+    for (j = 0; j < ecc_cwds; j++) {
         if (rsCodeWords[j] != 0) {
             rsCodeWords[j] = 929 - rsCodeWords[j];
         }
     }
 
-    for (i = k - 1; i >= 0; i--) {
+    for (i = ecc_cwds - 1; i >= 0; i--) {
         codeWords[cwCnt] = rsCodeWords[i];
         cwCnt++;
     }
 
     /* Place data into table */
-    LeftRAPStart = cc_aRAPTable[variant];
-    CentreRAPStart = cc_aRAPTable[variant + 17];
-    RightRAPStart = cc_aRAPTable[variant + 34];
-    StartCluster = cc_aRAPTable[variant + 51] / 3;
+    LeftRAP = cc_aRAPTable[0][variant] - 1;
+    CentreRAP = cc_aRAPTable[1][variant] - 1;
+    RightRAP = cc_aRAPTable[2][variant] - 1;
 
-    LeftRAP = LeftRAPStart;
-    CentreRAP = CentreRAPStart;
-    RightRAP = RightRAPStart;
-    Cluster = StartCluster; /* Cluster can be 0, 1 or 2 for Cluster(0), Cluster(3) and Cluster(6) */
+    /* Cluster can be 0, 1 or 2 for Cluster(0), Cluster(3) and Cluster(6) */
+    Cluster = cc_aRAPTable[3][variant]; /* Pre-divided by 3 */
 
     for (i = 0; i < symbol->rows; i++) {
+        const int k = i * cc_width;
         bp = 0;
         offset = 929 * Cluster;
-        k = i * cc_width;
         /* Copy the data into codebarre */
         if (cc_width != 3) {
-            bp = z_bin_append_posn(zint_pdf_rap_side[LeftRAP - 1], 10, pattern, bp);
+            bp = z_bin_append_posn(zint_pdf_rap_side[LeftRAP], 10, pattern, bp);
         }
-        bp = z_bin_append_posn(zint_pdf_bitpattern[offset + codeWords[k]], 16, pattern, bp);
-        pattern[bp++] = '0';
+        bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + codeWords[k]]) << 1, 17, pattern, bp);
         if (cc_width >= 2) {
             if (cc_width == 3) {
-                bp = z_bin_append_posn(zint_pdf_rap_centre[CentreRAP - 1], 10, pattern, bp);
+                bp = z_bin_append_posn(zint_pdf_rap_centre[CentreRAP], 10, pattern, bp);
             }
-            bp = z_bin_append_posn(zint_pdf_bitpattern[offset + codeWords[k + 1]], 16, pattern, bp);
-            pattern[bp++] = '0';
+            bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + codeWords[k + 1]]) << 1, 17, pattern, bp);
             if (cc_width >= 3) {
                 if (cc_width == 4) {
-                    bp = z_bin_append_posn(zint_pdf_rap_centre[CentreRAP - 1], 10, pattern, bp);
+                    bp = z_bin_append_posn(zint_pdf_rap_centre[CentreRAP], 10, pattern, bp);
                 }
-                bp = z_bin_append_posn(zint_pdf_bitpattern[offset + codeWords[k + 2]], 16, pattern, bp);
-                pattern[bp++] = '0';
+                bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + codeWords[k + 2]]) << 1, 17, pattern, bp);
                 if (cc_width == 4) {
-                    bp = z_bin_append_posn(zint_pdf_bitpattern[offset + codeWords[k + 3]], 16, pattern, bp);
-                    pattern[bp++] = '0';
+                    bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + codeWords[k + 3]]) << 1, 17, pattern,
+                                            bp);
                 }
             }
         }
-        bp = z_bin_append_posn(zint_pdf_rap_side[RightRAP - 1], 10, pattern, bp);
+        bp = z_bin_append_posn(zint_pdf_rap_side[RightRAP], 10, pattern, bp);
         pattern[bp++] = '1'; /* Stop */
 
         /* So now pattern[] holds the string of '1's and '0's. - copy this to the symbol */
-        for (loop = 0; loop < bp; loop++) {
-            if (pattern[loop] == '1') {
-                z_set_module(symbol, i, loop);
+        for (j = 0; j < bp; j++) {
+            if (pattern[j] == '1') {
+                z_set_module(symbol, i, j);
             }
         }
         symbol->row_height[i] = 2;
 
         /* Set up RAPs and Cluster for next row */
-        LeftRAP++;
-        CentreRAP++;
-        RightRAP++;
-        Cluster++;
-
-        if (LeftRAP == 53) {
-            LeftRAP = 1;
-        }
-        if (CentreRAP == 53) {
-            CentreRAP = 1;
-        }
-        if (RightRAP == 53) {
-            RightRAP = 1;
-        }
-        if (Cluster == 3) {
-            Cluster = 0;
-        }
+        LeftRAP = LeftRAP == 51 ? 0 : LeftRAP + 1;
+        CentreRAP = CentreRAP == 51 ? 0 : CentreRAP + 1;
+        RightRAP = RightRAP == 51 ? 0 : RightRAP + 1;
+        Cluster = Cluster == 2 ? 0 : Cluster + 1;
     }
     symbol->width = bp;
 
@@ -284,17 +265,16 @@ static void cc_b(struct zint_symbol *symbol, const char source[], const int cc_w
     unsigned char *data_string = (unsigned char *) z_alloca(length + 3);
     short chainemc[180];
     int mclength = 0;
-    int k, j, p, longueur, mccorrection[50] = {0}, offset;
-    int total;
     char pattern[580];
-    int variant, LeftRAPStart, CentreRAPStart, RightRAPStart, StartCluster;
-    int LeftRAP, CentreRAP, RightRAP, Cluster, loop;
-    int columns;
-    int bp = 0;
+    int variant;
+#ifndef NDEBUG
+    int ecc_cwds;
+#endif
     const int debug_print = symbol->debug & ZINT_DEBUG_PRINT;
 
     for (i = 0; i < length; i++) {
         const int binloc = i * 8;
+        int p;
 
         data_string[i] = 0;
         for (p = 0; p < 8; p++) {
@@ -311,183 +291,27 @@ static void cc_b(struct zint_symbol *symbol, const char source[], const int cc_w
 
     /* Now figure out which variant of the symbol to use and load values accordingly */
 
-    variant = 0;
-
-    if (cc_width == 2) {
-        if (mclength <= 8) {
-            variant = 7;
-        } else if (mclength <= 13) {
-            variant = 8;
-        } else if (mclength <= 19) {
-            variant = 9;
-        } else if (mclength <= 24) {
-            variant = 10;
-        } else if (mclength <= 29) {
-            variant = 11;
-        } else if (mclength <= 33) {
-            variant = 12;
-        } else {
-            variant = 13;
-        }
-    } else if (cc_width == 3) {
-        if (mclength <= 6) {
-            variant = 14;
-        } else if (mclength <= 10) {
-            variant = 15;
-        } else if (mclength <= 14) {
-            variant = 16;
-        } else if (mclength <= 18) {
-            variant = 17;
-        } else if (mclength <= 24) {
-            variant = 18;
-        } else if (mclength <= 34) {
-            variant = 19;
-        } else if (mclength <= 46) {
-            variant = 20;
-        } else if (mclength <= 58) {
-            variant = 21;
-        } else if (mclength <= 70) {
-            variant = 22;
-        } else {
-            variant = 23;
-        }
-    } else if (cc_width == 4) {
-        if (mclength <= 8) {
-            variant = 24;
-        } else if (mclength <= 12) {
-            variant = 25;
-        } else if (mclength <= 18) {
-            variant = 26;
-        } else if (mclength <= 24) {
-            variant = 27;
-        } else if (mclength <= 30) {
-            variant = 28;
-        } else if (mclength <= 39) {
-            variant = 29;
-        } else if (mclength <= 54) {
-            variant = 30;
-        } else if (mclength <= 72) {
-            variant = 31;
-        } else if (mclength <= 90) {
-            variant = 32;
-        } else if (mclength <= 108) {
-            variant = 33;
-        } else {
-            variant = 34;
-        }
-    }
+    variant = zint_micropdf_variant(cc_width, mclength);
+    assert(variant > 0);
 
     /* Now we have the variant we can load the data - from here on the same as MicroPDF417 code */
     variant--;
     assert(variant >= 0);
-    columns = zint_pdf_MicroVariants[variant]; /* columns */
-    symbol->rows = zint_pdf_MicroVariants[variant + 34]; /* rows */
-    k = zint_pdf_MicroVariants[variant + 68]; /* Number of EC CWs */
-    longueur = (columns * symbol->rows) - k; /* Number of non-EC CWs */
-    i = longueur - mclength; /* Amount of padding required */
-    offset = zint_pdf_MicroVariants[variant + 102]; /* Coefficient offset */
+    assert(zint_pdf_MicroVariants[0][variant] == cc_width); /* columns */
+    symbol->rows = zint_pdf_MicroVariants[1][variant]; /* rows */
+#ifndef NDEBUG
+    ecc_cwds = zint_pdf_MicroVariants[2][variant]; /* Number of EC CWs */
+#else
+    (void) zint_pdf_MicroVariants[2][variant]; /* Number of EC CWs */
+#endif
+    /* Binary input padded to target length so no padding necessary */
+    assert(cc_width * symbol->rows == mclength + ecc_cwds);
 
-    /* Binary input padded to target length so no padding should be necessary */
-    while (i > 0) {
-        chainemc[mclength++] = 900; /* Not reached */
-        i--;
-    }
-
-    /* Reed-Solomon error correction */
-    longueur = mclength;
-    for (i = 0; i < longueur; i++) {
-        total = (chainemc[i] + mccorrection[k - 1]) % 929;
-        for (j = k - 1; j >= 0; j--) {
-            if (j == 0) {
-                mccorrection[j] = (929 - (total * zint_pdf_Microcoeffs[offset + j]) % 929) % 929;
-            } else {
-                mccorrection[j] = (mccorrection[j - 1] + 929 - (total * zint_pdf_Microcoeffs[offset + j]) % 929)
-                                    % 929;
-            }
-        }
-    }
-
-    for (j = 0; j < k; j++) {
-        if (mccorrection[j] != 0) {
-            mccorrection[j] = 929 - mccorrection[j];
-        }
-    }
-    /* We add these codes to the string */
-    for (i = k - 1; i >= 0; i--) {
-        chainemc[mclength++] = mccorrection[i];
-    }
-
-    /* Now get the RAP (Row Address Pattern) start values */
-    LeftRAPStart = zint_pdf_RAPTable[variant];
-    CentreRAPStart = zint_pdf_RAPTable[variant + 34];
-    RightRAPStart = zint_pdf_RAPTable[variant + 68];
-    StartCluster = zint_pdf_RAPTable[variant + 102] / 3;
-
-    /* That's all values loaded, get on with the encoding */
-
-    LeftRAP = LeftRAPStart;
-    CentreRAP = CentreRAPStart;
-    RightRAP = RightRAPStart;
-    Cluster = StartCluster;
-    /* Cluster can be 0, 1 or 2 for Cluster(0), Cluster(3) and Cluster(6) */
+    zint_micropdf_expand(symbol, chainemc, mclength, pattern, cc_width, variant, debug_print);
 
     for (i = 0; i < symbol->rows; i++) {
-        bp = 0;
-        offset = 929 * Cluster;
-        k = i * columns;
-        /* Copy the data into codebarre */
-        bp = z_bin_append_posn(zint_pdf_rap_side[LeftRAP - 1], 10, pattern, bp);
-        bp = z_bin_append_posn(zint_pdf_bitpattern[offset + chainemc[k]], 16, pattern, bp);
-        pattern[bp++] = '0';
-        if (cc_width >= 2) {
-            if (cc_width == 3) {
-                bp = z_bin_append_posn(zint_pdf_rap_centre[CentreRAP - 1], 10, pattern, bp);
-            }
-            bp = z_bin_append_posn(zint_pdf_bitpattern[offset + chainemc[k + 1]], 16, pattern, bp);
-            pattern[bp++] = '0';
-            if (cc_width >= 3) {
-                if (cc_width == 4) {
-                    bp = z_bin_append_posn(zint_pdf_rap_centre[CentreRAP - 1], 10, pattern, bp);
-                }
-                bp = z_bin_append_posn(zint_pdf_bitpattern[offset + chainemc[k + 2]], 16, pattern, bp);
-                pattern[bp++] = '0';
-                if (cc_width == 4) {
-                    bp = z_bin_append_posn(zint_pdf_bitpattern[offset + chainemc[k + 3]], 16, pattern, bp);
-                    pattern[bp++] = '0';
-                }
-            }
-        }
-        bp = z_bin_append_posn(zint_pdf_rap_side[RightRAP - 1], 10, pattern, bp);
-        pattern[bp++] = '1'; /* Stop */
-
-        /* So now pattern[] holds the string of '1's and '0's. - copy this to the symbol */
-        for (loop = 0; loop < bp; loop++) {
-            if (pattern[loop] == '1') {
-                z_set_module(symbol, i, loop);
-            }
-        }
         symbol->row_height[i] = 2;
-
-        /* Set up RAPs and Cluster for next row */
-        LeftRAP++;
-        CentreRAP++;
-        RightRAP++;
-        Cluster++;
-
-        if (LeftRAP == 53) {
-            LeftRAP = 1;
-        }
-        if (CentreRAP == 53) {
-            CentreRAP = 1;
-        }
-        if (RightRAP == 53) {
-            RightRAP = 1;
-        }
-        if (Cluster == 3) {
-            Cluster = 0;
-        }
     }
-    symbol->width = bp;
 
     if (debug_print) {
         printf("CC-B Columns: %d, Rows: %d, Variant: %d, CodeWords: %d\n",
@@ -496,13 +320,13 @@ static void cc_b(struct zint_symbol *symbol, const char source[], const int cc_w
 }
 
 /* CC-C 2D component - byte compressed PDF417 */
-static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_width, const int ecc_level) {
+static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_width, const int ecc) {
     const int length = (int) strlen(source) / 8;
-    int i, p;
+    int i;
     unsigned char *data_string = (unsigned char *) z_alloca(length + 4);
     short chainemc[1000];
-    int mclength = 0, k;
-    int offset, longueur, loop, total, j, mccorrection[520] = {0};
+    int mclength = 0, ecc_cwds;
+    int offset, j, mccorrection[520] = {0};
     int c1, c2, c3, dummy[35];
     char pattern[580];
     int bp = 0;
@@ -510,6 +334,7 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
 
     for (i = 0; i < length; i++) {
         const int binloc = i * 8;
+        int p;
 
         data_string[i] = 0;
         for (p = 0; p < 8; p++) {
@@ -523,6 +348,7 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
     chainemc[mclength++] = 920; /* CC-C identifier */
 
     zint_pdf_byteprocess(chainemc, &mclength, data_string, 0, length, 0);
+    assert(mclength > 0); /* Suppress clang-tidy-23 warning clang-analyzer-security.ArrayBound */
 
     chainemc[0] = mclength;
 
@@ -532,28 +358,15 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
         fputc('\n', stdout);
     }
 
-    k = 1;
-    for (i = 1; i <= (ecc_level + 1); i++) {
-        k *= 2;
-    }
-
     /* 796 - we now take care of the Reed Solomon codes */
-    switch (ecc_level) {
-        case 1: offset = 2; break; /* Not reached */
-        case 2: offset = 6; break; /* Min ECC currently used is 2 */
-        case 3: offset = 14; break;
-        case 4: offset = 30; break;
-        case 5: offset = 62; break; /* Max ECC currently used is 5 */
-        case 6: offset = 126; break; /* Not reached */
-        case 7: offset = 254; break; /* Not reached */
-        case 8: offset = 510; break; /* Not reached */
-        default: offset = 0; break; /* Not reached */
-    }
+    assert(ecc >= 2 && ecc <= 5);
+    offset = (2 << ecc) - 2;
+    assert(offset >= 0 && offset <= 512); /* Suppress clang-tidy-23 warning clang-analyzer-security.ArrayBound */
+    ecc_cwds = 1 << (ecc + 1);
 
-    longueur = mclength;
-    for (i = 0; i < longueur; i++) {
-        total = (chainemc[i] + mccorrection[k - 1]) % 929;
-        for (j = k - 1; j >= 0; j--) {
+    for (i = 0; i < mclength; i++) {
+        const int total = (chainemc[i] + mccorrection[ecc_cwds - 1]) % 929;
+        for (j = ecc_cwds - 1; j >= 0; j--) {
             if (j == 0) {
                 mccorrection[j] = (929 - (total * zint_pdf_coefrs[offset + j]) % 929) % 929;
             } else {
@@ -562,13 +375,13 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
         }
     }
 
-    for (j = 0; j < k; j++) {
+    for (j = 0; j < ecc_cwds; j++) {
         if (mccorrection[j] != 0) {
             mccorrection[j] = 929 - mccorrection[j];
         }
     }
     /* We add these codes to the string */
-    for (i = k - 1; i >= 0; i--) {
+    for (i = ecc_cwds - 1; i >= 0; i--) {
         chainemc[mclength++] = mccorrection[i];
     }
 
@@ -577,15 +390,15 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
     /* 818 - The CW string is finished */
     symbol->rows = mclength / cc_width;
     c1 = (symbol->rows - 1) / 3;
-    c2 = ecc_level * 3 + (symbol->rows - 1) % 3;
+    c2 = ecc * 3 + (symbol->rows - 1) % 3;
     c3 = cc_width - 1;
 
     /* We now encode each row */
     for (i = 0; i <= symbol->rows - 1; i++) {
+        const int k = (i / 3) * 30;
         for (j = 0; j < cc_width; j++) {
             dummy[j + 1] = chainemc[i * cc_width + j];
         }
-        k = (i / 3) * 30;
         switch (i % 3) {
             case 0:
                 dummy[0] = k + c1;
@@ -607,14 +420,13 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
         bp = z_bin_append_posn(0x1FEA8, 17, pattern, bp); /* Row start */
 
         for (j = 0; j <= cc_width + 1; j++) {
-            bp = z_bin_append_posn(zint_pdf_bitpattern[offset + dummy[j]], 16, pattern, bp);
-            pattern[bp++] = '0';
+            bp = z_bin_append_posn(((int) zint_pdf_bitpattern[offset + dummy[j]]) << 1, 17, pattern, bp);
         }
         bp = z_bin_append_posn(0x3FA29, 18, pattern, bp); /* Row Stop */
 
-        for (loop = 0; loop < bp; loop++) {
-            if (pattern[loop] == '1') {
-                z_set_module(symbol, i, loop);
+        for (j = 0; j < bp; j++) {
+            if (pattern[j] == '1') {
+                z_set_module(symbol, i, j);
             }
         }
         symbol->row_height[i] = 3;
@@ -623,7 +435,7 @@ static void cc_c(struct zint_symbol *symbol, const char source[], const int cc_w
 
     if (debug_print) {
         printf("CC-C Columns: %d, Rows: %d, CodeWords: %d, ECC Level: %d\n",
-                cc_width, symbol->rows, mclength, ecc_level);
+                cc_width, symbol->rows, mclength, ecc);
     }
 }
 
@@ -667,15 +479,12 @@ static int cc_b_calc_padding(const int binary_length, const int cc_width) {
     return target_bitsize;
 }
 
-static int cc_c_calc_padding(const int binary_length, int *p_cc_width, const int linear_width, int *p_ecc_level) {
-    int target_bitsize = 0;
-    int byte_length, codewords_used, ecc_level, ecc_codewords, rows;
+static int cc_c_calc_padding(const int binary_length, int *p_cc_width, const int linear_width, int *p_ecc) {
+    int target_bitsize;
+    int codewords_used, ecc, ecc_cwds, rows;
     int codewords_total, target_codewords, target_bytesize;
-
-    byte_length = binary_length / 8;
-    if (binary_length % 8 != 0) {
-        byte_length++;
-    }
+    int cc_width;
+    const int byte_length = (binary_length + 7) >> 3;
 
     codewords_used = (byte_length / 6) * 5;
     codewords_used += byte_length % 6;
@@ -683,62 +492,62 @@ static int cc_c_calc_padding(const int binary_length, int *p_cc_width, const int
     /* Recommended minimum ecc levels ISO/IEC 1543:2015 (PDF417) Annex E Table E.1,
        restricted by CC-C codeword max 900 (30 cols * 30 rows), GS1 General Specifications 19.1 5.9.2.3 */
     if (codewords_used <= 40) {
-        ecc_level = 2;
+        ecc = 2;
     } else if (codewords_used <= 160) {
-        ecc_level = 3;
+        ecc = 3;
     } else if (codewords_used <= 320) {
-        ecc_level = 4;
+        ecc = 4;
     } else if (codewords_used <= 833) { /* 900 - 3 - 64 */
-        ecc_level = 5;
+        ecc = 5;
     } else if (codewords_used <= 865) { /* 900 - 3 - 32 */
-        ecc_level = 4; /* Not recommended but allow to meet advertised "up to 2361 digits" (allows max 2372) */
+        ecc = 4; /* Not recommended but allow to meet advertised "up to 2361 digits" (allows max 2372) */
     } else {
         return 0;
     }
-    *p_ecc_level = ecc_level;
-    ecc_codewords = 1 << (ecc_level + 1);
+    *p_ecc = ecc;
+    ecc_cwds = 1 << (ecc + 1);
 
-    codewords_used += ecc_codewords;
+    codewords_used += ecc_cwds;
     codewords_used += 3;
+    assert(codewords_used <= 900);
 
     /* Minimum possible linear width (with GS1_NO_CHECK) is 11*5 (start, FNC1, linkage, data, check) + 13 stop */
     assert(linear_width >= 68);
     /* -52 = 7 left shift (section 12.3 f) + 10 right quiet zone - 17 start + 2x17 row indicators + 18 stop */
-    *p_cc_width = linear_width == 68 ? 1 : (linear_width - 52) / 17; /* Ensure > 0 */
-    if (*p_cc_width > 30) {
-        *p_cc_width = 30;
+    cc_width = linear_width == 68 ? 1 : (linear_width - 52) / 17; /* Ensure > 0 */
+    if (cc_width > 30) {
+        cc_width = 30;
     }
-    assert(*p_cc_width > 0);
-    rows = (int) ceil((double) codewords_used / *p_cc_width);
+    assert(cc_width > 0);
+    rows = (int) ceil((double) codewords_used / cc_width);
     /* Stop the symbol from becoming too high */
-    while (rows > 30 && *p_cc_width < 30) {
-        (*p_cc_width)++;
-        rows = (int) ceil((double) codewords_used / *p_cc_width);
+    while (rows > 30 && cc_width < 30) {
+        cc_width++;
+        rows = (int) ceil((double) codewords_used / cc_width);
     }
+    assert(rows <= 30); /* Guaranteed by codewords_used <= 900 */
 
-    if (rows > 30) { /* Should never happen given `codewords_used` check above (865 / 30 ~ 28.83) */
-        return 0; /* Not reached */
-    }
     if (rows < 3) {
         rows = 3;
     }
 
-    codewords_total = *p_cc_width * rows;
+    codewords_total = cc_width * rows;
+    *p_cc_width = cc_width;
 
-    target_codewords = codewords_total - ecc_codewords;
+    target_codewords = codewords_total - ecc_cwds;
     target_codewords -= 3;
 
     target_bytesize = 6 * (target_codewords / 5);
     target_bytesize += target_codewords % 5;
 
-    target_bitsize = 8 * target_bytesize;
+    target_bitsize = target_bytesize << 3;
 
     return target_bitsize;
 }
 
 /* Handles all data encodation from section 5 of ISO/IEC 24723 */
 static int cc_binary_string(struct zint_symbol *symbol, const unsigned char source[], const int length,
-            char binary_string[], const int cc_mode, int *p_cc_width, int *p_ecc_level, const int linear_width) {
+            char binary_string[], const int cc_mode, int *p_cc_width, int *p_ecc, const int linear_width) {
     int encoding_method, read_posn, alpha_pad;
     int i, j, ai_crop, ai_crop_posn, fnc1_latch;
     int ai90_mode, remainder;
@@ -755,7 +564,7 @@ static int cc_binary_string(struct zint_symbol *symbol, const unsigned char sour
     ai_crop_posn = -1;
     fnc1_latch = 0;
     alpha_pad = 0;
-    *p_ecc_level = 0;
+    *p_ecc = 0;
     target_bitsize = 0;
     mode = GF_NUMERIC;
 
@@ -1033,7 +842,7 @@ static int cc_binary_string(struct zint_symbol *symbol, const unsigned char sour
             target_bitsize = cc_b_calc_padding(bp, *p_cc_width);
             break;
         case 3:
-            target_bitsize = cc_c_calc_padding(bp, p_cc_width, linear_width, p_ecc_level);
+            target_bitsize = cc_c_calc_padding(bp, p_cc_width, linear_width, p_ecc);
             break;
     }
 
@@ -1064,7 +873,7 @@ static int cc_binary_string(struct zint_symbol *symbol, const unsigned char sour
     switch (cc_mode) {
         case 1: target_bitsize = cc_a_calc_padding(bp, *p_cc_width); break;
         case 2: target_bitsize = cc_b_calc_padding(bp, *p_cc_width); break;
-        case 3: target_bitsize = cc_c_calc_padding(bp, p_cc_width, linear_width, p_ecc_level); break;
+        case 3: target_bitsize = cc_c_calc_padding(bp, p_cc_width, linear_width, p_ecc); break;
     }
 
     if (target_bitsize == 0) {
@@ -1089,7 +898,7 @@ static int cc_binary_string(struct zint_symbol *symbol, const unsigned char sour
     binary_string[target_bitsize] = '\0';
 
     if (debug_print) {
-        printf("ECC: %d, CC width %d\n", *p_ecc_level, *p_cc_width);
+        printf("ECC: %d, CC width %d\n", *p_ecc, *p_cc_width);
         printf("Binary: %s (%d)\n", binary_string, target_bitsize);
     }
 
@@ -1120,9 +929,9 @@ static int cc_linear_dummy_run(struct zint_symbol *symbol, unsigned char *source
 }
 
 INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], int length) {
-    int error_number = 0, warn_number = 0;
-    int cc_mode, cc_width = 0, ecc_level = 0;
-    int j, i, k;
+    int error_number = 0, warn_number;
+    int cc_mode, cc_width = 0, ecc = 0;
+    int i, j;
     /* Allow for 8 bits + 5-bit latch per char + 1000 bits overhead/padding */
     const unsigned int bs = 13 * length + 1000 + 1;
     char *binary_string = (char *) z_alloca(bs);
@@ -1134,6 +943,11 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
     const int debug_print = symbol->debug & ZINT_DEBUG_PRINT;
 
     if (debug_print) printf("Reduced length: %d\n", length);
+
+    /* Hack to initialize `warn_number` to warning (if any) returned by `zint_gs1_verify()` */
+    warn_number = symbol->warn_level >> 8;
+    symbol->warn_level &= 0xFF;
+    assert(warn_number < ZINT_ERROR);
 
     /* Perform sanity checks on input options first */
     primary_len = (int) strlen(symbol->primary);
@@ -1222,7 +1036,7 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
     }
 
     if (cc_mode == 1) {
-        i = cc_binary_string(symbol, source, length, binary_string, cc_mode, &cc_width, &ecc_level, linear_width);
+        i = cc_binary_string(symbol, source, length, binary_string, cc_mode, &cc_width, &ecc, linear_width);
         if (i == ZINT_ERROR_TOO_LONG) {
             symbol->errtxt[0] = '\0'; /* Unset error text */
             cc_mode = 2;
@@ -1233,7 +1047,7 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
 
     if (cc_mode == 2) {
         /* If the data didn't fit into CC-A it is recalculated for CC-B */
-        i = cc_binary_string(symbol, source, length, binary_string, cc_mode, &cc_width, &ecc_level, linear_width);
+        i = cc_binary_string(symbol, source, length, binary_string, cc_mode, &cc_width, &ecc, linear_width);
         if (i == ZINT_ERROR_TOO_LONG) {
             if (symbol->symbology != BARCODE_GS1_128_CC) {
                 return ZINT_ERROR_TOO_LONG;
@@ -1247,7 +1061,7 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
 
     if (cc_mode == 3) {
         /* If the data didn't fit in CC-B (and linear part is GS1-128) it is recalculated for CC-C */
-        i = cc_binary_string(symbol, source, length, binary_string, cc_mode, &cc_width, &ecc_level, linear_width);
+        i = cc_binary_string(symbol, source, length, binary_string, cc_mode, &cc_width, &ecc, linear_width);
         if (i != 0) {
             return i;
         }
@@ -1255,15 +1069,15 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
 
     symbol->rows = 0; /* Composites are not stackable */
 
+    assert(cc_mode >= 1 && cc_mode <= 3);
     switch (cc_mode) {
-        /* Note that ecc_level is only relevant to CC-C */
+        /* Note that ecc is only relevant to CC-C */
         case 1: cc_a(symbol, binary_string, cc_width); break;
         case 2: cc_b(symbol, binary_string, cc_width); break;
-        case 3: cc_c(symbol, binary_string, cc_width, ecc_level); break;
-        default: assert(0); break; /* Not reached */
+        case 3: cc_c(symbol, binary_string, cc_width, ecc); break;
     }
 
-    if (symbol->option_1 >= 1 && symbol->option_1 <= 3 && symbol->option_1 != cc_mode) {
+    if (warn_number == 0 && symbol->option_1 >= 1 && symbol->option_1 <= 3 && symbol->option_1 != cc_mode) {
         warn_number = ZEXT z_errtxtf(ZINT_WARN_INVALID_OPTION, symbol, 443,
                                     "Composite type changed from CC-%1$c to CC-%2$c",
                                     'A' + (symbol->option_1 - 1), 'A' + (cc_mode - 1));
@@ -1401,8 +1215,8 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
             }
             break;
         case BARCODE_DBAR_EXP_CC:
-            for (k = 1; !z_module_is_set(linear, 1, k - 1) && z_module_is_set(linear, 1, k); k++);
-            top_shift = k;
+            for (j = 1; !z_module_is_set(linear, 1, j - 1) && z_module_is_set(linear, 1, j); j++);
+            top_shift = j;
             break;
         case BARCODE_UPCA_CC:
             bottom_shift = 2;
@@ -1417,8 +1231,8 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
             top_shift = 1;
             break;
         case BARCODE_DBAR_EXPSTK_CC:
-            for (k = 1; !z_module_is_set(linear, 1, k - 1) && z_module_is_set(linear, 1, k); k++);
-            top_shift = k;
+            for (j = 1; !z_module_is_set(linear, 1, j - 1) && z_module_is_set(linear, 1, j); j++);
+            top_shift = j;
             break;
     }
 
@@ -1460,31 +1274,40 @@ INTERNAL int zint_composite(struct zint_symbol *symbol, unsigned char source[], 
     }
     symbol->rows += linear->rows;
     if (symbol->output_options & COMPLIANT_HEIGHT) {
+        /* Avoid overwriting any `zint_gs1_verify()` warning */
+        const int no_errtxt = error_number != 0 || warn_number != 0;
         if (symbol->symbology == BARCODE_DBAR_STK_CC) {
             /* Databar Stacked needs special treatment due to asymmetric rows */
-            error_number = zint_dbar_omnstk_set_height(symbol, symbol->rows - linear->rows + 1 /*first_row*/);
+            if (!no_errtxt) {
+                error_number = zint_dbar_stk_set_height(symbol, symbol->rows - linear->rows + 1 /*first_row*/,
+                                                            no_errtxt);
+            } else {
+                (void) zint_dbar_stk_set_height(symbol, symbol->rows - linear->rows + 1 /*first_row*/, no_errtxt);
+            }
         } else if (symbol->symbology == BARCODE_DBAR_EXP_CC || symbol->symbology == BARCODE_DBAR_EXPSTK_CC) {
             /* If symbol->height given then min row height was returned, else default height */
-            if (error_number == 0) { /* Avoid overwriting any `zint_gs1_verify()` warning */
+            if (!no_errtxt) {
                 error_number = z_set_height(symbol, symbol->height ? linear->height : 0.0f,
-                                            symbol->height ? 0.0f : linear->height, 0.0f, 0 /*no_errtxt*/);
+                                            symbol->height ? 0.0f : linear->height, 0.0f, no_errtxt);
             } else {
                 (void) z_set_height(symbol, symbol->height ? linear->height : 0.0f,
-                                    symbol->height ? 0.0f : linear->height, 0.0f, 1 /*no_errtxt*/);
+                                    symbol->height ? 0.0f : linear->height, 0.0f, no_errtxt);
             }
         } else {
             /* If symbol->height given then min row height was returned, else default height */
-            if (error_number == 0) { /* Avoid overwriting any previous warning (e.g. EAN-8 with add-on) */
+            /* Avoid overwriting any previous warning (e.g. EAN-8 with add-on) */
+            if (!no_errtxt) {
                 error_number = z_set_height(symbol, symbol->height ? linear->height : 0.0f,
-                                            symbol->height ? 0.0f : linear->height, 0.0f, 0 /*no_errtxt*/);
+                                            symbol->height ? 0.0f : linear->height, 0.0f, no_errtxt);
             } else {
                 (void) z_set_height(symbol, symbol->height ? linear->height : 0.0f,
-                                            symbol->height ? 0.0f : linear->height, 0.0f, 1 /*no_errtxt*/);
+                                            symbol->height ? 0.0f : linear->height, 0.0f, no_errtxt);
             }
         }
     } else {
         if (symbol->symbology == BARCODE_DBAR_STK_CC) {
-            (void) zint_dbar_omnstk_set_height(symbol, symbol->rows - linear->rows + 1 /*first_row*/);
+            (void) zint_dbar_stk_set_height(symbol, symbol->rows - linear->rows + 1 /*first_row*/,
+                                                1 /*no_errtxt*/);
         } else {
             (void) z_set_height(symbol, symbol->height ? linear->height : 0.0f,
                                 symbol->height ? 0.0f : linear->height, 0.0f, 1 /*no_errtxt*/);

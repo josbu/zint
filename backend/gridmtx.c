@@ -781,14 +781,14 @@ static int gm_encode_segs(const unsigned int ddata[], const struct zint_seg segs
 
 static void gm_add_ecc(const char binary[], const int data_posn, const int layers, const int ecc_level,
             unsigned char word[]) {
-    int data_cw, i, j, wp, p;
+    int data_cws, i, j, wp, p;
     int n1, b1, n2, b2, e1, b3, e2;
     int block_size, ecc_size;
     unsigned char data[1320], block[130];
     unsigned char data_block[115], ecc_block[70];
     rs_t rs;
 
-    data_cw = gm_data_codewords[((layers - 1) * 5) + (ecc_level - 1)];
+    data_cws = gm_data_cws[layers - 1][ecc_level - 1];
 
     for (i = 0; i < 1320; i++) {
         data[i] = 0;
@@ -805,7 +805,7 @@ static void gm_add_ecc(const char binary[], const int data_posn, const int layer
 
     /* Add padding codewords */
     data[data_posn] = 0x00;
-    for (i = (data_posn + 1); i < data_cw; i++) {
+    for (i = (data_posn + 1); i < data_cws; i++) {
         if (i & 1) {
             data[i] = 0x7E;
         } else {
@@ -814,13 +814,13 @@ static void gm_add_ecc(const char binary[], const int data_posn, const int layer
     }
 
     /* Get block sizes */
-    n1 = gm_n1[(layers - 1)];
-    b1 = gm_b1[(layers - 1)];
+    n1 = gm_n1[layers - 1];
+    b1 = gm_b1[layers - 1];
     n2 = n1 - 1;
-    b2 = gm_b2[(layers - 1)];
-    e1 = gm_ebeb[((layers - 1) * 20) + ((ecc_level - 1) * 4)];
-    b3 = gm_ebeb[((layers - 1) * 20) + ((ecc_level - 1) * 4) + 1];
-    e2 = gm_ebeb[((layers - 1) * 20) + ((ecc_level - 1) * 4) + 2];
+    b2 = gm_b2[layers - 1];
+    e1 = gm_e1b3e2[layers - 1][ecc_level - 1][0];
+    b3 = gm_e1b3e2[layers - 1][ecc_level - 1][1];
+    e2 = gm_e1b3e2[layers - 1][ecc_level - 1][2];
 
     zint_rs_init_gf(&rs, 0x89);
 
@@ -921,7 +921,7 @@ static void gm_place_data_in_grid(const unsigned char word[], char grid[], const
 
     for (y = 0; y < modules; y++) {
         for (x = 0; x < modules; x++) {
-            macromodule = gm_macro_matrix[((y + offset) * 27) + (x + offset)];
+            macromodule = gm_macro_matrix[y + offset][x + offset];
             gm_place_macromodule(grid, x, y, word[macromodule * 2], word[(macromodule * 2) + 1], size);
         }
     }
@@ -979,13 +979,13 @@ static void gm_place_layer_id(char *grid, const int size, const int layers, cons
 INTERNAL int zint_gridmatrix(struct zint_symbol *symbol, struct zint_seg segs[], const int seg_count) {
     int warn_number = 0;
     int size, modules, error_number;
-    int auto_layers, min_layers, layers, auto_ecc_level, min_ecc_level, ecc_level;
+    int auto_layers, min_layers, layers, rec_ecc_level, min_rec_ecc_level, ecc_level;
     int x, y, i;
     int full_multibyte;
     char binary[9300];
-    int data_cw, input_latch = 0;
+    int data_cws;
     unsigned char word[1460] = {0};
-    int data_max, reader = 0;
+    int reader = 0;
     const struct zint_structapp *p_structapp = NULL;
     int size_squared;
     int bin_len;
@@ -1079,95 +1079,77 @@ INTERNAL int zint_gridmatrix(struct zint_symbol *symbol, struct zint_seg segs[],
     }
 
     /* Determine the size of the symbol */
-    data_cw = bin_len / 7; /* Binary length always a multiple of 7 */
+    data_cws = bin_len / 7; /* Binary length always a multiple of 7 */
 
     auto_layers = 13;
     for (i = 12; i > 0; i--) {
-        if (gm_recommend_cw[(i - 1)] >= data_cw) {
+        if (gm_recommend_cws[i - 1] >= data_cws) {
             auto_layers = i;
         }
     }
     min_layers = 13;
     for (i = 12; i > 0; i--) {
-        if (gm_max_cw[(i - 1)] >= data_cw) {
+        if (gm_max_cws[i - 1] >= data_cws) {
             min_layers = i;
         }
     }
     layers = auto_layers;
 
     if (symbol->option_2 >= 1 && symbol->option_2 <= 13) {
-        input_latch = 1;
         if (symbol->option_2 >= min_layers) {
             layers = symbol->option_2;
         } else {
             return ZEXT z_errtxtf(ZINT_ERROR_TOO_LONG, symbol, 534,
                                     "Input too long for Version %1$d, requires %2$d codewords (maximum %3$d)",
-                                    symbol->option_2, data_cw, gm_max_cw[symbol->option_2 - 1]);
+                                    symbol->option_2, data_cws, gm_max_cws[symbol->option_2 - 1]);
         }
     }
 
-    auto_ecc_level = 3;
+    /* Table 11 - Recommended error correction levels - Recommended ECL */
+    rec_ecc_level = 3;
     if (layers == 1) {
-        auto_ecc_level = 5;
+        rec_ecc_level = 5;
     } else if (layers == 2 || layers == 3) {
-        auto_ecc_level = 4;
+        rec_ecc_level = 4;
     }
-    ecc_level = auto_ecc_level;
+    ecc_level = rec_ecc_level;
 
-    min_ecc_level = 1;
+    /* Table 11 - Recommended error correction levels - Minimum Recommended ECL */
+    min_rec_ecc_level = 1;
     if (layers == 1) {
-        min_ecc_level = 4;
+        min_rec_ecc_level = 4;
     } else if (layers == 2) {
-        min_ecc_level = 2;
+        min_rec_ecc_level = 2;
     }
 
     if (symbol->option_1 >= 1 && symbol->option_1 <= 5) {
-        if (symbol->option_1 >= min_ecc_level) {
+        /* Silently ignoring user-specified if less than minimum recommended */
+        if (symbol->option_1 >= min_rec_ecc_level) {
             ecc_level = symbol->option_1;
         } else {
-            ecc_level = min_ecc_level;
+            ecc_level = min_rec_ecc_level;
         }
     }
-    if (data_cw > gm_data_codewords[5 * (layers - 1) + (ecc_level - 1)]) {
-        /* If layers user-specified (option_2), try reducing ECC level first */
-        if (input_latch && ecc_level > min_ecc_level) {
-            do {
-                ecc_level--;
-            } while (data_cw > gm_data_codewords[5 * (layers - 1) + (ecc_level - 1)] && ecc_level > min_ecc_level);
-        }
-        while (data_cw > gm_data_codewords[5 * (layers - 1) + (ecc_level - 1)] && layers < 13) {
-            layers++;
-        }
-        /* ECC min level 1 for layers > 2 */
-        while (data_cw > gm_data_codewords[5 * (layers - 1) + (ecc_level - 1)] && ecc_level > 1) {
+    if (data_cws > gm_data_cws[layers - 1][ecc_level - 1]) {
+        /* Reduce ECC level */
+        const int min_ecc_level = layers > 1 ? 1 : 2; /* ECL 1 in version 1 symbols is invalid */
+        do {
             ecc_level--;
-        }
+        } while (data_cws > gm_data_cws[layers - 1][ecc_level - 1] && ecc_level > min_ecc_level);
+        assert(data_cws <= gm_data_cws[layers - 1][ecc_level - 1]);
     }
 
-    data_max = 1313;
-    switch (ecc_level) {
-        case 2: data_max = 1167; break;
-        case 3: data_max = 1021; break;
-        case 4: data_max = 875; break;
-        case 5: data_max = 729; break;
-    }
-
-    if (data_cw > data_max) {
-        return ZEXT z_errtxtf(ZINT_ERROR_TOO_LONG, symbol, 532,
-                                "Input too long for ECC level %1$d, requires %2$d codewords (maximum %3$d)",
-                                ecc_level, data_cw, data_max);
-    }
     if (debug_print) {
-        printf("Layers: %d, ECC level: %d, Data Codewords: %d\n", layers, ecc_level, data_cw);
+        printf("Layers: %d, ECC level: %d, Data Codewords: %d\n", layers, ecc_level, data_cws);
     }
 
     /* Feedback options */
     symbol->option_1 = ecc_level;
     symbol->option_2 = layers;
 
-    gm_add_ecc(binary, data_cw, layers, ecc_level, word);
+    gm_add_ecc(binary, data_cws, layers, ecc_level, word);
 #ifdef ZINT_TEST
-    if (symbol->debug & ZINT_DEBUG_TEST) z_debug_test_codeword_dump(symbol, word, data_cw);
+    if (symbol->debug & ZINT_DEBUG_TEST) z_debug_test_codeword_dump(symbol, word, data_cws);
 #endif
     size = 6 + (layers * 12);
     modules = 1 + (layers * 2);

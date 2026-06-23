@@ -202,7 +202,7 @@ static void test_print(const testCtx *const p_ctx) {
         have_vnu = testUtilHaveVnu();
 
         assert_nonzero(testUtilDataPath(data_dir_path, sizeof(data_dir_path), data_dir, NULL),
-					"testUtilDataPath(%s) == 0\n", data_dir);
+                        "testUtilDataPath(%s) == 0\n", data_dir);
         if (!testUtilDirExists(data_dir_path)) {
             ret = testUtilMkDir(data_dir_path);
             assert_zero(ret, "testUtilMkDir(%s) ret %d != 0 (%d: %s)\n", data_dir_path, ret, errno, strerror(errno));
@@ -218,8 +218,8 @@ static void test_print(const testCtx *const p_ctx) {
         assert_nonnull(symbol, "Symbol not created\n");
 
         length = testUtilSetSymbol(symbol, data[i].symbology, data[i].input_mode, -1 /*eci*/,
-									data[i].option_1, data[i].option_2, data[i].option_3, data[i].output_options,
-									data[i].data, -1, debug);
+                                    data[i].option_1, data[i].option_2, data[i].option_3, data[i].output_options,
+                                    data[i].data, -1, debug);
         if (data[i].show_hrt != -1) {
             symbol->show_hrt = data[i].show_hrt;
         }
@@ -252,23 +252,23 @@ static void test_print(const testCtx *const p_ctx) {
 
         ret = ZBarcode_Encode(symbol, TCU(text), text_length);
         assert_equal(ret, data[i].ret, "i:%d %s ZBarcode_Encode ret %d != %d (%s)\n",
-					i, testUtilBarcodeName(data[i].symbology), ret, data[i].ret, symbol->errtxt);
+                    i, testUtilBarcodeName(data[i].symbology), ret, data[i].ret, symbol->errtxt);
 
         strcpy(symbol->outfile, svg);
         ret = ZBarcode_Print(symbol, data[i].rotate_angle);
         assert_zero(ret, "i:%d %s ZBarcode_Print %s ret %d != 0\n",
-					i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret);
+                    i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret);
 
         assert_nonzero(testUtilDataPath(expected_file, sizeof(expected_file), data_dir, data[i].expected_file),
-					"i:%d testUtilDataPath == 0\n", i);
+                    "i:%d testUtilDataPath == 0\n", i);
 
         if (p_ctx->generate) {
             printf("        /*%3d*/ { %s, %s, %d, %s, %d, %d, %d, %d, %d, %d, %.8g, \"%s\", \"%s\", %d, \"%s\", \"%s\", %s, \"%s\", \"%s\" },\n",
                     i, testUtilBarcodeName(data[i].symbology), testUtilInputModeName(data[i].input_mode),
-					data[i].border_width, testUtilOutputOptionsName(data[i].output_options),
-					data[i].whitespace_width, data[i].whitespace_height, data[i].show_hrt,
+                    data[i].border_width, testUtilOutputOptionsName(data[i].output_options),
+                    data[i].whitespace_width, data[i].whitespace_height, data[i].show_hrt,
                     data[i].option_1, data[i].option_2, data[i].option_3, data[i].height,
-					data[i].fgcolour, data[i].bgcolour, data[i].rotate_angle,
+                    data[i].fgcolour, data[i].bgcolour, data[i].rotate_angle,
                     testUtilEscape(data[i].data, length, escaped, escaped_size), data[i].composite,
                     testUtilErrorName(data[i].ret), data[i].expected_file, data[i].comment);
             ret = testUtilRename(symbol->outfile, expected_file);
@@ -276,12 +276,12 @@ static void test_print(const testCtx *const p_ctx) {
             if (have_libreoffice) {
                 ret = testUtilVerifyLibreOffice(expected_file, debug);
                 assert_zero(ret, "i:%d %s libreoffice %s ret %d != 0\n",
-							i, testUtilBarcodeName(data[i].symbology), expected_file, ret);
+                            i, testUtilBarcodeName(data[i].symbology), expected_file, ret);
             }
             if (have_vnu) {
                 ret = testUtilVerifyVnu(expected_file, debug); /* Very slow */
                 assert_zero(ret, "i:%d %s vnu libreoffice %s ret %d != 0\n",
-							i, testUtilBarcodeName(data[i].symbology), expected_file, ret);
+                            i, testUtilBarcodeName(data[i].symbology), expected_file, ret);
             }
         } else {
             assert_nonzero(testUtilExists(symbol->outfile), "i:%d testUtilExists(%s) == 0\n", i, symbol->outfile);
@@ -289,7 +289,7 @@ static void test_print(const testCtx *const p_ctx) {
 
             ret = testUtilCmpSvgs(symbol->outfile, expected_file);
             assert_zero(ret, "i:%d %s testUtilCmpSvgs(%s, %s) %d != 0\n",
-						i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
+                        i, testUtilBarcodeName(data[i].symbology), symbol->outfile, expected_file, ret);
 
             symbol->output_options |= BARCODE_MEMORY_FILE;
             ret = ZBarcode_Print(symbol, data[i].rotate_angle);
@@ -297,7 +297,7 @@ static void test_print(const testCtx *const p_ctx) {
                             i, testUtilBarcodeName(data[i].symbology), symbol->outfile, ret, symbol->errtxt);
             assert_nonnull(symbol->memfile, "i:%d %s memfile NULL\n", i, testUtilBarcodeName(data[i].symbology));
             assert_nonzero(symbol->memfile_size, "i:%d %s memfile_size 0\n",
-						i, testUtilBarcodeName(data[i].symbology));
+                        i, testUtilBarcodeName(data[i].symbology));
 
             ret = testUtilWriteFile(memfile, symbol->memfile, symbol->memfile_size, "wb");
             assert_zero(ret, "%d: testUtilWriteFile(%s) fail ret %d != 0\n", i, memfile, ret);
@@ -338,20 +338,20 @@ static void test_outfile(const testCtx *const p_ctx) {
     skip_readonly_test = getuid() == 0; /* Skip if running as root on Unix as can't create read-only file */
 #endif
     if (!skip_readonly_test) {
-		/* Excluding OS-dependent `errno` stuff */
+        /* Excluding OS-dependent `errno` stuff */
         static char expected_errtxt[] = "680: Could not open SVG output file (";
 
         (void) testUtilRmROFile(symbol.outfile); /* In case lying around from previous fail */
         assert_nonzero(testUtilCreateROFile(symbol.outfile), "zint_svg_plot testUtilCreateROFile(%s) fail (%d: %s)\n",
-					symbol.outfile, errno, strerror(errno));
+                    symbol.outfile, errno, strerror(errno));
 
         ret = zint_svg_plot(&symbol, 0);
         assert_equal(ret, ZINT_ERROR_FILE_ACCESS, "zint_svg_plot ret %d != ZINT_ERROR_FILE_ACCESS (%d) (%s)\n",
-					ret, ZINT_ERROR_FILE_ACCESS, symbol.errtxt);
+                    ret, ZINT_ERROR_FILE_ACCESS, symbol.errtxt);
         assert_zero(testUtilRmROFile(symbol.outfile), "zint_svg_plot testUtilRmROFile(%s) != 0 (%d: %s)\n",
-					symbol.outfile, errno, strerror(errno));
+                    symbol.outfile, errno, strerror(errno));
         assert_zero(strncmp(symbol.errtxt, expected_errtxt, sizeof(expected_errtxt) - 1), "strncmp(%s, %s) != 0\n",
-					symbol.errtxt, expected_errtxt);
+                    symbol.errtxt, expected_errtxt);
     }
 
     symbol.output_options |= BARCODE_STDOUT;
@@ -364,7 +364,71 @@ static void test_outfile(const testCtx *const p_ctx) {
     symbol.vector = NULL;
     ret = zint_svg_plot(&symbol, 0);
     assert_equal(ret, ZINT_ERROR_INVALID_DATA, "zint_svg_plot ret %d != ZINT_ERROR_INVALID_DATA (%d) (%s)\n",
-				ret, ZINT_ERROR_INVALID_DATA, symbol.errtxt);
+                ret, ZINT_ERROR_INVALID_DATA, symbol.errtxt);
+
+    testFinish();
+}
+
+#include "filemem.h"
+
+static void test_fm(const testCtx *const p_ctx) {
+    int debug = p_ctx->debug;
+
+    struct item {
+        int symbology;
+        int output_options;
+        const char *data;
+        int ret;
+        int ats[5];
+        int at_cnt;
+        int id;
+    };
+    /* s/\/\*[ 0-9]*\*\//\=printf("\/\*%3d*\/", line(".") - line("'<")): */
+    static const struct item data[] = {
+        /*  0*/ { BARCODE_DATAMATRIX, -1, "123", ZINT_ERROR_FILE_ACCESS, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_OPEN },
+        /*  1*/ { BARCODE_DATAMATRIX, -1, "123", ZINT_ERROR_FILE_WRITE, { 5, 11, 0, 0, 0 }, 2, FM_FAIL_ID_PUTS },
+        /*  1*/ { BARCODE_DATAMATRIX, BARCODE_MEMORY_FILE, "123", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_PUTS },
+        /*  2*/ { BARCODE_DATAMATRIX, -1, "123", ZINT_ERROR_FILE_WRITE, { 1, 3, 0, 0, 0 }, 2, FM_FAIL_ID_PUTC },
+        /*  3*/ { BARCODE_DATAMATRIX, -1, "123", ZINT_ERROR_FILE_WRITE, { 1, 10, 21, 0, 0 }, 3, FM_FAIL_ID_PUTSF },
+        /*  3*/ { BARCODE_DATAMATRIX, BARCODE_MEMORY_FILE, "123", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_PUTSF },
+        /*  4*/ { BARCODE_DATAMATRIX, -1, "123", ZINT_ERROR_FILE_WRITE, { 1, 3, 0, 0, 0 }, 2, FM_FAIL_ID_PRINTF },
+        /*  4*/ { BARCODE_DATAMATRIX, BARCODE_MEMORY_FILE, "123", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_PRINTF },
+        /*  5*/ { BARCODE_DATAMATRIX, -1, "123", ZINT_ERROR_FILE_WRITE, { 1, 0, 0, 0, 0 }, 1, FM_FAIL_ID_CLOSE },
+    };
+    const int data_size = ARRAY_SIZE(data);
+    int i, length, ret;
+    struct zint_symbol *symbol = NULL;
+
+    testStartSymbol(p_ctx->func_name, &symbol);
+
+    for (i = 0; i < data_size; i++) {
+        int j;
+
+        if (testContinue(p_ctx, i)) continue;
+
+        symbol = ZBarcode_Create();
+        assert_nonnull(symbol, "Symbol not created\n");
+
+        for (j = 0; j < data[i].at_cnt; j++) {
+
+            length = testUtilSetSymbol(symbol, data[i].symbology, -1 /*input_mode*/, -1 /*eci*/,
+                                        -1 /*option_1*/, -1 /*option_2*/, -1 /*option_3*/, data[i].output_options,
+                                        data[i].data, -1, debug);
+            strcpy(symbol->outfile, "out.svg");
+            ret = ZBarcode_Encode(symbol, ZCUCP(data[i].data), length);
+            assert_zero(ret, "i:%d %s ZBarcode_Encode ret %d != 0 %s\n",
+                        i, testUtilBarcodeName(data[i].symbology), ret, symbol->errtxt);
+
+            zint_test_fm_set_fail(data[i].id, data[i].ats[j]);
+            ret = ZBarcode_Print(symbol, 0 /*rotate_angle*/);
+            assert_equal(ret, data[i].ret, "i:%d j:%d ZBarcode_Print (%d,%d) ret %d != %d (%s)\n",
+                            i, j, data[i].id, data[i].ats[j], ret, data[i].ret, symbol->errtxt);
+            ZBarcode_Reset(symbol);
+        }
+        zint_test_fm_set_fail(0, 0);
+
+        ZBarcode_Delete(symbol);
+    }
 
     testFinish();
 }
@@ -374,6 +438,7 @@ int main(int argc, char *argv[]) {
     testFunction funcs[] = { /* name, func */
         { "test_print", test_print },
         { "test_outfile", test_outfile },
+        { "test_fm", test_fm },
     };
 
     testRun(argc, argv, funcs, ARRAY_SIZE(funcs));

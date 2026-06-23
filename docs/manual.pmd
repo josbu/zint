@@ -444,9 +444,9 @@ meanings as given below:
 
 | Character          | Effect                  |
 |:-------------------|:------------------------|
-|`$`                 | Insert leading zeroes   |
-|`#`                 | Insert leading spaces   |
-|`*`                 | Insert leading asterisks|
+|`$` (dollar)        | Insert leading zeroes   |
+|`#` (hash)          | Insert leading spaces   |
+|`*` (asterisk)      | Insert leading asterisks|
 |Any other character | Interpreted literally   |
 
 Table: Sequence Format Characters {#tbl:sequence_format_characters}
@@ -488,9 +488,9 @@ zint.exe -d "This Text"
 
 For compatibility with Windows the examples use double quotes to delimit data,
 though on Unix single quotes are generally preferable as they stop the shell
-from processing any characters such as backslash or dollar. A single quote
-itself is dealt with by terminating the single-quoted text, backslashing the
-single quote, and then continuing:
+from processing characters such as backslash. A single quote itself is dealt
+with by terminating the single-quoted text, backslashing the single quote, and
+then continuing:
 
 ```bash
 zint -d 'Text containing a single quote '\'' in the middle'
@@ -514,6 +514,10 @@ zint --data "This Text"
 The examples use a space separator for short option names, and an equals sign
 for long option names.
 
+Long options may be abbreviated up to nonambiguity. For instance
+`--compliantheight` may be shortened to `--compliant`, or even `--com`, but note
+that future additions may necessitate longer abbreviations.
+
 ## 4.1 Inputting Data
 
 The data to encode can be entered at the command line using the `-d` or `--data`
@@ -525,11 +529,11 @@ zint -d "This Text"
 
 This will encode the text `"This Text"`. Zint will use the default symbology,
 Code 128, and output to the default file `"out.png"` in the current directory.
-Alternatively, if `libpng` was not present when Zint was built, the default
-output file will be `"out.gif"`.
+Alternatively, if Zint was not built with `libpng`, the default output file will
+be `"out.gif"`.
 
 The data input to the Zint CLI is assumed to be encoded in UTF-8 (Unicode)
-format (Zint will correctly handle UTF-8 data on Windows). If you are encoding
+(Zint will correctly handle UTF-8 data on Windows). If you are encoding
 characters beyond the 7-bit ASCII set using a scheme other than UTF-8 then you
 will need to set the appropriate input options as shown in [4.11 Input Modes]
 below.
@@ -633,8 +637,8 @@ See [6.1.10.1 Standard Code 128 (ISO 15417)] for the details on manually
 switching Code Sets.
 
 Input data can be read directly from file using the `-i` or `--input` switch as
-shown below. The input file is assumed to be UTF-8 formatted unless an
-alternative mode is selected. This option replaces the use of the `-d` switch.
+shown below. The input file is assumed to be in UTF-8 unless `--binary` is
+selected. This option replaces the use of the `-d` switch.
 
 ```bash
 zint -i somefile.txt
@@ -687,6 +691,9 @@ zint -o "dir/subdir/filename.eps" -d "This Text"
 ```
 
 Note that on Windows, filenames are assumed to be UTF-8 encoded.
+
+For another way to name output files, using the `--mirror` option, see [4.14
+Automatic Filenames].
 
 ## 4.3 Selecting Barcode Type
 
@@ -1139,9 +1146,8 @@ applied to the X-dimension. For MaxiCode, it is multiplied by 10 for raster
 output, by 40 for EMF vector output, and by 2 otherwise (non-EMF vector output).
 
 For non-MaxiCode raster output, the default scale of 1 results in an X-dimension
-of 2 pixels. For example for non-MaxiCode PNG images a scale of 5 will increase
-the X-dimension to 10 pixels. For MaxiCode, see [4.9.3 MaxiCode Raster Scaling]
-below.
+of 2 pixels, e.g. for PNG images a scale of 5 will increase the X-dimension to
+10 pixels. For MaxiCode, see [4.9.3 MaxiCode Raster Scaling] below.
 
 Scales for non-MaxiCode raster output should be given in increments of 0.5, i.e.
 0.5, 1, 1.5, 2, 2.5, 3, 3.5, etc., to avoid the X-dimension varying across the
@@ -1211,14 +1217,14 @@ nominal size" gives an example of an EAN-13 barcode using the X-dimension of
 pixels, or 4 pixels rounding to the nearest pixel:
 
 ```bash
-zint -b EAN13 -d "501234567890" --compliantheight --scale=2
+zint -b EAN13 -d "501234567890" --compliant --scale=2
 ```
 
 This will result in output of 37.29mm x 25.56mm (WxH) at 12 dpmm. The same
 result can be achieved using the `--scalexdimdp` option with
 
 ```bash
-zint -b EAN13 -d "501234567890" --compliantheight --scalexdimdp
+zint -b EAN13 -d "501234567890" --compliant --scalexdimdp
 ```
 
 as 0.33mm is the default X-dimension for EAN, and 12 dpmm the default
@@ -1280,12 +1286,12 @@ matrix barcodes.
 
 ### 4.11.1 Unicode, Data, and GS1 Modes
 
-By default all CLI input data is assumed to be encoded in UTF-8 format. Many
-barcode symbologies encode data using the Latin-1 (ISO/IEC 8859-1 plus ASCII)
-character set, so input is converted from UTF-8 to Latin-1 before being put in
-the symbol. In addition QR Code and its variants and Han Xin Code can by default
-encode Japanese (Kanji) or Chinese (Hanzi) characters which are also converted
-from UTF-8.
+By default all CLI input data is assumed to be encoded in UTF-8. Many barcode
+symbologies encode data using the Latin-1 (ISO/IEC 8859-1 plus ASCII) character
+set, so input is converted from UTF-8 to Latin-1 before being put in the symbol.
+In addition QR Code and its variants and Han Xin Code can by default encode
+Japanese (Kanji) or Chinese (Hanzi) characters which are also converted from
+UTF-8.
 
 There are two exceptions to the Latin-1 default: Grid Matrix, whose default
 character set is GB 2312 (Chinese); and UPNQR, whose default character set is
@@ -1412,7 +1418,7 @@ Table: ECI Codes {#tbl:eci_codes}
 `#`, `$`, `@`, `[`, `\`, `]`, `^`, `` ` ``, `{`, `|`, `}`, `~` (tilde).
 
 [^9]: Note that unless the `--binary` switch is used, 8-bit binary data for ECI
-899 must be given as UTF-8, e.g.  a byte `"\x80"` must be represented as the 2
+899 must be given as UTF-8, e.g. byte `"\x80"` must be represented as the 2
 bytes `"\xC2\x80"`; similarly `"\xC0"` as `"\xC3\x80"`, etc.
 
 An ECI value of 0 does not encode any ECI information in the code symbol (unless
@@ -1436,60 +1442,64 @@ information.
 
 #### 4.11.2.1 Input Modes and ECI Example 1
 
-The Euro sign U+20AC can be encoded in ISO/IEC 8859-15. The Euro sign has the
-ISO/IEC 8859-15 codepoint hex `"A4"`. It is encoded in UTF-8 as the hex
-sequence: `"E2 82 AC"`. Those 3 bytes are contained in the file
-`"utf8euro.txt"`. This command will generate the corresponding code:
+The Euro sign `"€"` (U+20AC) can be encoded in ISO/IEC 8859-15 (ECI 17) as the
+hex byte `"A4"`. It is encoded in UTF-8 as the hex sequence: `"E2 82 AC"`. Those
+3 bytes are contained in the file `"utf8euro.txt"`, e.g. on Unix
 
 ```bash
-zint -b DATAMATRIX --scale=10 --eci=17 -i utf8euro.txt
+echo -ne '\xE2\x82\xAC' > utf8euro.txt
+```
+
+This command will generate the corresponding code:
+
+```bash
+zint -b DATAMATRIX --eci=17 -i utf8euro.txt
 ```
 
 This is equivalent to the commands (using the `--esc` switch):
 
 ```bash
-zint -b DATAMATRIX --scale=10 --eci=17 --esc -d "\xE2\x82\xAC"
+zint -b DATAMATRIX --eci=17 --esc -d "\xE2\x82\xAC"
 
-zint -b DATAMATRIX --scale=10 --eci=17 --esc -d "\u20AC"
+zint -b DATAMATRIX --eci=17 --esc -d "\u20AC"
 ```
 
 and to the command:
 
 ```bash
-zint -b DATAMATRIX --scale=10 --eci=17 -d "€"
+zint -b DATAMATRIX --eci=17 -d "€"
 ```
 
 ![`zint -b DATAMATRIX --eci=17 -d "€"`](images/datamatrix_euro.svg){.i2d}
 
 #### 4.11.2.2 Input Modes and ECI Example 2
 
-The Chinese character with the Unicode codepoint U+5E38 can be encoded in Big5
-encoding. The Big5 representation of this character is the two hex bytes:
-`"B1 60"` (contained in the file `"big5char.txt"`). The generation command for
-Data Matrix is:
+The Chinese character `"碼"` (U+78BC) can be encoded in Big5 encoding (ECI 28)
+as the hex sequence: `"BD 58"`. Those 2 bytes are contained in the file
+`"big5char.txt"`. The generation command is:
 
 ```bash
-zint -b DATAMATRIX --scale=10 --eci=28 --binary -i big5char.txt
+zint -b DATAMATRIX --eci=28 --binary -i big5char.txt
 ```
 
 This is equivalent to the command (using the `--esc` switch):
 
 ```bash
-zint -b DATAMATRIX --scale=10 --eci=28 --binary --esc -d "\xB1\x60"
+zint -b DATAMATRIX --eci=28 --binary --esc -d "\xBD\x58"
 ```
 
 and to the commands (no `--binary` switch so conversion occurs):
 
 ```bash
-zint -b DATAMATRIX --scale=10 --eci=28 --esc -d "\xE5\xB8\xB8"
+zint -b DATAMATRIX --eci=28 --esc -d "\xE7\xA2\xBC"
 
-zint -b DATAMATRIX --scale=10 --eci=28 --esc -d "\u5E38"
+zint -b DATAMATRIX --eci=28 --esc -d "\u78BC"
 
-zint -b DATAMATRIX --scale=10 --eci=28 -d "常"
+zint -b DATAMATRIX --eci=28 -d "碼"
 ```
 
-![`zint -b DATAMATRIX --eci=28 -d "\u5E38"
---esc`](images/datamatrix_big5.svg){.i2d}
+![`zint -b DATAMATRIX --eci=28 --binary --esc -d
+"\xBD\x58"`](images/datamatrix_big5.svg){.i2d}
 
 #### 4.11.2.3 Input Modes and ECI Example 3
 
@@ -1498,53 +1508,53 @@ by default and do not support ECI. In this case supply UTF-8 data and use the
 `--binary` switch so that the data will be encoded as UTF-8 without conversion:
 
 ```bash
-zint -b QRCODE --binary -d "UTF-8 data"
+zint -b QRCODE --binary -d "€"
 ```
 
-![`zint -b QRCODE --binary -d "\xE2\x82\xAC\xE5\xB8\xB8"
---esc`](images/qrcode_binary_utf8.svg){.i2d}
+![`zint -b QRCODE --binary -d "€"`](images/qrcode_binary_utf8.svg){.i2d}
 
 ### 4.11.3 GS1 Data Entry and Options
 
 The following symbologies accept GS1 data:
 
-----------------------------------------------------------
-Symbology                 Implicit  GS1 Data  Supports GS1
-                          AI?       Assumed?  Composite?
--------------             --------  --------  ------------
-Aztec Code                No        No        No
+------------------------------------------------------------
+Symbology                 Implicit   GS1 Data   Supports GS1
+                          AI?        Assumed?   Composite?
+------------------------  ---------  ---------  ------------
+Aztec Code                No         No         No
 
-Code 16K                  No        No        No
+Code 16K                  No         No         No
 
-Code 49                   No        No        No
+Code 49                   No         No         No
 
-Code One                  No        No        No
+Code One                  No         No         No
 
-Data Matrix               No        No        No
+Data Matrix               No         No         No
 
-DotCode                   No        No        No
+DotCode                   No         No         No
 
-EAN-13, EAN-8             Yes (01)  Yes       Yes
+EAN-13, EAN-8             Yes (01)   Yes        Yes
 
-EAN-14                    Yes (01)  Yes       No
+EAN-14                    Yes (01)   Yes        No
 
-GS1-128                   No        Yes       Yes
+GS1-128                   No         Yes        Yes
 
-GS1 DataBar Expanded      No        Yes       Yes
-(including Stacked)
+GS1 DataBar Expanded      No         Yes        Yes
+(including Expanded
+Stacked)
 
-GS1 DataBar (all others)  Yes (01)  Yes       Yes
+GS1 DataBar (all others)  Yes (01)   Yes        Yes
 
-NVE-18                    Yes (00)  Yes       No
+NVE-18                    Yes (00)   Yes        No
 
-QR Code                   No        No        No
+QR Code                   No         No         No
 
-rMQR                      No        No        No
+rMQR                      No         No         No
 
-Ultracode                 No        No        No
+Ultracode                 No         No         No
 
-UPC-A, UPC-E              Yes (01)  Yes       Yes
-----------------------------------------------------------
+UPC-A, UPC-E              Yes (01)   Yes        Yes
+------------------------------------------------------------
 
 Table: GS1-Enabled Symbologies
 
@@ -1623,9 +1633,9 @@ other GS1 options.
 
 - `--gs1strict`, which enables the use the GS1 Syntax Engine to
 strictly validate GS1 data, including GS1 Digital Link URIs (by default Zint
-does not validate Digital Links at all). It requires that the `gs1encoders`
-library was present when Zint was built, otherwise the default built-in
-validation will be used.
+does not validate Digital Links at all). It requires that Zint was built with
+the `gs1encoders` library, otherwise the default built-in validation will be
+used.
 
 - `--gs1nocheck`, for use with legacy systems that have data that does not
 conform to the current GS1 standard. Printable ASCII input is still checked for,
@@ -1665,9 +1675,9 @@ characters in the output filename as shown in the table below:
 
 Input Character      Interpretation
 ---------------      ------------------------------------------
-`~`                  Insert a number or 0
-`#`                  Insert a number or space
-`@`                  Insert a number or `*` (or `+` on Windows)
+`~` (tilde)          Insert a number or 0
+`#` (hash)           Insert a number or space
+`@` (ampersand)      Insert a number or `*` (or `+` on Windows)
 Any other            Insert literally
 
 Table: Batch Filename Formatting {#tbl:batch_filename_formatting}
@@ -1707,9 +1717,9 @@ For an alternative method of naming output files see the `--mirror` option in
 
 The finished image files can be output directly to stdout for use as part of a
 pipe by using the `--direct` option. By default `--direct` will output data as a
-PNG image (or GIF image if `libpng` is not present), but this can be altered by
-supplementing the `--direct` option with a `--filetype` option followed by the
-suffix of the file type required. For example:
+PNG image (or GIF image if Zint not built with `libpng`), but this can be
+altered by supplementing the `--direct` option with a `--filetype` option
+followed by the suffix of the file type required. For example:
 
 ```bash
 zint -b MICROPDF417 --direct --filetype=pcx -d "Data to encode"
@@ -1733,13 +1743,34 @@ file named `"1234567.png"`.
 
 There are restrictions, however, on what characters can be stored in a filename,
 so the filename may vary from the data if the data includes non-printable
-characters, for example, and may be shortened if the data input is long.
+characters, for example,[^12] and may be shortened if the data input is long. So
+in batch mode your data must be unique given these restrictions otherwise files
+will overwrite each other.
 
 To set the output file format use the `--filetype` option as detailed above in
-[4.13 Direct Output to stdout]. To output to a specific directory use the `-o`
-option giving the name of the directory (any filename will be ignored, unless
-`--filetype` is not specified, in which case the filename's extension will be
-used).
+[4.13 Direct Output to stdout]. For instance
+
+```bash
+zint -d "1234567" --mirror --filetype=eps
+```
+
+will output to the file `"1234567.eps"`:
+
+To output to a specific directory use the `-o` option giving the name of the
+directory, indicated by a terminating slash `/` (backslash `\` may be used on
+Windows). Any filename after the last slash will be ignored, unless `--filetype`
+is not specified, in which case the filename's extension will be used - e.g.
+
+```bash
+zint -d "1234567" --mirror -o "dir/subdir/mir.eps"
+```
+
+will output to the file `"1234567.eps"` in the `"dir/subdir"` directory.
+
+[^12]: The `--mirror` option will replace control characters (including `DEL`)
+and slash (`/`) with an underscore (`_`). Additionally on Windows the characters
+`!`, `"`, `*`, `:`, `<`, `>`, `?`, `\` and `|` will also be replaced with
+underscores, as they are prohibited in filenames.
 
 ## 4.15 Working with Dots
 
@@ -1880,8 +1911,8 @@ gcc -o simple simple.c -lzint
 To encode data in a barcode use the `ZBarcode_Encode()` function. To write the
 symbol to a file use the `ZBarcode_Print()` function. For example the following
 code takes a string from the command line and outputs a Code 128 symbol to a PNG
-file named `"out.png"` (or a GIF file `"out.gif"` if `libpng` is not present) in
-the current working directory:
+file named `"out.png"` (or a GIF file `"out.gif"` if Zint not built with
+`libpng`) in the current working directory:
 
 ```c
 #include <zint.h>
@@ -2108,10 +2139,10 @@ int main(int argc, char **argv)
 ```
 
 will print the SVG output to `stdout` (the file `"mem.svg"` is not created).
-This is particularly useful for the textual formats EPS and SVG,[^12] allowing
+This is particularly useful for the textual formats EPS and SVG,[^13] allowing
 the output to be manipulated and processed by the client.
 
-[^12]: BARCODE_MEMORY_FILE textual formats EPS and SVG will have Unix newlines
+[^13]: BARCODE_MEMORY_FILE textual formats EPS and SVG will have Unix newlines
 (LF) on both Windows and Unix, i.e. not CR+LF on Windows.
 
 ## 5.7 Setting Options
@@ -2132,7 +2163,7 @@ Member Name          Type        Meaning                    Default Value
 `height`             float       Symbol height in            Symbol dependent
                                  X-dimensions, excluding
                                  fixed width-to-height
-                                 symbols.[^13]
+                                 symbols.[^14]
 
 `scale`              float       Scale factor for            1.0
                                  adjusting size of image
@@ -2182,7 +2213,7 @@ Member Name          Type        Meaning                    Default Value
                                  `.eps`, `.pcx`, `.svg`,
                                  `.tif` or `.txt` followed
                                  by a terminating
-                                 `NUL`.[^14]
+                                 `NUL`.[^15]
 
 `primary`            character   Primary message data for    `""` (empty)
                      string      more complex symbols,
@@ -2310,13 +2341,13 @@ Member Name          Type        Meaning                    Default Value
 
 Table: API Structure `zint_symbol` {#tbl:api_structure_zint_symbol}
 
-[^13]: The `height` value is ignored for Aztec (including HIBC and Aztec Rune),
+[^14]: The `height` value is ignored for Aztec (including HIBC and Aztec Rune),
 Code One, Data Matrix (including HIBC), DotCode, Grid Matrix, Han Xin, MaxiCode,
 QR Code (including HIBC, Micro QR, rMQR and UPNQR), and Ultracode - all of which
 have a fixed width-to-height ratio (or, in the case of Code One, a fixed
 height).
 
-[^14]: For Windows, `outfile` is assumed to be UTF-8 encoded.
+[^15]: For Windows, `outfile` is assumed to be UTF-8 encoded.
 
 To alter these values use the syntax shown in the example below. This code has
 the same result as the previous example except the output is now taller and
@@ -2482,10 +2513,10 @@ Value                      Effect
 -------------------------  ---------------------------------------------------
  0                         No options selected.
 
-`BARCODE_BIND_TOP`         Boundary bar above the symbol only.[^15]
+`BARCODE_BIND_TOP`         Boundary bar above the symbol only.[^16]
 
 `BARCODE_BIND`             Boundary bars above and below the symbol and
-                           between rows if stacking multiple symbols.[^16]
+                           between rows if stacking multiple symbols.[^17]
 
 `BARCODE_BOX`              Add a box surrounding the symbol and whitespace.
 
@@ -2512,7 +2543,7 @@ Value                      Effect
                            Symbols in Memory (raster)].
 
 `BARCODE_QUIET_ZONES`      Add compliant quiet zones (additional to any
-                           specified whitespace).[^17]
+                           specified whitespace).[^18]
 
 `BARCODE_NO_QUIET_ZONES`   Disable quiet zones, notably those with defaults.
 
@@ -2534,13 +2565,13 @@ Value                      Effect
 
 Table: API `output_options` Values {#tbl:api_output_options}
 
-[^15]: The `BARCODE_BIND_TOP` flag is set by default for DPD - see [6.1.10.7 DPD
+[^16]: The `BARCODE_BIND_TOP` flag is set by default for DPD - see [6.1.10.7 DPD
 Code].
 
-[^16]: The `BARCODE_BIND` flag is always set for Codablock F, Code 16K and Code
+[^17]: The `BARCODE_BIND` flag is always set for Codablock F, Code 16K and Code
 49. Special considerations apply to ITF-14 - see [6.1.2.6 ITF-14].
 
-[^17]: Codablock F, Code 16K, Code 49, EAN-13, EAN-8, EAN/UPC add-ons, ISBN,
+[^18]: Codablock F, Code 16K, Code 49, EAN-13, EAN-8, EAN/UPC add-ons, ISBN,
 ITF-14, UPC-A and UPC-E have compliant quiet zones added by default.
 
 ## 5.11 Setting the Input Mode
@@ -2568,7 +2599,7 @@ Value                   Effect
 
 `GS1NOCHECK_MODE`       Do not check GS1 data for validity, i.e. suppress
                         checks for valid AIs and data lengths. Invalid
-                        characters (e.g.  control characters, extended ASCII
+                        characters (e.g. control characters, extended ASCII
                         characters) are still checked for.
 
 `HEIGHTPERROW_MODE`     Interpret the `height` member as per-row rather than
@@ -2799,7 +2830,7 @@ Value                       Meaning
 `ZINT_CAP_STACKABLE`        Is the symbology stackable? Note that stacked
                             symbologies are not stackable.
 
-`ZINT_CAP_EANUPC`[^18]      Is the symbology EAN/UPC?
+`ZINT_CAP_EANUPC`[^19]      Is the symbology EAN/UPC?
 
 `ZINT_CAP_COMPOSITE`        Does the symbology support composite data? (see
                             [6.3 GS1 Composite Symbols (ISO 24723)] below)
@@ -2835,7 +2866,7 @@ Value                       Meaning
 
 Table: API Capability Flags {#tbl:api_cap}
 
-[^18]: `ZINT_CAP_EANUPC` was previously named `ZINT_CAP_EXTENDABLE`, which is
+[^19]: `ZINT_CAP_EANUPC` was previously named `ZINT_CAP_EXTENDABLE`, which is
 still recognised.
 
 For example:
@@ -2862,7 +2893,7 @@ On successful encodation (after using `ZBarcode_Encode()` etc.) the `option_1`,
 create the barcode. This is useful for feedback if the values were left as
 defaults or were overridden by Zint.
 
-In particular for symbologies that have masks,[^19] `option_3` will contain the
+In particular for symbologies that have masks,[^20] `option_3` will contain the
 mask used as `(N + 1) << 8`, N being the mask. Also Aztec Code will return the
 actual ECC percentage used in `option_1` as `P << 8`, where P is the integer
 percentage, the low byte containing the values given in [#tbl:aztec_eccs] (with
@@ -2880,7 +2911,7 @@ least one.
 The `source`, `length` and `eci` members of `zint_seg` will be set accordingly -
 the unconverted data in `source`, the data length in `length`, and the character
 set the data was converted to in `eci`. Any check characters encoded will be
-included,[^20] and for GS1 data any `FNC1` separators will be represented as
+included,[^21] and for GS1 data any `FNC1` separators will be represented as
 `GS` (ASCII 29) characters. UPC-A and UPC-E data will be expanded to EAN-13, as
 will EAN-8 but only if it has an add-on (otherwise it will remain at 8 digits),
 and any add-ons will follow the 13 digits directly (no separator). GS1 Composite
@@ -2892,16 +2923,16 @@ is `DATA_MODE`, it remains in binary; otherwise it will be in UTF-8. The UTF-8
 source may be converted to the character set of the corresponding `eci` member
 using the two helper functions discussed next.
 
-[^19]: DotCode, Han Xin, Micro QR Code, QR Code and UPNQR have variable masks.
+[^20]: DotCode, Han Xin, Micro QR Code, QR Code and UPNQR have variable masks.
 Rectangular Micro QR Code has a fixed mask (4).
 
-[^20]: Except for Japanese Postal Code, whose check character is not truly
+[^21]: Except for Japanese Postal Code, whose check character is not truly
 representable in the encoded data.
 
 ## 5.17 UTF-8 to ECI convenience functions
 
 As a convenience the conversion done by Zint from UTF-8 to ECIs is exposed in
-two helper functions (compatible with the `libzueci`[^21] functions
+two helper functions (compatible with the `libzueci`[^22] functions
 `zueci_utf8_to_eci()` and `zueci_dest_len_eci()`):
 
 
@@ -2921,7 +2952,7 @@ returned in `p_dest_length`, may be smaller than the estimate given by
 NUL-terminated. The destination buffer is not NUL-terminated. The obsolete ECIs
 0, 1 and 2 are supported.
 
-[^21]: The library `libzueci`, which can convert both to and from UTF-8 and ECI,
+[^22]: The library `libzueci`, which can convert both to and from UTF-8 and ECI,
 is available at [https://sourceforge.net/projects/libzueci/](
 https://sourceforge.net/projects/libzueci/).
 
@@ -3026,8 +3057,7 @@ A high-density barcode that encodes pairs of numbers, and so can only encode an
 even number of digits (0-9). If an odd number of digits is entered a leading
 zero is added by Zint. A maximum of 62 pairs (124 digits) can be encoded.
 
-![`zint -b C25INTER --compliantheight -d
-"9212320967"`](images/c25inter.svg){.lin}
+![`zint -b C25INTER --compliant -d "9212320967"`](images/c25inter.svg){.lin}
 
 No check digit is added by default, but can be set the same as for [6.1.2.1
 Standard Code 2 of 5].
@@ -3051,7 +3081,7 @@ entered, or a 14-digit input if the standard GS1 check digit is given, in which
 case the check digit will be verified. A standard GS1 check digit is added by
 Zint unless already given.
 
-![`zint -b ITF14 --compliantheight -d "9212320967145"`](images/itf14.svg){.lin}
+![`zint -b ITF14 --compliant -d "9212320967145"`](images/itf14.svg){.lin}
 
 If no border option is specified Zint defaults to adding a bounding box with a
 border width of 5. This behaviour can be overridden by using the `--bind` option
@@ -3060,7 +3090,7 @@ overridden using `--border` (API `border_width`). If a symbol with no border is
 required this can be achieved by explicitly setting the border type to box (or
 bind or bindtop) and leaving the border width 0.
 
-![`zint -b ITF14 --box --compliantheight -d
+![`zint -b ITF14 --box --compliant -d
 "9212320967145"`](images/itf14_border0.svg){.lin}
 
 #### 6.1.2.7 Deutsche Post Leitcode
@@ -3089,7 +3119,7 @@ UPC-A is used in the United States for retail applications, and encodes a
 GTIN-12, a 12-digit Global Trade Item Number that includes a standard GS1 check
 digit.
 
-![`zint -b UPCA --compliantheight -d "01234500005"`](images/upca.svg){.upcean}
+![`zint -b UPCA --compliant -d "01234500005"`](images/upca.svg){.upcean}
 
 Input up to 11 digits may be given, to which a check digit will be added by
 Zint. A 12-digit input including the check digit may also be supplied, in which
@@ -3116,8 +3146,7 @@ error = ZBarcode_Encode_and_Print(symbol, "01234500005+12345", 0, 0);
 error = ZBarcode_Encode_and_Print(symbol, "01234500005 12345", 0, 0);
 ```
 
-![`zint -b UPCA --compliantheight -d
-"01234500005+12345"`](images/upca_5.svg){.upcean}
+![`zint -b UPCA --compliant -d "01234500005+12345"`](images/upca_5.svg){.upcean}
 
 A quiet zone indicator can be added to the HRT by setting `--guardwhitespace`
 (API `output_options |= EANUPC_GUARD_WHITESPACE`). For UPC, this is only
@@ -3135,7 +3164,7 @@ symbol->output_options |= EANUPC_GUARD_WHITESPACE;
 error = ZBarcode_Encode_and_Print(symbol, "01234500005+12345", 0, 0);
 ```
 
-![`zint -b UPCA --compliantheight -d "01234500005+12345"
+![`zint -b UPCA --compliant -d "01234500005+12345"
 --guardwhitespace`](images/upca_5_gws.svg){.upcean}
 
 You can adjust the gap between the main symbol and an add-on in integral
@@ -3152,7 +3181,7 @@ Zint. If 7 digits are given then the first must be '0' or '1' (the latter is
 known as number system 1 and is non-standard). Input less than 7 digits will be
 zero-filled.
 
-![`zint -b UPCE --compliantheight -d "123455"`](images/upce.svg){.upcean}
+![`zint -b UPCE --compliant -d "123455"`](images/upce.svg){.upcean}
 
 An 8-digit input including the check digit may also be supplied, in which case
 Zint will verify the check digit, or the symbology `BARCODE_UPCE_CHK` (38) may
@@ -3167,7 +3196,7 @@ EANUPC_GUARD_WHITESPACE`):
 zint -b UPCE -d "123455+12" --guardwhitespace
 ```
 
-![`zint -b UPCE --compliantheight -d "123455+12"
+![`zint -b UPCE --compliant -d "123455+12"
 --guardwhitespace`](images/upce_2_gws.svg){.upcean}
 
 You can adjust the gap between the main symbol and an add-on in integral
@@ -3188,8 +3217,7 @@ EAN-8 and ISBN (a subset of EAN-13).
 EAN-13 encodes a GTIN-13, a 13-digit Global Trade Item Number that includes a
 standard GS1 check digit.
 
-![`zint -b EAN13 --compliantheight -d
-"952012345678"`](images/ean13.svg){.upcean}
+![`zint -b EAN13 --compliant -d "952012345678"`](images/ean13.svg){.upcean}
 
 Input up to 12 digits may be given, to which a check digit will be added by
 Zint, or a 13-digit input can be supplied in which case Zint will validate the
@@ -3210,8 +3238,7 @@ symbol->symbology = BARCODE_EAN13;
 error = ZBarcode_Encode_and_Print(symbol, "952012345678+21", 0, 0);
 ```
 
-![`zint -b EAN13 --compliantheight -d
-"952012345678+21"`](images/ean13_2.svg){.upcean}
+![`zint -b EAN13 --compliant -d "952012345678+21"`](images/ean13_2.svg){.upcean}
 
 Options to add quiet zone indicators and to adjust the add-on gap and the guard
 bar descent height are the same as for [6.1.3.2 UPC Version E]. For instance:
@@ -3220,15 +3247,15 @@ bar descent height are the same as for [6.1.3.2 UPC Version E]. For instance:
 zint -b EAN13 -d "9520123456788" --guarddescent=2.5 --guardwhitespace
 ```
 
-![`zint -b EAN13 --compliantheight -d "9520123456788"`
---guarddescent=2.5 --guardwhitespace](images/ean13_gd_gws.svg){.upcean}
+![`zint -b EAN13 --compliant -d "9520123456788" --guarddescent=2.5
+--guardwhitespace`](images/ean13_gd_gws.svg){.upcean}
 
 #### 6.1.4.2 EAN-8
 
 EAN-8 is a shortened version of EAN-13, encoding a GTIN-8 (a GTIN-13 with 5
 leading zeroes implied), for use with small packages.
 
-![`zint -b EAN8 --compliantheight -d "9520000"`](images/ean8.svg){.upcean}
+![`zint -b EAN8 --compliant -d "9520000"`](images/ean8.svg){.upcean}
 
 Input up to 7 digits may be supplied, to which Zint will add a standard GS1
 check digit. An 8-digit input including the check digit may also be given, in
@@ -3250,7 +3277,7 @@ symbol->output_options |= EANUPC_GUARD_WHITESPACE;
 error = ZBarcode_Encode_and_Print(symbol, "9520000", 0, 0);
 ```
 
-![`zint -b EAN8 --compliantheight -d "9520000"`
+![`zint -b EAN8 --compliant -d "9520000"`
 --guardwhitespace](images/ean8_gws.svg){.upcean}
 
 2-digit and 5-digit add-ons may also be added, and the gap adjusted, as with
@@ -3263,12 +3290,11 @@ SBN, 10-digit ISBN or 13-digit ISBN-13 data. The relevant check digit needs to
 be present in the input data and will be verified before the symbol is
 generated.
 
-![`zint -b ISBNX --compliantheight -d
-"9789295055124"`](images/isbnx.svg){.upcean}
+![`zint -b ISBNX --compliant -d "9789295055124"`](images/isbnx.svg){.upcean}
 
 As with EAN-13, a quiet zone indicator can be added using `--guardwhitespace`:
 
-![`zint -b ISBNX --compliantheight -d "9789295055124"
+![`zint -b ISBNX --compliant -d "9789295055124"
 --guardwhitespace`](images/isbnx_gws.svg){.upcean}
 
 2-digit and 5-digit add-on symbols can be added using a `+` or space character,
@@ -3281,8 +3307,7 @@ As a convenience, 2-digit and 5-digit add-ons may be generated as standalone
 symbols using the symbologies `BARCODE_EAN_2ADDON` (11) and `BARCODE_EAN_5ADDON`
 (12).
 
-![`zint -b EAN_2ADDON --compliantheight
--d "12"`](images/ean_2addon.svg){.upcean}
+![`zint -b EAN_2ADDON --compliant -d "12"`](images/ean_2addon.svg){.upcean}
 
 As with the main EAN/UPC symbols a quiet zone indicator can be added
 using `---guardwhitespace`. For instance
@@ -3300,7 +3325,7 @@ symbol->output_options |= EANUPC_GUARD_WHITESPACE;
 error = ZBarcode_Encode_and_Print(symbol, "54321", 0, 0);
 ```
 
-![`zint -b EAN_5ADDON --compliantheight -d "54321"`
+![`zint -b EAN_5ADDON --compliant -d "54321"`
 --guardwhitespace](images/ean_5addon_gws.svg){.upcean}
 
 ### 6.1.5 Plessey
@@ -3350,7 +3375,7 @@ Telepen Alpha was developed in 1972 by SB Electronic Systems Limited and can
 encode ASCII text input, up to a maximum of 69 characters. Telepen includes a
 hidden modulo-127 check digit, added by Zint.
 
-![`zint -b TELEPEN --compliantheight -d "Z8000"`](images/telepen.svg){.lin}
+![`zint -b TELEPEN --compliant -d "Z8000"`](images/telepen.svg){.lin}
 
 AIM-defined Start/Stop characters may be enabled by setting `--vers=1` (API
 `option_2 = 1`). In this mode control character `DLE` (ASCII 16, escape sequence
@@ -3358,7 +3383,7 @@ AIM-defined Start/Stop characters may be enabled by setting `--vers=1` (API
 symbol character encodes a digit pair (or a "digit X" pair - see Telepen Numeric
 below):
 
-![`zint -b TELEPEN --compliantheight -d
+![`zint -b TELEPEN --compliant -d
 "Z\L8000" -esc --vers=1`](images/telepen_aim.svg){.lin}
 
 However not all barcode readers recognise this mode so check before using.
@@ -3372,19 +3397,18 @@ character. For example: `"466333"` and `"466X33"` are valid codes whereas
 supplied, Zint will add a leading zero. Up to 138 digits can be encoded. A
 hidden modulo-127 check digit is added by Zint.
 
-![`zint -b TELEPEN_NUM --compliantheight -d
-"466X33"`](images/telepen_num.svg){.lin}
+![`zint -b TELEPEN_NUM --compliant -d "466X33"`](images/telepen_num.svg){.lin}
 
 Additionally trailing ASCII characters may be encoded by prefixing them with a
 `DLE` control character (ASCII 16, escape sequence `\L`) and appending them to
 the numeric data:
 
-![`zint -b TELEPEN_NUM --compliantheight -d
+![`zint -b TELEPEN_NUM --compliant -d
 "12\LAB" --esc`](images/telepen_num_asc.svg){.lin}
 
 This method allows odd numbers to be encoded without a leading zero:
 
-![`zint -b TELEPEN_NUM --compliantheight -d
+![`zint -b TELEPEN_NUM --compliant -d
 "123\L4" --esc`](images/telepen_num_odd.svg){.lin}
 
 AIM-defined Start/Stop characters may be enabled by setting `--vers=1` (API
@@ -3402,7 +3426,7 @@ characters in length and can include the characters 0-9, A-Z, dash (`-`), full
 stop (`.`), space, asterisk (`*`), dollar (`$`), slash (`/`), plus (`+`) and
 percent (`%`).
 
-![`zint -b CODE39 --compliantheight -d "1A" --vers=1`](images/code39.svg){.lin}
+![`zint -b CODE39 --compliant -d "1A" --vers=1`](images/code39.svg){.lin}
 
 The standard does not require a check digit but a modulo-43 check digit can be
 added if desired by setting `--vers=1` (API `option_2 = 1`). To add a check
@@ -3414,8 +3438,7 @@ digit but not show it in the Human Readable Text, set `--vers=2` (API
 Also known as Code 39e and Code39+, this symbology expands on Standard Code 39
 to provide support for the full 7-bit ASCII character set.
 
-![`zint -b EXCODE39 --compliantheight -d
-"123.45#@fd"`](images/excode39.svg){.lin}
+![`zint -b EXCODE39 --compliant -d "123.45#@fd"`](images/excode39.svg){.lin}
 
 The check digit options are the same as for [6.1.7.1 Standard Code 39 (ISO
 16388)].
@@ -3427,7 +3450,7 @@ accepting up to 123 characters. Two check characters are added by Zint. By
 default these check characters are not shown in the Human Readable Text, but may
 be shown by setting `--vers=1` (API `option_2 = 1`).
 
-![`zint -b CODE93 --compliantheight -d "C93"`](images/code93.svg){.lin}
+![`zint -b CODE93 --compliant -d "C93"`](images/code93.svg){.lin}
 
 #### 6.1.7.4 PZN (Pharmazentralnummer)
 
@@ -3436,7 +3459,7 @@ PZN encodes a 7-digit number to which Zint will add a modulo-11 check digit
 (PZN8). Input less than 7 digits will be zero-filled. An 8-digit input can be
 supplied in which case Zint will validate the check digit.
 
-![`zint -b PZN --compliantheight -d "2758089"`](images/pzn.svg){.lin}
+![`zint -b PZN --compliant -d "2758089"`](images/pzn.svg){.lin}
 
 To encode a PZN7 (obsolete since 2013) instead set `--vers=1` (API
 `option_2 = 1`) and supply up to 7 digits. As with PZN8, a modulo-11 check digit
@@ -3450,7 +3473,7 @@ LOGMARS encodes the same character set as [6.1.7.1 Standard Code 39 (ISO
 16388)], and the check digit options are also the same. Input is restricted to
 a maximum of 30 characters.
 
-![`zint -b LOGMARS --compliantheight -d "12345/ABCDE"
+![`zint -b LOGMARS --compliant -d "12345/ABCDE"
 --vers=1`](images/logmars.svg){.lin}
 
 #### 6.1.7.6 Code 32
@@ -3460,7 +3483,7 @@ Sanità") for encoding identifiers on pharmaceutical products. This symbology
 requires a numeric input up to 8 digits in length. A check digit is added by
 Zint.
 
-![`zint -b CODE32 --compliantheight -d "14352312"`](images/code32.svg){.lin}
+![`zint -b CODE32 --compliant -d "14352312"`](images/code32.svg){.lin}
 
 #### 6.1.7.7 HIBC Code 39
 
@@ -3468,7 +3491,7 @@ This variant adds a leading `'+'` character and a trailing modulo-49 check digit
 to a standard Code 39 symbol as required by the Health Industry Barcode
 standards.
 
-![`zint -b HIBC_39 --compliantheight -d "14352312"`](images/hibc_39.svg){.lin}
+![`zint -b HIBC_39 --compliant -d "14352312"`](images/hibc_39.svg){.lin}
 
 #### 6.1.7.8 Vehicle Identification Number (VIN)
 
@@ -3489,7 +3512,7 @@ and Monarch, this symbology was developed in 1972 from earlier versions by
 Pitney Bowes-Alpex for retail price marking. The American Blood Commission
 adopted Codabar in 1979 as the standard barcode for blood products.
 
-![`zint -b CODABAR --compliantheight -d "A37859B"`](images/codabar.svg){.lin}
+![`zint -b CODABAR --compliant -d "A37859B"`](images/codabar.svg){.lin}
 
 Codabar can encode up to 103 characters starting and ending with the letters A-D
 and containing between these letters the numbers 0-9, dash (`-`), dollar (`$`),
@@ -3505,7 +3528,7 @@ Developed by Laetus, Pharmacode One-Track is used for the identification of
 pharmaceuticals. The symbology is able to encode whole numbers between 3 and
 131070.
 
-![`zint -b PHARMA --compliantheight -d "130170"`](images/pharma.svg){.lin}
+![`zint -b PHARMA --compliant -d "130170"`](images/pharma.svg){.lin}
 
 ### 6.1.10 Code 128
 
@@ -3565,7 +3588,7 @@ alphanumerics) are not recommended.
 #### 6.1.10.2 Code 128 Suppress Code Set C (Code Sets A and B only)
 
 It is sometimes advantageous to stop Code 128 from using Code Set C which
-compresses numerical data. The `BARCODE_CODE128AB`[^22] variant (symbology 60)
+compresses numerical data. The `BARCODE_CODE128AB`[^23] variant (symbology 60)
 suppresses Code Set C in favour of Code Sets A and B.
 
 ![`zint -b CODE128AB -d "130170X178"`](images/code128ab.svg){.lin}
@@ -3573,7 +3596,7 @@ suppresses Code Set C in favour of Code Sets A and B.
 Note that the special extra escapes mentioned above are not available for this
 variant (nor for any other).
 
-[^22]: `BARCODE_CODE128AB` previously used the name `BARCODE_CODE128B`, which is
+[^23]: `BARCODE_CODE128AB` previously used the name `BARCODE_CODE128B`, which is
 still recognised.
 
 #### 6.1.10.3 GS1-128
@@ -3583,7 +3606,7 @@ defined by the GS1 General Specifications. Data should be in one of the formats
 described in [4.11.3.1 GS1 Data Entry]. Here we will use the square bracket
 format.
 
-![`zint -b GS1_128 --compliantheight -d
+![`zint -b GS1_128 --compliant -d
 "[01]98898765432106[3202]012345[15]991231"`](images/gs1_128.svg){.lin}
 
 Fixed length data should be entered at the appropriate length for correct
@@ -3603,7 +3626,7 @@ digits entered, or a 14-digit number if the standard GS1 check digit is given,
 in which case the check digit will be verified. The GS1 check digit (if not
 given) and HRT-only AI `"(01)"` are added by Zint.
 
-![`zint -b EAN14 --compliantheight -d "9889876543210"`](images/ean14.svg){.lin}
+![`zint -b EAN14 --compliant -d "9889876543210"`](images/ean14.svg){.lin}
 
 #### 6.1.10.5 NVE-18 (SSCC-18)
 
@@ -3614,8 +3637,7 @@ which will be prefixed with leading zeros if less than 17 digits given, or an
 18-digit input if the GS1 check digit is included, in which case the check digit
 will be verified. Check digit(s) and HRT-only AI `"(00)"` are added by Zint.
 
-![`zint -b NVE18 --compliantheight -d
-"37612345000001003"`](images/nve18.svg){.lin}
+![`zint -b NVE18 --compliant -d "37612345000001003"`](images/nve18.svg){.lin}
 
 #### 6.1.10.6 HIBC Code 128
 
@@ -3629,7 +3651,7 @@ standards.
 
 Another variation of Code 128 as used by DPD (Deutscher Paketdienst).
 
-![`zint -b DPD --compliantheight -d
+![`zint -b DPD --compliant -d
 "000393206219912345678101040"`](images/dpd.svg){.lin}
 
 DPD Code requires a 27 or 28 character input. For 28 character input, the first
@@ -3673,8 +3695,7 @@ format `"SSNNNNNNNNXCC"`, where `"SS"` is a two-character alphabetic service
 indicator, `"NNNNNNNN"` is an 8-digit serial number, `"X"` is a modulo-11 check
 digit, and `"CC"` is a two-character ISO 3166-1 country code.
 
-![`zint -b UPU_S10 --compliantheight -d
-"EE876543216CA"`](images/upu_s10.svg){.lin}
+![`zint -b UPU_S10 --compliant -d "EE876543216CA"`](images/upu_s10.svg){.lin}
 
 The check digit may be omitted in which case Zint will add it. Warnings will be
 generated if the service indicator is non-standard or the country code is not
@@ -3698,8 +3719,7 @@ digit and HRT-only Application Identifier of `"(01)"` are added by Zint. (A
 case the check digit will be verified.) Input less than 13 digits will be
 zero-filled.
 
-![`zint -b DBAR_OMN --compliantheight -d
-"0950110153001"`](images/dbar_omn.svg){.lin}
+![`zint -b DBAR_OMN --compliant -d "0950110153001"`](images/dbar_omn.svg){.lin}
 
 GS1 DataBar Omnidirectional symbols should have a height of 33 or greater. To
 produce a GS1 DataBar Truncated symbol set the symbol height to a value between
@@ -3718,8 +3738,7 @@ digit and HRT-only Application Identifier of `"(01)"` are added by Zint, and a
 14-digit code may be given in which case the check digit will be verified. Input
 less than 13 digits will be zero-filled.
 
-![`zint -b DBAR_LTD --compliantheight -d
-"0950110153001"`](images/dbar_ltd.svg){.lin}
+![`zint -b DBAR_LTD --compliant -d "0950110153001"`](images/dbar_ltd.svg){.lin}
 
 #### 6.1.11.3 GS1 DataBar Expanded
 
@@ -3728,7 +3747,7 @@ encoding multiple AIs in a single symbol. Data should be in one of the formats
 described in [4.11.3.1 GS1 Data Entry], and will be displayed using parentheses
 (round brackets) in the Human Readable Text.
 
-![`zint -b DBAR_EXP --compliantheight -d
+![`zint -b DBAR_EXP --compliant -d
 "[01]98898765432106[3202]012345[15]991231"`](images/dbar_exp.svg){.lin}
 
 The GTIN-14 data for AI (01) must include the standard GS1 check digit as this
@@ -3756,7 +3775,7 @@ the `--vers` option (API `option_2`). It can also be determined by the length of
 the input data: e.g. a three character input string generates a 4 channel code
 by default.
 
-![`zint -b CHANNEL -d "453678" --compliantheight`](images/channel.svg){.lin}
+![`zint -b CHANNEL -d "453678" --compliant`](images/channel.svg){.lin}
 
 The maximum values permitted depend on the number of channels used as shown in
 the table below:
@@ -3781,7 +3800,7 @@ input must be alphanumeric, excluding the letter `O`, and must be from 7 to 18
 characters in length. A single check character is added by Zint, appearing in
 the 2nd character position. Lowercase input is automatically made uppercase.
 
-![`zint -b BC412 -d "AQ45670" --compliantheight`](images/bc412.svg){.lin}
+![`zint -b BC412 -d "AQ45670" --compliant`](images/bc412.svg){.lin}
 
 \clearpage
 
@@ -3859,8 +3878,7 @@ character encoding in the same manner as Code 128. GS1 data encoding is also
 supported. The minimum number of rows to use can be set using the `--rows`
 option (API `option_1`), with values from 2 to 16.
 
-![`zint -b CODE16K --compliantheight -d
-"ab0123456789"`](images/code16k.svg){.lin}
+![`zint -b CODE16K --compliant -d "ab0123456789"`](images/code16k.svg){.lin}
 
 ### 6.2.4 PDF417 (ISO 15438)
 
@@ -3939,8 +3957,7 @@ except that its height is reduced and its central separator is a single row,
 making it suitable for small items when omnidirectional scanning is not
 required.
 
-![`zint -b DBAR_STK --compliantheight -d
-"9889876543210"`](images/dbar_stk.svg){.lin}
+![`zint -b DBAR_STK --compliant -d "9889876543210"`](images/dbar_stk.svg){.lin}
 
 #### 6.2.7.2 GS1 DataBar Stacked Omnidirectional
 
@@ -3948,7 +3965,7 @@ A stacked variation of the GS1 DataBar Omnidirectional symbol requiring the same
 input (see [6.1.11.1 GS1 DataBar Omnidirectional and GS1 DataBar Truncated]).
 The data is encoded in two rows of bars with a central 3-row separator.
 
-![`zint -b DBAR_OMNSTK --compliantheight -d
+![`zint -b DBAR_OMNSTK --compliant -d
 "9889876543210"`](images/dbar_omnstk.svg){.lin}
 
 #### 6.2.7.3 GS1 DataBar Expanded Stacked
@@ -3957,7 +3974,7 @@ A stacked variation of the GS1 DataBar Expanded symbol for smaller packages.
 Input is the same as for GS1 DataBar Expanded (see [6.1.11.3 GS1 DataBar
 Expanded]), with the same maximum capacity.
 
-![`zint -b DBAR_EXPSTK --compliantheight -d
+![`zint -b DBAR_EXPSTK --compliant -d
 "[01]98898765432106[3202]012345[15]991231"`](images/dbar_expstk.svg){.lin}
 
 The width of the symbol can be altered using the `--cols` switch (API
@@ -3978,7 +3995,7 @@ or 81 numeric digits. GS1 data encoding is also supported. The minimum number
 of fixed-width rows to use can be set using the `--rows` option (API
 `option_1`), with values from 2 to 8.
 
-![`zint -b CODE49 --compliantheight -d
+![`zint -b CODE49 --compliant -d
 "MULTIPLE ROWS IN CODE 49"`](images/code49.svg){.lin}
 
 \clearpage
@@ -4073,7 +4090,7 @@ which is being used. CC-A can encode up to 56 numeric digits (including AIs) or
 an alphanumeric string of shorter length (e.g. if all capitals, at most 30,
 excluding AI). To select CC-A use `--mode=1` (API `option_1 = 1`).
 
-![`zint -b EAN13_CC --compliantheight -d "[99]1234-abcd" --mode=1
+![`zint -b EAN13_CC --compliant -d "[99]1234-abcd" --mode=1
 --primary=331234567890`](images/ean13_cc_a.svg){.upcean}
 
 ### 6.3.2 CC-B
@@ -4084,7 +4101,7 @@ to be encoded and the type of linear component which is being used. CC-B can
 encode up to 338 numeric digits or an alphanumeric string of shorter length. To
 select CC-B use `--mode=2` (API `option_1 = 2`).
 
-![`zint -b EAN13_CC --compliantheight -d "[99]1234-abcd" --mode=2
+![`zint -b EAN13_CC --compliant -d "[99]1234-abcd" --mode=2
 --primary=331234567890`](images/ean13_cc_b.svg){.upcean}
 
 ### 6.3.3 CC-C
@@ -4093,7 +4110,7 @@ This system uses PDF417 and can only be used in conjunction with a GS1-128
 linear component. CC-C can encode up to 2361 numeric digits or an alphanumeric
 string of shorter length. To select CC-C use `--mode=3` (API `option_1 = 3`).
 
-![`zint -b GS1_128_CC --compliantheight -d "[99]1234-abcd" --mode=3
+![`zint -b GS1_128_CC --compliant -d "[99]1234-abcd" --mode=3
 --primary="[01]03312345678903"`](images/gs1_128_cc_c.svg){.upcean}
 
 \clearpage
@@ -4107,8 +4124,7 @@ One-Track (see [6.1.9 Pharmacode One-Track]) used for the identification of
 pharmaceuticals. The symbology is able to encode whole numbers between 4 and
 64570080.
 
-![`zint -b PHARMA_TWO --compliantheight -d
-"29876543"`](images/pharma_two.svg){.trk}
+![`zint -b PHARMA_TWO --compliant -d "29876543"`](images/pharma_two.svg){.trk}
 
 ### 6.4.2 POSTNET
 
@@ -4120,8 +4136,7 @@ to 38 digits in length, standard lengths as used by USPS were `PostNet6`
 `PostNet12` (5-digit ZIP + 6-digit user data), and a warning will be issued if
 the input length is not one of these.
 
-![`zint -b POSTNET --compliantheight -d
-"12345678901"`](images/postnet.svg){.trk}
+![`zint -b POSTNET --compliant -d "12345678901"`](images/postnet.svg){.trk}
 
 ### 6.4.3 PLANET
 
@@ -4133,8 +4148,7 @@ lengths used by USPS were `Planet12` (11-digit input) and `Planet14` (13-digit
 input), and as with POSTNET a warning will be issued if the length is not one of
 these.
 
-![`zint -b PLANET --compliantheight -d
-"4012345235636"`](images/planet.svg){.trk}
+![`zint -b PLANET --compliant -d "4012345235636"`](images/planet.svg){.trk}
 
 ### 6.4.4 Brazilian CEPNet
 
@@ -4143,7 +4157,7 @@ service, to encode CEP (Código de Endereçamento Postal) numbers on mail items.
 Input should consist of eight digits with the check digit being automatically
 added by Zint.
 
-![`zint -b CEPNET --compliantheight -d "12345678"`](images/cepnet.svg){.trk}
+![`zint -b CEPNET --compliant -d "12345678"`](images/cepnet.svg){.trk}
 
 ### 6.4.5 DX Film Edge Barcode
 
@@ -4151,8 +4165,7 @@ Introduced by Kodak in the 1980s, the DX (Digital Index) barcode is printed on
 the bottom edge of 35mm film to aid in the reordering and post-processing of
 prints.
 
-![`zint -b DXFILMEDGE --compliantheight -d
-"112-1/10A"`](images/dxfilmedge.svg){.trk}
+![`zint -b DXFILMEDGE --compliant -d "112-1/10A"`](images/dxfilmedge.svg){.trk}
 
 The data can be in two parts. The first part (required) is the "DX number",
 identifying the manufacturer and film type - the National Association of
@@ -4166,7 +4179,7 @@ first and last digit are ignored, leaving a 4-digit DX Extract number in any
 case, which must be in the range 16 to 2047. The second format `"NNN-NN"`
 represents the DX Extract as two numbers separated by a dash (`-`), the first
 number being 1 to 3 digits (range 1 to 127) and the second 1 to 2 digits (range
-0 to 15).[^23]
+0 to 15).[^24]
 
 The optional frame number is a number in the range 0 to 63, and may have a half
 frame indicator `"A"` appended. Special character sequences (with or without a
@@ -4176,7 +4189,7 @@ number 62, `"K"` or `"00"` means frame number 63, and `"F"` means frame number
 
 A parity bit is automatically added by Zint.
 
-[^23]: The DX number may be looked up in The (Modified) Big Film Database at
+[^24]: The DX number may be looked up in The (Modified) Big Film Database at
 [https://thebigfilmdatabase.merinorus.com](
 https://thebigfilmdatabase.merinorus.com).
 
@@ -4193,7 +4206,7 @@ Barcode 3 are 37-bar, 52-bar and 67-bar specifications respectively, developed
 by Australia Post for printing Delivery Point ID (DPID) and customer information
 on mail items.
 
-![`zint -b AUSPOST --compliantheight -d "96184209"`](images/auspost.svg){.trk}
+![`zint -b AUSPOST --compliant -d "96184209"`](images/auspost.svg){.trk}
 
 Valid data characters are 0-9, A-Z, a-z, space and hash (#). A Format Control
 Code (FCC) is added by Zint and should not be included in the input data.
@@ -4226,22 +4239,21 @@ lengths) if the DPID is all zeroes.
 A Reply Paid version of the Australia Post 4-State Barcode (FCC 45) which
 requires an 8-digit DPID input.
 
-![`zint -b AUSREPLY --compliantheight -d "12345678"`](images/ausreply.svg){.trk}
+![`zint -b AUSREPLY --compliant -d "12345678"`](images/ausreply.svg){.trk}
 
 #### 6.5.1.3 Routing Barcode
 
 A Routing version of the Australia Post 4-State Barcode (FCC 87) which requires
 an 8-digit DPID input.
 
-![`zint -b AUSROUTE --compliantheight -d "34567890"`](images/ausroute.svg){.trk}
+![`zint -b AUSROUTE --compliant -d "34567890"`](images/ausroute.svg){.trk}
 
 #### 6.5.1.4 Redirect Barcode
 
 A Redirection version of the Australia Post 4-State Barcode (FCC 92) which
 requires an 8-digit DPID input.
 
-![`zint -b AUSREDIRECT --compliantheight -d
-"98765432"`](images/ausredirect.svg){.trk}
+![`zint -b AUSREDIRECT --compliant -d "98765432"`](images/ausredirect.svg){.trk}
 
 ### 6.5.2 Dutch Post KIX Code
 
@@ -4249,7 +4261,7 @@ This symbology is used by Royal Dutch TPG Post (Netherlands) for Postal code and
 automatic mail sorting. Data input can consist of numbers 0-9 and letters A-Z
 and needs to be 11 characters in length. No check digit is included.
 
-![`zint -b KIX --compliantheight -d "2500GG30250"`](images/kix.svg){.trk}
+![`zint -b KIX --compliant -d "2500GG30250"`](images/kix.svg){.trk}
 
 ### 6.5.3 Royal Mail 4-State Customer Code (RM4SCC)
 
@@ -4259,14 +4271,14 @@ A-Z and usually includes delivery postcode followed by house number. For example
 `"W1J0TR01"` for 1 Piccadilly Circus in London. Check digit data is generated by
 Zint.
 
-![`zint -b RM4SCC --compliantheight -d "W1J0TR01"`](images/rm4scc.svg){.trk}
+![`zint -b RM4SCC --compliant -d "W1J0TR01"`](images/rm4scc.svg){.trk}
 
 ### 6.5.4 Royal Mail 4-State Mailmark
 
 Developed in 2014 as a replacement for RM4SCC this 4-state symbol includes Reed-
 Solomon error correction.
 
-![`zint -b MAILMARK_4S --compliantheight -d
+![`zint -b MAILMARK_4S --compliant -d
 "21B2254800659JW5O9QA6Y"`](images/mailmark_4s.svg){.trk}
 
 Input is a pre-formatted alphanumeric string of 22 (for Barcode C) or 26 (for
@@ -4310,7 +4322,7 @@ Also known as the OneCode barcode and used in the U.S. by the United States
 Postal Service (USPS), the Intelligent Mail system replaced the POSTNET and
 PLANET symbologies in 2009.
 
-![`zint -b USPS_IMAIL --compliantheight -d
+![`zint -b USPS_IMAIL --compliant -d
 "01234567094987654321-01234"`](images/usps_imail.svg){.trk}
 
 Intelligent Mail is a fixed length 65-bar symbol which combines routing and
@@ -4329,7 +4341,7 @@ inputs are valid data entries:
 Used for address data on mail items for Japan Post. Accepted values are 0-9,
 A-Z and dash (`-`). A modulo 19 check digit is added by Zint.
 
-![`zint -b JAPANPOST --compliantheight -d
+![`zint -b JAPANPOST --compliant -d
 "15400233-16-4-205"`](images/japanpost.svg){.trk}
 
 ### 6.5.7 DAFT Code
@@ -4357,7 +4369,7 @@ produces the same barcode (see [6.5.3 Royal Mail 4-State Customer Code
 (RM4SCC)]) as
 
 ```bash
-zint -b RM4SCC --compliantheight -d "W1J0TR01"
+zint -b RM4SCC --compliant -d "W1J0TR01"
 ```
 
 \clearpage
@@ -4439,7 +4451,7 @@ zint -b DATAMATRIX -d "A\^1BC\^1DEF" --extraesc
 encodes the data `"A<FNC1>BC<FNC1>DEF"`, where `<FNC1>` represents the `FNC1`
 character. If the data contains an extra escape sequence, it can be escaped by
 doubling the caret (`^`), i.e. `"\^^"` encodes `"\^"`. Note that if using ECIs
-with manual FNC1s then the ECIs must be ASCII compatible.[^24]
+with manual FNC1s then the ECIs must be ASCII compatible.[^25]
 
 By default Zint uses a "de facto" codeword placement for symbols of size 144 x
 144 (version 24). To override this and use the now clarified ISO/IEC standard
@@ -4463,7 +4475,7 @@ be given as `"123234"`. Note that both `ID1` and `ID2` must be non-zero, so e.g.
 `"123000"` or `"000123"` would be invalid IDs. If an ID is not given it defaults
 to `"001001"`.
 
-[^24]: ASCII-compatible ECIs are ECIs 3 to 18 and 21 to 27 (see
+[^25]: ASCII-compatible ECIs are ECIs 3 to 18 and 21 to 27 (see
 [#tbl:eci_codes]). Note in particular that ECI 899, 8-bit binary, is not
 considered ASCII-compatible.
 
@@ -4768,7 +4780,7 @@ already Latin-2 formatted use the `--binary` switch (API
 The following example creates a symbol from data saved as a Latin-2 file:
 
 ```bash
-zint -o upnqr.png -b UPNQR --scale=3 --binary -i upn.txt
+zint -o upnqr.png -b UPNQR --binary -i upn.txt
 ```
 
 A mask may be manually specified and the `--fast` option used as with [6.6.3 QR
@@ -5217,7 +5229,7 @@ is not given, no ID is encoded.
 Used by the United States Postal Service (USPS), the FIM symbology is used to
 assist automated mail processing.
 
-![`zint -b FIM --compliantheight -d "C"`](images/fim.svg){.trk}
+![`zint -b FIM --compliant -d "C"`](images/fim.svg){.trk}
 
 There are only 5 valid symbols which can be generated using the characters A-E
 as shown in the table below.
@@ -5514,7 +5526,7 @@ For full details, see `"backend_qt/qzint.h"`.
 
 # Annex C. Tcl Backend Binding
 
-A Tcl binding is available in the `"backend_tcl`" sub-directory. To make on
+A Tcl binding is available in the `"backend_tcl"` sub-directory. To make on
 Unix:
 
 ```bash
