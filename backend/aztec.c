@@ -410,7 +410,7 @@ static int az_text_modes(char modes[], unsigned char source[], const int length,
 
 /* Cheapo to check if input all of one type of Byte-only, Upper, Lower or Digit, returning AZ_B, AZ_U, AZ_L or AZ_D
    resp., or -1 if not */
-static char az_all_byte_only_or_uld(const unsigned char source[], const int length) {
+static int az_all_byte_only_or_uld(const unsigned char source[], const int length) {
     int i;
     int byte_only, upper, lower, digit;
 
